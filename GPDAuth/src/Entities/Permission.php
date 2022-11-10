@@ -15,7 +15,7 @@ use GraphQL\Doctrine\Annotation as API;
 
 /**
  * @ORM\Entity()
- * @ORM\Table(name="auth_permission")
+ * @ORM\Table(name="gpd_auth_permission")
  */
 class Permission extends AbstractEntityModel
 {
@@ -54,13 +54,13 @@ class Permission extends AbstractEntityModel
     protected $role;
 
     /**
-     * @ORM\Column(type="string", name="access" nullable=false, length=255)
+     * @ORM\Column(type="string", name="permission_access", nullable=false, length=255)
      * @var string
      */
     protected $access;
 
     /**
-     * @ORM\Column(type="string", name="permision_value" nullable=false, length=255)
+     * @ORM\Column(type="string", name="permision_value", nullable=false, length=255)
      * @var string
      */
     protected $value;

@@ -19,7 +19,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  * 
  * @author JJesus Abarca Gonzalez
  * @ORM\Entity()
- * @ORM\Table(name="auth_role", indexes={
+ * @ORM\Table(name="gpd_auth_role", indexes={
  * @ORM\Index(name="role_code_idx",columns={"code"}),
  * @ORM\Index(name="role_title_idx",columns={"title"}),
  * @ORM\Index(name="role_created_idx",columns={"created"}),

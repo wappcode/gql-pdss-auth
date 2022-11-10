@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GPDAuth\Graphql\Types;
+namespace GPDAuth\Graphql;
 
 use GPDAuth\Entities\Permission;
 use GraphQL\Type\Definition\EnumType;

@@ -68,7 +68,7 @@ class User extends AbstractEntityModel
     protected $salt;
 
     /**
-     * @ORM\Column(type="string", name="password")
+     * @ORM\Column(type="string", name="user_password")
      * @var string
      */
     protected $password;
@@ -101,11 +101,14 @@ class User extends AbstractEntityModel
 
     /**
      * @ORM\ManyToMany(targetEntity="\GPDAuth\Entities\Role", inversedBy="users")
-     * @ORM\JoinTable(name="gpd_auth_users_roles,
-     * joinColumns={@JoinColumn(name="user_id", referencedColumnName="id", onDelete="CASCADE")},
-     * inverseJoinCollumn={@JoinColumn(name="role_id", referencedColumnName="id", onDelete="CASCADE")}
+     * @ORM\JoinTable(name="gpd_auth_users_roles",
+     * joinColumns={
+     *  @ORM\JoinColumn(name="user_id", referencedColumnName="id")
+     * },
+     * inverseJoinColumns={
+     *  @ORM\JoinColumn(name="role_id", referencedColumnName="id")
+     * }
      * )
-     * @ORM\JoinColumn(name="role_id", referencedColumnName="id", nullable=true)
      * @var Collection
      */
     protected $roles;

@@ -1,7 +1,17 @@
 {
     "name": "wappcode/gql-pdss-auth",
     "license": "\"MIT\"",
+    "autoload": {
+        "psr-4": {
+            "GPDAuth\\": "GPDAuth/src"
+        }
+    },
     "require-dev": {
         "wappcode/gqlpdss": "^2.0"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AppModule\\": "modules/AppModule/src/"
+        }
     }
 }

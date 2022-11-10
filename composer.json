@@ -1,0 +1,7 @@
+{
+    "name": "wappcode/gql-pdss-auth",
+    "license": "\"MIT\"",
+    "require-dev": {
+        "wappcode/gqlpdss": "^2.0"
+    }
+}

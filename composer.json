@@ -7,11 +7,11 @@
         }
     },
     "require-dev": {
-        "wappcode/gqlpdss": "^2.0"
+        "wappcode/gqlpdss": "dev-master"
     },
     "autoload-dev": {
         "psr-4": {
-            "AppModule\\": "modules/AppModule/src/"
+            "AppModule\\": "dev/modules/AppModule/src/"
         }
     }
 }

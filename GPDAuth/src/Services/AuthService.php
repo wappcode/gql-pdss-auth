@@ -54,7 +54,7 @@ class AuthService implements IAuthService
          * set JWT on headers
          */
         $user = $this->findUser($username);
-        if (empty($user)) {
+        if (empty($user) || !$user["active"]) {
             throw new Exception('Invalid user');
         }
         $userPassword = $user["password"] ?? '';
@@ -64,7 +64,7 @@ class AuthService implements IAuthService
         if ($encodedPassword !== $userPassword) {
             throw new Exception('Invalid user');
         }
-        $_SESSION[static::AUTH_SESSION_ID] = $user->getUsername();
+        $_SESSION[static::AUTH_SESSION_ID] = $user["username"];
         return true;
     }
     /**

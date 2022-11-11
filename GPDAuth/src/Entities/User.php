@@ -28,7 +28,7 @@ use GPDCore\Entities\AbstractEntityModel;
 class User extends AbstractEntityModel
 {
 
-    const RELATIONS_MANY_TO_ONE = ['role'];
+    const RELATIONS_MANY_TO_ONE = [];
 
     /**
      * @ORM\Column(type="string", name="firstname", nullable=false) 

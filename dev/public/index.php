@@ -2,6 +2,7 @@
 
 use AppModule\AppModule;
 use AppModule\Services\AppRouter;
+use GPDAuth\GPDAuthModule;
 use GPDCore\Library\GPDApp;
 use GPDCore\Services\ContextService;
 use Laminas\ServiceManager\ServiceManager;
@@ -18,6 +19,7 @@ $router = new AppRouter();
 $app = new GPDApp($context, $router, $enviroment);
 $app->addModules([
     AppModule::class,
+    GPDAuthModule::class
 ]);
 $localConfig = require __DIR__ . "/../config/local.config.php";
 $context->getConfig()->add($localConfig);

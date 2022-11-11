@@ -10,6 +10,8 @@ use Exception;
 use GPDAuth\Entities\Permission;
 use GPDAuth\Entities\User;
 use GPDAuth\Library\IAuthService;
+use GPDAuth\Library\InvalidUserException;
+use GPDAuth\Library\NoSignedException;
 use GPDAuth\Library\PasswordManager;
 
 @session_start();
@@ -44,10 +46,10 @@ class AuthService implements IAuthService
      *
      * @param string $username
      * @param string $password
-     * @return void
+     * @return array
      * @throws Exception
      */
-    public function login(string $username, string $password)
+    public function login(string $username, string $password): array
     {
         /** @todo 
          * create JWT
@@ -55,17 +57,18 @@ class AuthService implements IAuthService
          */
         $user = $this->findUser($username);
         if (empty($user) || !$user["active"]) {
-            throw new Exception('Invalid user');
+            throw new InvalidUserException();
         }
         $userPassword = $user["password"] ?? '';
         $salt = $user["salt"] ?? '';
         $algorithm = $user['algorithm'] ?? null;
         $encodedPassword = PasswordManager::encode($password, $salt, $algorithm);
         if ($encodedPassword !== $userPassword) {
-            throw new Exception('Invalid user');
+            throw new InvalidUserException();
         }
         $_SESSION[static::AUTH_SESSION_ID] = $user["username"];
-        return true;
+        $this->user = $user;
+        return $user;
     }
     /**
      * @return void
@@ -75,15 +78,29 @@ class AuthService implements IAuthService
         $_SESSION[static::AUTH_SESSION_ID] = null;
     }
 
-    public function getUser(): array
+    /**
+     * Se considera que esta firmado si tiene registro de usuario
+     *
+     * @return boolean
+     */
+    public function isSigned(): bool
     {
+        $user = $this->getUser();
+        return (is_array($user) && !empty($user));
+    }
+    public function getUser(): ?array
+    {
+        $username = $this->getSessionAuthId();
+        if (empty($username)) {
+            return null;
+        }
         if (empty($this->user)) {
 
             /**
              * @todo 
              * Obtener el username por encabezado o por sesion
              */
-            $username = $this->getSessionAuthId();
+
             $this->user = $this->findUser($username);
         }
         return $this->user;
@@ -166,6 +183,9 @@ class AuthService implements IAuthService
     public function getRoles(): array
     {
         $user = $this->getUser();
+        if (!is_array($user)) {
+            return [];
+        }
         $roles = $user["roles"];
         if (!is_array($roles)) {
             return [];
@@ -175,14 +195,13 @@ class AuthService implements IAuthService
         }, $roles);
         return $rolesCodes;
     }
-    protected function setPermissions()
-    {
-    }
-
-    protected function getPermissions(): array
+    public function getPermissions(): array
     {
         if (!is_array($this->permissions)) {
             $user = $this->getUser();
+            if (!is_array($user)) {
+                return [];
+            }
             $userId = $user["id"];
             $roles = $user["roles"] ?? [["id" => "0"]];
             $rolesIds = array_map(function ($role) {

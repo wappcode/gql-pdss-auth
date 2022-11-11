@@ -5,6 +5,8 @@ namespace GPDAuth\Library;
 interface IAuthService
 {
     public function login(string $username, string $password);
+    public function logout(): void;
+    public function isSigned(): bool;
     public function hasRole(string $role): bool;
     public function hasSomeRoles(array $roles): bool;
     public function hasAllRole(array $roles): bool;
@@ -12,6 +14,5 @@ interface IAuthService
     public function hasSomePermissions(array $resources, array $permission, ?array $scopes = null): bool;
     public function hasAllPermissions(array $resources, array $permission, ?array $scopes = null): bool;
     public function getRoles(): array;
-    public function getUser(): array;
-    public function logout(): void;
+    public function getUser(): ?array;
 }

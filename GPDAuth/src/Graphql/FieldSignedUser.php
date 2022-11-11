@@ -4,12 +4,12 @@ namespace GPDAuth\Graphql;
 
 use Exception;
 use GPDAuth\Entities\User;
+use GPDAuth\Library\NoSignedException;
 use GPDAuth\Services\AuthService;
 use GPDCore\Library\GQLException;
 use GPDCore\Library\IContextService;
-use GraphQL\Type\Definition\Type;
 
-class FieldLogin
+class FieldSignedUser
 {
 
     /**
@@ -19,40 +19,27 @@ class FieldLogin
 
     public static function get(IContextService $context, ?callable $proxy)
     {
-        $resolve = FieldLogin::createResolve();
+        $resolve = FieldSignedUser::createResolve();
         $proxyResolve = is_callable($proxy) ? $proxy($resolve) : $resolve;
         $types = $context->getTypes();
         return [
             "type" => $types->getOutput(User::class),
-            "args" => [
-                [
-                    "name" => "username",
-                    "type" => Type::nonNull(Type::string())
-                ],
-                [
-                    "name" => "password",
-                    "type" => Type::nonNull(Type::string())
-                ],
-            ],
             "resolve" => $proxyResolve
         ];
     }
     private static function createResolve(): callable
     {
         return function ($root, array $args, IContextService $context, $info) {
-            $username = $args["username"] ?? '';
-            $password = $args["password"] ?? '';
             /** @var AuthService */
             $auth = $context->getServiceManager()->get(AuthService::class);
-            try {
-                $user = $auth->login($username, $password);
-                return $user;
-            } catch (Exception $e) {
-                throw new GQLException($e->getMessage(), "AUTH_LOGIN_400", 400);
+            $user = $auth->getUser();
+            $permissions = $auth->getPermissions();
+            if (empty($user)) {
+                throw new NoSignedException();
             }
+            return $user;
         };
     }
-
 
     private function __construct(IContextService $context)
     {

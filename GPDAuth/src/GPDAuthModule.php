@@ -4,6 +4,7 @@ namespace GPDAuth;
 
 use AppModule\AppModule;
 use GPDAuth\Graphql\FieldLogin;
+use GPDAuth\Graphql\FieldSignedUser;
 use GPDAuth\Services\AuthService;
 use Laminas\ServiceManager\ServiceManager;
 
@@ -48,7 +49,8 @@ class GPDAuthModule extends AppModule
     function getQueryFields(): array
     {
         return [
-            "login" => FieldLogin::get($this->context, $proxy = null)
+            "login" => FieldLogin::get($this->context, $proxy = null),
+            "signedUser" => FieldSignedUser::get($this->context, $proxy = null)
         ];
     }
     /**

@@ -18,8 +18,8 @@ $context->setDoctrineCacheDir($cacheDir);
 $router = new AppRouter();
 $app = new GPDApp($context, $router, $enviroment);
 $app->addModules([
+    GPDAuthModule::class,
     AppModule::class,
-    GPDAuthModule::class
 ]);
 $localConfig = require __DIR__ . "/../config/local.config.php";
 $context->getConfig()->add($localConfig);

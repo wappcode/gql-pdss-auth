@@ -9,16 +9,15 @@ use Doctrine\ORM\Query;
 use Exception;
 use GPDAuth\Entities\Permission;
 use GPDAuth\Entities\User;
+use GPDAuth\Library\AuthJWTManager;
 use GPDAuth\Library\IAuthService;
 use GPDAuth\Library\InvalidUserException;
-use GPDAuth\Library\NoSignedException;
 use GPDAuth\Library\PasswordManager;
 
 @session_start();
 class AuthService implements IAuthService
 {
 
-    const AUTH_SESSION_ID = 'gpd_auth_session_id';
     /**
      * @var array
      */
@@ -34,9 +33,37 @@ class AuthService implements IAuthService
     protected $entityManager;
 
 
-    public function __construct(EntityManager $entityManager)
-    {
+    /**
+     *
+     * @var string
+     */
+    protected $jwtSecureKey;
+
+    /**
+     *
+     * @var string
+     */
+    protected $sessionKey;
+
+    /**
+     * @var string
+     */
+    protected $jwtAlgoritm;
+
+    protected $jwtDefaultExpirationTime;
+
+    public function __construct(
+        EntityManager $entityManager,
+        string $jwtSecureKey,
+        string $sessionKey,
+        string $jwtAlgoritm,
+        string $jwtDefaultExpirationTime
+    ) {
         $this->entityManager = $entityManager;
+        $this->jwtAlgoritm = $jwtAlgoritm;
+        $this->sessionKey = $sessionKey;
+        $this->jwtSecureKey = $jwtSecureKey;
+        $this->jwtDefaultExpirationTime = $jwtDefaultExpirationTime;
     }
 
 
@@ -51,22 +78,15 @@ class AuthService implements IAuthService
      */
     public function login(string $username, string $password): array
     {
-        /** @todo 
-         * create JWT
-         * set JWT on headers
-         */
+
+        $jwtExpirationTime = $this->jwtDefaultExpirationTime;
         $user = $this->findUser($username);
-        if (empty($user) || !$user["active"]) {
+        if (!$this->validUser($password, $user)) {
             throw new InvalidUserException();
         }
-        $userPassword = $user["password"] ?? '';
-        $salt = $user["salt"] ?? '';
-        $algorithm = $user['algorithm'] ?? null;
-        $encodedPassword = PasswordManager::encode($password, $salt, $algorithm);
-        if ($encodedPassword !== $userPassword) {
-            throw new InvalidUserException();
-        }
-        $_SESSION[static::AUTH_SESSION_ID] = $user["username"];
+        $jwtToken = AuthJWTManager::createUserToken($user, $this->jwtSecureKey, $jwtExpirationTime, $this->jwtAlgoritm);
+        AuthJWTManager::addTokenToResponseHeader($jwtToken);
+        $_SESSION[$this->sessionKey] = $user["username"];
         $this->user = $user;
         return $user;
     }
@@ -75,7 +95,7 @@ class AuthService implements IAuthService
      */
     public function logout(): void
     {
-        $_SESSION[static::AUTH_SESSION_ID] = null;
+        $_SESSION[$this->sessionKey] = null;
     }
 
     /**
@@ -90,19 +110,16 @@ class AuthService implements IAuthService
     }
     public function getUser(): ?array
     {
-        $username = $this->getSessionAuthId();
+        $username = $this->getAuthId();
         if (empty($username)) {
             return null;
         }
         if (empty($this->user)) {
 
-            /**
-             * @todo 
-             * Obtener el username por encabezado o por sesion
-             */
-
             $this->user = $this->findUser($username);
         }
+        $token = AuthJWTManager::createUserToken($this->user, $this->jwtSecureKey, $this->jwtDefaultExpirationTime, $this->jwtAlgoritm);
+        AuthJWTManager::addTokenToResponseHeader($token);
         return $this->user;
     }
 
@@ -228,6 +245,21 @@ class AuthService implements IAuthService
         return $permissions;
     }
 
+    private function validUser(string $password, ?array $user): bool
+    {
+        if (empty($user)) {
+            return false;
+        }
+        $userPassword = $user["password"] ?? '';
+        $salt = $user["salt"] ?? '';
+        $algorithm = $user['algorithm'] ?? null;
+        $encodedPassword = PasswordManager::encode($password, $salt, $algorithm);
+        if ($encodedPassword !== $userPassword) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Ordena los permisos dando prioridad a usuario, roles y al final permisos globales
      * el orden es descendiente por fecha de actualización
@@ -285,8 +317,132 @@ class AuthService implements IAuthService
         $user = $qb->getQuery()->getOneOrNullResult(Query::HYDRATE_ARRAY);
         return $user;
     }
-    public function getSessionAuthId(): ?string
+    public function getAuthId(): ?string
     {
-        return $_SESSION[static::AUTH_SESSION_ID] ?? null;
+
+        $jwtAuthId = $this->getAuthIdFromJWT();
+        if (!empty($jwtAuthId)) {
+            return $jwtAuthId;
+        }
+        $sessionId = $_SESSION[$this->sessionKey] ?? null;
+        if (!empty($sessionId)) {
+            return $sessionId;
+        }
+        return null;
+    }
+
+    public function getAuthIdFromJWT(): ?string
+    {
+        $token = AuthJWTManager::getTokenFromAuthoriaztionHeader();
+        if (empty($token)) {
+            return null;
+        }
+        $data = AuthJWTManager::getTokenData($token, $this->jwtSecureKey, $this->jwtAlgoritm);
+        if (!static::validateJWTData($data)) {
+            return null;
+        }
+        return $data["username"] ?? null;
+    }
+
+    public function validateJWTData(array $data): bool
+    {
+        $exp = $data["exp"] ?? 'now';
+        $expDate = new DateTime($exp);
+        $currentDate = new DateTime();
+        if ($expDate->getTimestamp() < $currentDate->getTimestamp()) {
+            return false;
+        }
+    }
+
+    /**
+     * Get the value of jwtAlgoritm
+     *
+     * @return  string
+     */
+    public function getJwtAlgoritm()
+    {
+        return $this->jwtAlgoritm;
+    }
+
+    /**
+     * Set the value of jwtAlgoritm
+     *
+     * @param  string  $jwtAlgoritm
+     *
+     * @return  self
+     */
+    public function setJwtAlgoritm(string $jwtAlgoritm)
+    {
+        $this->jwtAlgoritm = $jwtAlgoritm;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of sessionKey
+     *
+     * @return  string
+     */
+    public function getSessionKey()
+    {
+        return $this->sessionKey;
+    }
+
+    /**
+     * Set the value of sessionKey
+     *
+     * @param  string  $sessionKey
+     *
+     * @return  self
+     */
+    public function setSessionKey(string $sessionKey)
+    {
+        $this->sessionKey = $sessionKey;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of jwtSecureKey
+     *
+     * @return  string
+     */
+    public function getJwtSecureKey()
+    {
+        return $this->jwtSecureKey;
+    }
+
+    /**
+     * Set the value of jwtSecureKey
+     *
+     * @param  string  $jwtSecureKey
+     *
+     * @return  self
+     */
+    public function setJwtSecureKey(string $jwtSecureKey)
+    {
+        $this->jwtSecureKey = $jwtSecureKey;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of jwtDefaultExpirationTime
+     */
+    public function getJwtDefaultExpirationTime()
+    {
+        return $this->jwtDefaultExpirationTime;
+    }
+
+    /**
+     * Set the value of jwtDefaultExpirationTime
+     *
+     * @return  self
+     */
+    public function setJwtDefaultExpirationTime($jwtDefaultExpirationTime)
+    {
+        $this->jwtDefaultExpirationTime = $jwtDefaultExpirationTime;
+
+        return $this;
     }
 }

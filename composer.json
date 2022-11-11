@@ -13,5 +13,8 @@
         "psr-4": {
             "AppModule\\": "dev/modules/AppModule/src/"
         }
+    },
+    "require": {
+        "firebase/php-jwt": "^6.3"
     }
 }

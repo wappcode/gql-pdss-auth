@@ -5,6 +5,7 @@ namespace GPDAuth;
 use AppModule\AppModule;
 use GPDAuth\Graphql\FieldLogin;
 use GPDAuth\Graphql\FieldSignedUser;
+use GPDAuth\Library\AuthConfig;
 use GPDAuth\Services\AuthService;
 use Laminas\ServiceManager\ServiceManager;
 
@@ -25,8 +26,16 @@ class GPDAuthModule extends AppModule
             'invokables' => [],
             'factories' => [
                 AuthService::class => function (ServiceManager $sm) {
+                    $config = $this->context->getConfig();
                     $entityManager = $this->context->getEntityManager();
-                    return new AuthService($entityManager);
+                    $authService = new AuthService(
+                        $entityManager,
+                        $config->get(AuthConfig::AUTH_SESSION_KEY),
+                        $config->get(AuthConfig::JWT_SECURE_KEY),
+                        $config->get(AuthConfig::JWT_ALGORITHM_KEY),
+                        $config->get(AuthConfig::JWT_EXPIRATION_TIME_KEY),
+                    );
+                    return $authService;
                 }
             ],
             'aliases' => []

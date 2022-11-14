@@ -168,29 +168,6 @@ class User extends AbstractEntityModel
         return $this;
     }
 
-    /**
-     * Get the value of emailAddress
-     *
-     * @return  ?string
-     */
-    public function getEmailAddress(): ?string
-    {
-        return $this->emailAddress;
-    }
-
-    /**
-     * Set the value of emailAddress
-     *
-     * @param  ?string  $emailAddress
-     *
-     * @return  self
-     */
-    public function setEmailAddress(?string $emailAddress)
-    {
-        $this->emailAddress = $emailAddress;
-
-        return $this;
-    }
 
     /**
      * Get the value of username
@@ -427,6 +404,30 @@ class User extends AbstractEntityModel
     public function setRoles(Collection $roles)
     {
         $this->roles = $roles;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of email
+     *
+     * @return  ?string
+     */
+    public function getEmail()
+    {
+        return $this->email;
+    }
+
+    /**
+     * Set the value of email
+     *
+     * @param  ?string  $email
+     *
+     * @return  self
+     */
+    public function setEmail(?string $email)
+    {
+        $this->email = $email;
 
         return $this;
     }

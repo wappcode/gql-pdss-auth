@@ -5,6 +5,9 @@ namespace GPDAuth;
 use AppModule\AppModule;
 use GPDAuth\Graphql\FieldLogin;
 use GPDAuth\Graphql\FieldSignedUser;
+use GPDAuth\Graphql\ResolvesUser;
+use GPDAuth\Graphql\TypeFactorySessionData;
+use GPDAuth\Graphql\TypeSessionDataPermission;
 use GPDAuth\Library\AuthConfig;
 use GPDAuth\Services\AuthService;
 use Laminas\ServiceManager\ServiceManager;
@@ -22,9 +25,17 @@ class GPDAuthModule extends AppModule
     }
     function getServicesAndGQLTypes(): array
     {
+        $context = $this->context;
         return [
-            'invokables' => [],
+            'invokables' => [
+                TypeSessionDataPermission::NAME => TypeSessionDataPermission::class
+            ],
             'factories' => [
+                TypeFactorySessionData::NAME => function (ServiceManager $sm) use ($context) {
+                    $type = TypeFactorySessionData::create($context);
+                    return $type;
+                },
+
                 AuthService::class => function (ServiceManager $sm) {
                     $config = $this->context->getConfig();
                     $entityManager = $this->context->getEntityManager();
@@ -36,7 +47,10 @@ class GPDAuthModule extends AppModule
                         $config->get(AuthConfig::JWT_EXPIRATION_TIME_KEY),
                     );
                     return $authService;
-                }
+                },
+
+
+
             ],
             'aliases' => []
         ];
@@ -48,7 +62,9 @@ class GPDAuthModule extends AppModule
      */
     function getResolvers(): array
     {
-        return [];
+        return [
+            'User::fullName' => ResolvesUser::getFullNameResolve()
+        ];
     }
     /**
      * Array con los graphql Queries del módulo

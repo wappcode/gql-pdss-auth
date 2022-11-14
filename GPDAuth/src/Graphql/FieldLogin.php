@@ -3,11 +3,11 @@
 namespace GPDAuth\Graphql;
 
 use Exception;
-use GPDAuth\Entities\User;
 use GPDAuth\Services\AuthService;
 use GPDCore\Library\GQLException;
-use GPDCore\Library\IContextService;
 use GraphQL\Type\Definition\Type;
+use GPDCore\Library\IContextService;
+use GPDAuth\Graphql\TypeFactorySessionData;
 
 class FieldLogin
 {
@@ -21,9 +21,10 @@ class FieldLogin
     {
         $resolve = FieldLogin::createResolve();
         $proxyResolve = is_callable($proxy) ? $proxy($resolve) : $resolve;
-        $types = $context->getTypes();
+        $serviceManager = $context->getServiceManager();
+        $sessionDataType = $serviceManager->get(TypeFactorySessionData::NAME);
         return [
-            "type" => $types->getOutput(User::class),
+            "type" => $sessionDataType,
             "args" => [
                 [
                     "name" => "username",
@@ -45,8 +46,16 @@ class FieldLogin
             /** @var AuthService */
             $auth = $context->getServiceManager()->get(AuthService::class);
             try {
-                $user = $auth->login($username, $password);
-                return $user;
+                $auth->login($username, $password);
+                $user = $auth->getUser();
+                $permissions = $auth->getPermissions();
+                $token = $auth->getCurrentJWT();
+                $result = [
+                    'user' => $user,
+                    'permissions' => $permissions,
+                    'token' => $token
+                ];
+                return $result;
             } catch (Exception $e) {
                 throw new GQLException($e->getMessage(), "AUTH_LOGIN_400", 400);
             }

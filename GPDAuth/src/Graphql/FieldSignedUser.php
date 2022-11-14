@@ -22,8 +22,10 @@ class FieldSignedUser
         $resolve = FieldSignedUser::createResolve();
         $proxyResolve = is_callable($proxy) ? $proxy($resolve) : $resolve;
         $types = $context->getTypes();
+        $serviceManager = $context->getServiceManager();
+        $sessionDataType = $serviceManager->get(TypeFactorySessionData::NAME);
         return [
-            "type" => $types->getOutput(User::class),
+            "type" => $sessionDataType,
             "resolve" => $proxyResolve
         ];
     }
@@ -33,11 +35,16 @@ class FieldSignedUser
             /** @var AuthService */
             $auth = $context->getServiceManager()->get(AuthService::class);
             $user = $auth->getUser();
-            $permissions = $auth->getPermissions();
             if (empty($user)) {
                 throw new NoSignedException();
             }
-            return $user;
+            $permissions = $auth->getPermissions();
+            $token = $auth->getCurrentJWT();
+            return [
+                "user" => $user,
+                "permissions" => $permissions,
+                "token" => $token
+            ];
         };
     }
 

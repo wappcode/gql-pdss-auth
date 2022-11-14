@@ -52,6 +52,11 @@ class AuthService implements IAuthService
 
     protected $jwtDefaultExpirationTime;
 
+    /**
+     * @var ?string
+     */
+    protected $currentJWT;
+
     public function __construct(
         EntityManager $entityManager,
         string $jwtSecureKey,
@@ -73,22 +78,18 @@ class AuthService implements IAuthService
      *
      * @param string $username
      * @param string $password
-     * @return array
      * @throws Exception
      */
-    public function login(string $username, string $password): array
+    public function login(string $username, string $password): void
     {
 
-        $jwtExpirationTime = $this->jwtDefaultExpirationTime;
         $user = $this->findUser($username);
         if (!$this->validUser($password, $user)) {
             throw new InvalidUserException();
         }
-        $jwtToken = AuthJWTManager::createUserToken($user, $this->jwtSecureKey, $jwtExpirationTime, $this->jwtAlgoritm);
-        AuthJWTManager::addTokenToResponseHeader($jwtToken);
-        $_SESSION[$this->sessionKey] = $user["username"];
         $this->user = $user;
-        return $user;
+        $_SESSION[$this->sessionKey] = $user["username"];
+        $this->updateJWT();
     }
     /**
      * @return void
@@ -118,8 +119,7 @@ class AuthService implements IAuthService
 
             $this->user = $this->findUser($username);
         }
-        $token = AuthJWTManager::createUserToken($this->user, $this->jwtSecureKey, $this->jwtDefaultExpirationTime, $this->jwtAlgoritm);
-        AuthJWTManager::addTokenToResponseHeader($token);
+        $this->updateJWT();
         return $this->user;
     }
 
@@ -346,12 +346,26 @@ class AuthService implements IAuthService
 
     public function validateJWTData(array $data): bool
     {
-        $exp = $data["exp"] ?? 'now';
-        $expDate = new DateTime($exp);
-        $currentDate = new DateTime();
-        if ($expDate->getTimestamp() < $currentDate->getTimestamp()) {
+        $exp = $data["exp"] ?? null;
+        if (empty($exp)) {
             return false;
         }
+        $currentDate = new DateTime();
+        if ($exp < $currentDate->getTimestamp()) {
+            return false;
+        }
+        return true;
+    }
+
+    private function updateJWT(): void
+    {
+        $token = AuthJWTManager::createUserToken($this->user, $this->jwtSecureKey, $this->jwtDefaultExpirationTime, $this->jwtAlgoritm);
+        AuthJWTManager::addTokenToResponseHeader($token);
+        $this->currentJWT = $token;
+    }
+    public function getCurrentJWT(): ?string
+    {
+        return $this->currentJWT;
     }
 
     /**

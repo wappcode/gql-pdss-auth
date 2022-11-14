@@ -14,13 +14,15 @@ class AuthJWTManager
 
     public static function getTokenFromAuthoriaztionHeader(): ?string
     {
-        if (!preg_match('/Bearer\s(\S+)/', $_SERVER['HTTP_AUTHORIZATION'], $matches)) {
+        $authorizationHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        if (!preg_match('/Bearer\s(\S+)/', $authorizationHeader, $matches)) {
             return null;
         }
         $jwt = $matches[1] ?? null;
         if (empty($jwt)) {
             return null;
         }
+        return $jwt;
     }
 
     public static function getTokenData(string $token, string $secureKey, string $algorithm = 'HS256'): ?array
@@ -53,7 +55,7 @@ class AuthJWTManager
             'iat'  => $issuedAt->getTimestamp(),         // Issued at
             'iss'  => $serverName,                       // Issuer
             'nbf'  => $issuedAt->getTimestamp(),         // Not before
-            'exp'  => $expire,                           // Expire
+            'exp'  => $expire->getTimestamp(),                           // Expire
             'preferred_username' => $username,
         ];
         $jwt = JWT::encode($payload, $secureKey, $algorithm);

@@ -2,7 +2,7 @@
 
 namespace GPDAuth\Graphql;
 
-class ResolvesUser
+class ResolversUser
 {
 
 

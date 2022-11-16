@@ -5,7 +5,7 @@ namespace GPDAuth;
 use AppModule\AppModule;
 use GPDAuth\Graphql\FieldLogin;
 use GPDAuth\Graphql\FieldSignedUser;
-use GPDAuth\Graphql\ResolvesUser;
+use GPDAuth\Graphql\ResolversUser;
 use GPDAuth\Graphql\TypeFactorySessionData;
 use GPDAuth\Graphql\TypeSessionDataPermission;
 use GPDAuth\Library\AuthConfig;
@@ -63,7 +63,7 @@ class GPDAuthModule extends AppModule
     function getResolvers(): array
     {
         return [
-            'User::fullName' => ResolvesUser::getFullNameResolve()
+            'User::fullName' => ResolversUser::getFullNameResolve()
         ];
     }
     /**

@@ -299,7 +299,7 @@ class AuthService implements IAuthService
         $result = null;
         $permissions = $this->getPermissions();
         foreach ($permissions as $permission) {
-            if ($resource != $permission["resource"] || $permissionValue != $permission["value"]) continue;
+            if ($resource != $permission["resource"] || ($permissionValue != $permission["value"] && $permission["value"] != Permission::ALL)) continue;
             if ($scope === null || $scope == $permission["scope"]) {
                 $result = $permission;
                 break;

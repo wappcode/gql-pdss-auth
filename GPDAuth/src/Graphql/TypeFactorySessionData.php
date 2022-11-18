@@ -24,9 +24,9 @@ class TypeFactorySessionData
                     'type' => Type::nonNull($types->getOutput(User::class))
                 ],
                 'permissions' => [
-                    'type' => Type::listOf($serviceManager->get(TypeSessionDataPermission::class)),
+                    'type' => Type::nonNull(Type::listOf($serviceManager->get(TypeSessionDataPermission::class))),
                 ],
-                'token' => [
+                'jwt' => [
                     'type' => Type::string()
                 ]
             ]

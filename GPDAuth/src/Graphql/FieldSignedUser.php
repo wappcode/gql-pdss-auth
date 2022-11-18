@@ -43,7 +43,7 @@ class FieldSignedUser
             return [
                 "user" => $user,
                 "permissions" => $permissions,
-                "token" => $token
+                "jwt" => $token
             ];
         };
     }

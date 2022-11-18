@@ -53,7 +53,7 @@ class FieldLogin
                 $result = [
                     'user' => $user,
                     'permissions' => $permissions,
-                    'token' => $token
+                    'jwt' => $token
                 ];
                 return $result;
             } catch (Exception $e) {

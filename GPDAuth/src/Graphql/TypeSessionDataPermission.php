@@ -18,7 +18,7 @@ class TypeSessionDataPermission extends ObjectType
                 'resource' => Type::nonNull(Type::string()),
                 'access' => Type::nonNull(Type::string()),
                 'value' => Type::nonNull(Type::string()),
-                'scope' => Type::nonNull(Type::string())
+                'scope' => Type::string()
             ]
         ];
         parent::__construct($config);

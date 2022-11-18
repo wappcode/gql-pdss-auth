@@ -9,7 +9,7 @@ interface IAuthService
     public function isSigned(): bool;
     public function hasRole(string $role): bool;
     public function hasSomeRoles(array $roles): bool;
-    public function hasAllRole(array $roles): bool;
+    public function hasAllRoles(array $roles): bool;
     public function hasPermission(string $resource, string $permission, ?string $scope = null): bool;
     public function hasSomePermissions(array $resources, array $permission, ?array $scopes = null): bool;
     public function hasAllPermissions(array $resources, array $permission, ?array $scopes = null): bool;

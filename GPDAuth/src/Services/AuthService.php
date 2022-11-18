@@ -134,7 +134,7 @@ class AuthService implements IAuthService
         $intersect = array_intersect($userRoles, $roles);
         return count($intersect) > 0;
     }
-    public function hasAllRole(array $roles): bool
+    public function hasAllRoles(array $roles): bool
     {
         $userRoles = $this->getRoles();
         $intersect = array_intersect($userRoles, $roles);

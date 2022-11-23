@@ -18,7 +18,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  * Entidad Doctrine para los Roles de usuarios
  * 
  * @ORM\Entity()
- * @ORM\Table(name="gpd_auth_role", indexes={
+ * @ORM\Table(name="gpd_auth_roles", indexes={
  * @ORM\Index(name="role_code_idx",columns={"code"}),
  * @ORM\Index(name="role_title_idx",columns={"title"}),
  * @ORM\Index(name="role_created_idx",columns={"created"}),

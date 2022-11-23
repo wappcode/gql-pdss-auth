@@ -13,7 +13,7 @@ use GraphQL\Doctrine\Annotation as API;
 
 /**
  * @ORM\Entity()
- * @ORM\Table(name="gpd_auth_resource")
+ * @ORM\Table(name="gpd_auth_resources")
  */
 class Resource extends AbstractEntityModel
 {

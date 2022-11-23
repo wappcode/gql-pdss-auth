@@ -10,7 +10,7 @@ class InvalidUserException extends GQLException
 
     const ERROR_ID = 'AUTH_INVALID_USER';
     const CODE = '400';
-    public function __construct($message = 'No signed', $errorId = static::ERROR_ID, $httpcode = static::CODE, $category = 'businessLogic', $previous = null)
+    public function __construct($message = 'No signed', $errorId = InvalidUserException::ERROR_ID, $httpcode = InvalidUserException::CODE, $category = 'businessLogic', $previous = null)
     {
         parent::__construct($message, $httpcode, $previous);
         $this->category = $category;

@@ -208,7 +208,7 @@ class AuthService implements IAuthService
             return [];
         }
         $rolesCodes = array_map(function ($role) {
-            $role["code"];
+            return $role["code"];
         }, $roles);
         return $rolesCodes;
     }

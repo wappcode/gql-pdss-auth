@@ -17,5 +17,5 @@ interface IAuthService
     public function hasAllPermissions(array $resources, array $permission, ?array $scopes = null): bool;
     public function getRoles(): array;
     public function getUser(): ?array;
-    public function setUser(User $user): void;
+    public function setUser(array $user): void;
 }

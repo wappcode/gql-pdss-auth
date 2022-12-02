@@ -89,7 +89,6 @@ class AuthService implements IAuthService
         }
         $this->user = $user;
         $this->setUser($user);
-        $_SESSION[$this->sessionKey] = $user["username"];
     }
     /**
      * @return void
@@ -105,13 +104,15 @@ class AuthService implements IAuthService
     /**
      * Realiza el login asignando directamente al usuario
      */
-    public function setUser(User $user) {
+    public function setUser(array $user): void
+    {
         $this->logout();
         $this->user = $user;
         $this->updateJWT();
+        $_SESSION[$this->sessionKey] = $user["username"];
     }
 
-    
+
 
     /**
      * Se considera que esta firmado si tiene registro de usuario

@@ -88,16 +88,30 @@ class AuthService implements IAuthService
             throw new InvalidUserException();
         }
         $this->user = $user;
+        $this->setUser($user);
         $_SESSION[$this->sessionKey] = $user["username"];
-        $this->updateJWT();
     }
     /**
      * @return void
      */
     public function logout(): void
     {
+        $this->user = null;
+        $this->roles = null;
+        $this->permissions = null;
         $_SESSION[$this->sessionKey] = null;
     }
+
+    /**
+     * Realiza el login asignando directamente al usuario
+     */
+    public function setUser(User $user) {
+        $this->logout();
+        $this->user = $user;
+        $this->updateJWT();
+    }
+
+    
 
     /**
      * Se considera que esta firmado si tiene registro de usuario

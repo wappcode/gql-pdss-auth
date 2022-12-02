@@ -2,6 +2,8 @@
 
 namespace GPDAuth\Library;
 
+use GPDAuth\Entities\User;
+
 interface IAuthService
 {
     public function login(string $username, string $password);
@@ -15,4 +17,5 @@ interface IAuthService
     public function hasAllPermissions(array $resources, array $permission, ?array $scopes = null): bool;
     public function getRoles(): array;
     public function getUser(): ?array;
+    public function setUser(User $user): void;
 }

@@ -1,3 +1,4 @@
 vendor
 dev-docs
 .vscode
+*.code-workspace

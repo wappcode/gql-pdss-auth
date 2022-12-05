@@ -84,7 +84,7 @@ class User extends AbstractEntityModel
      * @ORM\Column(type="text", nullable=true) 
      * @var ?string
      */
-    protected $photo;
+    protected $picture;
 
     /**
      *
@@ -292,29 +292,6 @@ class User extends AbstractEntityModel
         return $this;
     }
 
-    /**
-     * Get the value of photo
-     *
-     * @return  ?string
-     */
-    public function getPhoto(): ?string
-    {
-        return $this->photo;
-    }
-
-    /**
-     * Set the value of photo
-     *
-     * @param  ?string  $photo
-     *
-     * @return  self
-     */
-    public function setPhoto(?string $photo)
-    {
-        $this->photo = $photo;
-
-        return $this;
-    }
 
     /**
      * Get the value of active
@@ -428,6 +405,30 @@ class User extends AbstractEntityModel
     public function setEmail(?string $email)
     {
         $this->email = $email;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of picture
+     *
+     * @return  ?string
+     */
+    public function getPicture(): ?string
+    {
+        return $this->picture;
+    }
+
+    /**
+     * Set the value of picture
+     *
+     * @param  ?string  $picture
+     *
+     * @return  self
+     */
+    public function setPicture(?string $picture)
+    {
+        $this->picture = $picture;
 
         return $this;
     }

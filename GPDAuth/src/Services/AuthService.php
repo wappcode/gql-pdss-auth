@@ -356,7 +356,7 @@ class AuthService implements IAuthService
         if (!static::validateJWTData($data)) {
             return null;
         }
-        return $data["username"] ?? null;
+        return $data["preferred_username"] ?? null;
     }
 
     public function validateJWTData(array $data): bool

@@ -15,6 +15,10 @@ class AuthJWTManager
     public static function getTokenFromAuthoriaztionHeader(): ?string
     {
         $authorizationHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        if (empty($authorizationHeader)) {
+            $apacheHeaders = apache_request_headers();
+            $authorizationHeader = $apacheHeaders["Authorization"] ?? '';
+        }
         if (!preg_match('/Bearer\s(\S+)/', $authorizationHeader, $matches)) {
             return null;
         }

@@ -96,7 +96,6 @@ class AuthService implements IAuthService
     public function logout(): void
     {
         $this->user = null;
-        $this->roles = null;
         $this->permissions = null;
         $_SESSION[$this->sessionKey] = null;
     }

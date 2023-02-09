@@ -69,7 +69,7 @@ class AuthJWTManager
 
 
         ];
-        $payload = array_merge($userPayload);
+        $payload = array_merge($userPayload, $aditionalData);
         $jwt = JWT::encode($payload, $secureKey, $algorithm);
         return $jwt;
     }

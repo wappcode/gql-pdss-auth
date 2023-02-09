@@ -391,6 +391,8 @@ class AuthService implements IAuthService
     private function updateJWT(): void
     {
         $user = $this->user;
+        $roles = $this->getRoles();
+        $user["roles"] = $roles;
         $additionalData = $this->createJWTAditionalData();
         $token = AuthJWTManager::createUserToken($user, $this->jwtSecureKey, $this->jwtDefaultExpirationTime, $additionalData, $this->jwtAlgoritm);
         AuthJWTManager::addTokenToResponseHeader($token);

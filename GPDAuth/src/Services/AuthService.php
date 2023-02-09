@@ -125,6 +125,9 @@ class AuthService implements IAuthService
     }
     public function getUser(): ?array
     {
+        if (!empty($this->user)) {
+            return $this->user;
+        }
         $username = $this->getAuthId();
         if (empty($username)) {
             return null;
@@ -387,9 +390,7 @@ class AuthService implements IAuthService
 
     private function updateJWT(): void
     {
-        $roles = $this->getRoles();
         $user = $this->user;
-        $user["roles"] = $roles;
         $additionalData = $this->createJWTAditionalData();
         $token = AuthJWTManager::createUserToken($user, $this->jwtSecureKey, $this->jwtDefaultExpirationTime, $additionalData, $this->jwtAlgoritm);
         AuthJWTManager::addTokenToResponseHeader($token);

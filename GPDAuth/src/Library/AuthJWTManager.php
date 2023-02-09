@@ -47,21 +47,29 @@ class AuthJWTManager
      * @param integer $expirationTime tiempo para que expire en segundos
      * @return string
      */
-    public static function createUserToken(array $user, string $secureKey, int $expirationTime, string $algorithm = 'HS256'): string
+    public static function createUserToken(array $user,  string $secureKey, int $expirationTime, array $aditionalData = [],  string $algorithm = 'HS256'): string
     {
         $issuedAt = new DateTimeImmutable();
         $serverName = $_SERVER["SERVER_NAME"];
         $expire = new DateTime();
         $expire->modify("+{$expirationTime} seconds");
         $username = $user["username"];
-        $payload = [
+        $userPayload = [
 
             'iat'  => $issuedAt->getTimestamp(),         // Issued at
             'iss'  => $serverName,                       // Issuer
             'nbf'  => $issuedAt->getTimestamp(),         // Not before
             'exp'  => $expire->getTimestamp(),                           // Expire
             'preferred_username' => $username,
+            'given_name' => $user["firstName"],
+            'family_name' => $user["lastName"],
+            'picture' => $user["picture"] ?? null,
+            'email' => $user["email"] ?? null,
+            'roles' => $user["roles"] ?? []
+
+
         ];
+        $payload = array_merge($userPayload);
         $jwt = JWT::encode($payload, $secureKey, $algorithm);
         return $jwt;
     }

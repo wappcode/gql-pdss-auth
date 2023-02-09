@@ -96,7 +96,6 @@ class AuthService implements IAuthService
     public function logout(): void
     {
         $this->user = null;
-        $this->roles = null;
         $this->permissions = null;
         $_SESSION[$this->sessionKey] = null;
     }
@@ -346,6 +345,9 @@ class AuthService implements IAuthService
         return null;
     }
 
+    /**
+     *  Override to verify token to different apps and secure keys
+     */
     public function getAuthIdFromJWT(): ?string
     {
         $token = AuthJWTManager::getTokenFromAuthoriaztionHeader();
@@ -372,9 +374,24 @@ class AuthService implements IAuthService
         return true;
     }
 
+    /**
+     * Override this method to add more data to the jwt
+     *
+     * @return array
+     */
+    protected function createJWTAditionalData(): array
+    {
+
+        return [];
+    }
+
     private function updateJWT(): void
     {
-        $token = AuthJWTManager::createUserToken($this->user, $this->jwtSecureKey, $this->jwtDefaultExpirationTime, $this->jwtAlgoritm);
+        $roles = $this->getRoles();
+        $user = $this->user;
+        $user["roles"] = $roles;
+        $additionalData = $this->createJWTAditionalData();
+        $token = AuthJWTManager::createUserToken($user, $this->jwtSecureKey, $this->jwtDefaultExpirationTime, $additionalData, $this->jwtAlgoritm);
         AuthJWTManager::addTokenToResponseHeader($token);
         $this->currentJWT = $token;
     }

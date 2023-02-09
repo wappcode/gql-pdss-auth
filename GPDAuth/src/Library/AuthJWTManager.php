@@ -61,6 +61,7 @@ class AuthJWTManager
             'nbf'  => $issuedAt->getTimestamp(),         // Not before
             'exp'  => $expire->getTimestamp(),                           // Expire
             'preferred_username' => $username,
+            'name' => $user["firstName"] . " " . $user["lastName"],
             'given_name' => $user["firstName"],
             'family_name' => $user["lastName"],
             'picture' => $user["picture"] ?? null,

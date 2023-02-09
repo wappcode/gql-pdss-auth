@@ -85,7 +85,7 @@ class AuthService implements IAuthService
 
         $user = $this->findUser($username);
         if (!$this->validUser($password, $user)) {
-            throw new InvalidUserException();
+            throw new InvalidUserException('Invalid username and password');
         }
         $this->user = $user;
         $this->setUser($user);

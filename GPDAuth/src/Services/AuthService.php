@@ -346,7 +346,7 @@ class AuthService implements IAuthService
     }
 
     /**
-     *  Override to verify token to different apps and secure keys
+     *  Overwrite to verify token to different apps and secure keys
      */
     public function getAuthIdFromJWT(): ?string
     {
@@ -375,7 +375,7 @@ class AuthService implements IAuthService
     }
 
     /**
-     * Override this method to add more data to the jwt
+     * Overwrite this method to add or overwrite data to the jwt
      *
      * @return array
      */

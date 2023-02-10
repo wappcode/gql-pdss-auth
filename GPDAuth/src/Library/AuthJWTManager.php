@@ -33,7 +33,7 @@ class AuthJWTManager
      * Retrive JWT data (payload) before validate security.
      * Be careful
      */
-    public static function getTokenDataWithoutValidation(string $token): array {
+    public static function getTokenDataWithoutValidation(string $jwt): array {
         list($header, $payload, $signature) = explode('.', $jwt);
         $jsonToken = base64_decode($payload);
         $data = json_decode($jsonToken, true);

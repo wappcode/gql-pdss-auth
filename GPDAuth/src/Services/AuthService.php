@@ -239,7 +239,7 @@ class AuthService implements IAuthService
             $userId = $user["id"];
             $roles = $user["roles"] ?? [["id" => "0"]];
             $rolesIds = array_map(function ($role) {
-                $role["id"];
+                return $role["id"];
             }, $roles);
             $qb = $this->entityManager->createQueryBuilder()->from(Permission::class, 'permission')
                 ->innerJoin('permission.resource', 'resource')
@@ -307,6 +307,7 @@ class AuthService implements IAuthService
         $standardizedPermissions = array_map(function ($permission) {
             $permission["resource"] = $permission["resource"]["code"];
             $permission["role"] = $permission["role"]["code"];
+            return $permission;
         }, $permissions);
         return $standardizedPermissions;
     }

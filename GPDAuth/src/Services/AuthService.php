@@ -259,7 +259,7 @@ class AuthService implements IAuthService
             $permissions = $this->standardizePermissions($permissions);
             $this->permissions = $permissions;
         }
-        return $permissions;
+        return $this->permissions;
     }
 
     private function validUser(string $password, ?array $user): bool

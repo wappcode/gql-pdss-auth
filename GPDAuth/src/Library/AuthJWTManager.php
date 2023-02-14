@@ -17,7 +17,7 @@ class AuthJWTManager
         $authorizationHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
         if (empty($authorizationHeader)) {
             $apacheHeaders = apache_request_headers();
-            $authorizationHeader = $apacheHeaders["Authorization"] ?? '';
+            $authorizationHeader = $apacheHeaders["Authorization"] ?? $apacheHeaders["authorization"] ?? '';
         }
         if (!preg_match('/Bearer\s(\S+)/', $authorizationHeader, $matches)) {
             return null;
@@ -33,7 +33,8 @@ class AuthJWTManager
      * Retrive JWT data (payload) before validate security.
      * Be careful
      */
-    public static function getTokenDataWithoutValidation(string $jwt): array {
+    public static function getTokenDataWithoutValidation(string $jwt): array
+    {
         list($header, $payload, $signature) = explode('.', $jwt);
         $jsonToken = base64_decode($payload);
         $data = json_decode($jsonToken, true);

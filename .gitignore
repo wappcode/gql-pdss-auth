@@ -2,3 +2,7 @@ vendor
 dev-docs
 .vscode
 *.code-workspace
+*.tar.bz2
+*.zip
+dev/data/*
+!dev/data/.gitkeep

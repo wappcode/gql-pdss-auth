@@ -343,6 +343,7 @@ class AuthService implements IAuthService
         }
         $jwtAuthId = $this->getAuthIdFromJWT();
         if (!empty($jwtAuthId)) {
+            $_SESSION[$this->sessionKey] = $jwtAuthId;
             return $jwtAuthId;
         }
 

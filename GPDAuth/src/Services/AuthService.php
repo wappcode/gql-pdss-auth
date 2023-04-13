@@ -337,15 +337,15 @@ class AuthService implements IAuthService
     }
     public function getAuthId(): ?string
     {
-
-        $jwtAuthId = $this->getAuthIdFromJWT();
-        if (!empty($jwtAuthId)) {
-            return $jwtAuthId;
-        }
         $sessionId = $_SESSION[$this->sessionKey] ?? null;
         if (!empty($sessionId)) {
             return $sessionId;
         }
+        $jwtAuthId = $this->getAuthIdFromJWT();
+        if (!empty($jwtAuthId)) {
+            return $jwtAuthId;
+        }
+
         return null;
     }
 

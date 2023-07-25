@@ -2,7 +2,6 @@
 
 namespace GPDAuth;
 
-use AppModule\AppModule;
 use GPDAuth\Graphql\FieldLogin;
 use GPDAuth\Graphql\FieldSignedUser;
 use GPDAuth\Graphql\ResolversUser;
@@ -10,9 +9,10 @@ use GPDAuth\Graphql\TypeFactorySessionData;
 use GPDAuth\Graphql\TypeSessionDataPermission;
 use GPDAuth\Library\AuthConfig;
 use GPDAuth\Services\AuthService;
+use GPDCore\Library\AbstractModule;
 use Laminas\ServiceManager\ServiceManager;
 
-class GPDAuthModule extends AppModule
+class GPDAuthModule extends AbstractModule
 {
     /**
      * Array con la configuración del módulo

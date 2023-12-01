@@ -1,11 +1,11 @@
 <?php
 return [
     "driver" => [
-        'user'     =>   'root',
-        'password' =>   'dbpassword',
-        'dbname'   =>   'gqlpdss_auth',
+        'user'     =>   getenv('GQLPDSSAUTH_DBUSER') ? getenv('GQLPDSSAUTH_DBUSER') : 'root',
+        'password' =>   getenv('GQLPDSSAUTH_DBPASSWORD') ? getenv('GQLPDSSAUTH_DBPASSWORD') : 'dbpassword',
+        'dbname'   =>   getenv('GQLPDSSAUTH_DBNAME') ? getenv('GQLPDSSAUTH_DBNAME') : 'gqlpdss_authdb',
         'driver'   =>   'pdo_mysql',
-        'host'   =>     '127.0.0.1',
+        'host'   =>     getenv('GQLPDSSAUTH_DBHOST') ? getenv('GQLPDSSAUTH_DBHOST') : 'localhost',
         'charset' =>    'utf8mb4'
     ],
     "entities" => require __DIR__ . "/doctrine.entities.php"

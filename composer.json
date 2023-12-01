@@ -8,7 +8,9 @@
         }
     },
     "require-dev": {
-        "wappcode/gqlpdss": "dev-master"
+        "wappcode/gqlpdss": "dev-master",
+        "phpunit/phpunit": "^9.6",
+        "wappcode/graphql-basic-client": "^1.0"
     },
     "autoload-dev": {
         "psr-4": {
@@ -17,5 +19,6 @@
     },
     "require": {
         "firebase/php-jwt": "^6.3"
+        
     }
 }

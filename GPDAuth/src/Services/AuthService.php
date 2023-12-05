@@ -3,25 +3,31 @@
 namespace GPDAuth\Services;
 
 use DateTime;
-use DateTimeInterface;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Query;
 use Exception;
-use GPDAuth\Entities\Permission;
+use DateTimeInterface;
+use GPDAuth\Entities\Role;
 use GPDAuth\Entities\User;
-use GPDAuth\Library\AuthJWTManager;
+use Doctrine\ORM\EntityManager;
+use GPDAuth\Models\AuthSession;
+use GPDAuth\Entities\Permission;
 use GPDAuth\Library\IAuthService;
-use GPDAuth\Library\InvalidUserException;
+use GPDAuth\Library\AuthJWTManager;
 use GPDAuth\Library\PasswordManager;
+use GPDAuth\Library\InvalidUserException;
 
 @session_start();
 class AuthService implements IAuthService
 {
 
     /**
+     * @var ?AuthSession
+     */
+    protected $session;
+    /**
+     *
      * @var array
      */
-    protected $user;
+    protected $roles;
     /**
      *
      * @var array
@@ -50,30 +56,45 @@ class AuthService implements IAuthService
      */
     protected $jwtAlgoritm;
 
-    protected $jwtDefaultExpirationTime;
-
     /**
-     * @var ?string
+     * Seconds to expire jwt
+     *
+     * @var int
      */
-    protected $currentJWT;
+    protected $jwtExpirationTimeInSeconds;
+
+    protected $authMethod;
 
     public function __construct(
         EntityManager $entityManager,
-        string $jwtSecureKey,
-        string $sessionKey,
-        string $jwtAlgoritm,
-        string $jwtDefaultExpirationTime
+        string $authMethod = IAuthService::AUTHENTICATION_METHOD_SESSION,
+        ?string $jwtSecureKey
     ) {
         $this->entityManager = $entityManager;
-        $this->jwtAlgoritm = $jwtAlgoritm;
-        $this->sessionKey = $sessionKey;
+        $this->jwtAlgoritm = "HS256";
+        $this->sessionKey = "gpdauth_session_id";
         $this->jwtSecureKey = $jwtSecureKey;
-        $this->jwtDefaultExpirationTime = $jwtDefaultExpirationTime;
+        $this->jwtExpirationTimeInSeconds = 1200; // 20 minutos
+        $this->authMethod = $authMethod;
+        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT) {
+            $this->loginJWT();
+        }
+        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION) {
+            $this->loginSession();
+        }
+        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
+            $this->loginSession();
+            if (!($this->session instanceof AuthSession)) {
+                $this->loginJWT();
+            }
+        }
+        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION) {
+            $this->loginJWT();
+            if (!($this->session instanceof AuthSession)) {
+                $this->loginSession();
+            }
+        }
     }
-
-
-
-
     /**
      *
      * @param string $username
@@ -87,28 +108,66 @@ class AuthService implements IAuthService
         if (!$this->validUser($password, $user)) {
             throw new InvalidUserException('Invalid username and password');
         }
-        $this->user = $user;
-        $this->setUser($user);
+        $session = $this->userToSession($user);
+        $this->setPermissions($session->getRoles(), $user->getId());
+        $this->setSession($session);
     }
+
+    protected function loginJWT()
+    {
+        $jwt = AuthJWTManager::retriveJWT();
+        $jwtData = AuthJWTManager::getJWTData($jwt, $this->jwtSecureKey, $this->jwtAlgoritm);
+        if (empty($jwtData)) {
+            return;
+        }
+        $session = new AuthSession();
+        $session->fillFromArray($jwtData);
+        $userId = null;
+        // busca al usuario siempre y cuando se el mismo idprovider
+        if ($session->getIss() === $this->getISS()) {
+            $user = $this->findUser($session->getSub());
+            $userId = ($user instanceof User) ? $user->getId() : null;
+        }
+        $this->setPermissions($session->getRoles(), $userId);
+        $this->setSession($session);
+    }
+
+    protected function loginSession()
+    {
+        $username = $_SESSION[$this->sessionKey];
+        $user = $this->findUser($username);
+        if (!($user instanceof User)) {
+            return;
+        }
+        $session = $this->userToSession($user);
+        $this->setPermissions($session->getRoles(), $user->getId());
+        $this->setSession($session);
+    }
+
     /**
      * @return void
      */
     public function logout(): void
     {
-        $this->user = null;
+        $this->session = null;
         $this->permissions = null;
+        $this->roles = null;
         $_SESSION[$this->sessionKey] = null;
     }
 
     /**
      * Realiza el login asignando directamente al usuario
      */
-    public function setUser(array $user): void
+    public function setSession(AuthSession $session): void
     {
         $this->logout();
-        $this->user = $user;
-        $this->updateJWT();
-        $_SESSION[$this->sessionKey] = $user["username"];
+        $this->session = $session;
+        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
+            $this->updateJWT();
+        }
+        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
+            $_SESSION[$this->sessionKey] = $session->getSub();
+        }
     }
 
 
@@ -120,24 +179,11 @@ class AuthService implements IAuthService
      */
     public function isSigned(): bool
     {
-        $user = $this->getUser();
-        return (is_array($user) && !empty($user));
+        return ($this->session instanceof AuthSession && !empty($this->session->getSub()));
     }
-    public function getUser(): ?array
+    public function getSession(): ?AuthSession
     {
-        if (!empty($this->user)) {
-            return $this->user;
-        }
-        $username = $this->getAuthId();
-        if (empty($username)) {
-            return null;
-        }
-        if (empty($this->user)) {
-
-            $this->user = $this->findUser($username);
-        }
-        $this->updateJWT();
-        return $this->user;
+        return $this->session;
     }
 
     public function hasRole(string $role): bool
@@ -216,43 +262,34 @@ class AuthService implements IAuthService
     }
     public function getRoles(): array
     {
-        $user = $this->getUser();
-        if (!is_array($user)) {
-            return [];
-        }
-        $roles = $user["roles"];
-        if (!is_array($roles)) {
-            return [];
-        }
-        $rolesCodes = array_map(function ($role) {
-            return $role["code"];
-        }, $roles);
-        return $rolesCodes;
+        return $this->session->getRoles();
     }
-    public function getPermissions(): array
+    /**
+     * Sets the user permissions
+     *
+     * @param array $rolesCodes [string]
+     * @param mixed $userId int|string
+     * @return array  Permission as array
+     */
+    public function setPermissions(array $rolesCodes, $userId = null): array
     {
         if (!is_array($this->permissions)) {
-            $user = $this->getUser();
-            if (!is_array($user)) {
-                return [];
-            }
-            $userId = $user["id"];
-            $roles = $user["roles"] ?? [["id" => "0"]];
-            $rolesIds = array_map(function ($role) {
-                return $role["id"];
-            }, $roles);
             $qb = $this->entityManager->createQueryBuilder()->from(Permission::class, 'permission')
                 ->innerJoin('permission.resource', 'resource')
                 ->leftJoin('permission.user', 'user')
                 ->leftJoin('permission.role', 'role')
                 ->select(['permission', 'partial user.{id}', 'partial role.{id, code}', 'partial resource.{id,code}']);
-            $condigionRole = $qb->expr()->in('permission.role', ':rolesIds');
+            $condigionRole = $qb->expr()->in('role.code', ':rolesCodes');
             $conditionUser = 'permission.user = :userId';
             $conditionGlobal = $qb->expr()->andX($qb->expr()->isNull("permission.user"), $qb->expr()->isNull("permission.role"));
 
-            $qb->andWhere($qb->expr()->orX($conditionUser, $condigionRole, $conditionGlobal))
-                ->setParameter(':rolesIds', $rolesIds)
-                ->setParameter(':userId', $userId)
+            if ($userId != null) {
+                $qb->andWhere($qb->expr()->orX($conditionUser, $condigionRole, $conditionGlobal))
+                    ->setParameter(':userId', $userId);
+            } else {
+                $qb->andWhere($qb->expr()->orX($$condigionRole, $conditionGlobal));
+            }
+            $qb->setParameter(':rolesCodes', $rolesCodes)
                 ->orderBy('permission.updated', 'desc');
             $permissions = $qb->getQuery()->getArrayResult() ?? [];
             $permissions = $this->sortPermissions($permissions);
@@ -262,14 +299,19 @@ class AuthService implements IAuthService
         return $this->permissions;
     }
 
-    private function validUser(string $password, ?array $user): bool
+    public function getPermissions(): array
     {
-        if (empty($user)) {
+        return $this->permissions ?? [];
+    }
+
+    protected function validUser(string $password, ?User $user): bool
+    {
+        if (!($user instanceof User)) {
             return false;
         }
-        $userPassword = $user["password"] ?? '';
-        $salt = $user["salt"] ?? '';
-        $algorithm = $user['algorithm'] ?? null;
+        $userPassword = $user->getPassword();
+        $salt = $user->getSalt();
+        $algorithm = $user->getAlgorithm();
         $encodedPassword = PasswordManager::encode($password, $salt, $algorithm);
         if ($encodedPassword !== $userPassword) {
             return false;
@@ -281,7 +323,7 @@ class AuthService implements IAuthService
      * Ordena los permisos dando prioridad a usuario, roles y al final permisos globales
      * el orden es descendiente por fecha de actualización
      */
-    private function sortPermissions(array $permissions): array
+    protected function sortPermissions(array $permissions): array
     {
 
         usort($permissions, function ($a, $b) {
@@ -302,7 +344,7 @@ class AuthService implements IAuthService
         return $permissions;
     }
 
-    private function standardizePermissions(array $permissions): array
+    protected function standardizePermissions(array $permissions): array
     {
         $standardizedPermissions = array_map(function ($permission) {
             $permission["resource"] = $permission["resource"]["code"];
@@ -325,84 +367,26 @@ class AuthService implements IAuthService
         }
         return $result;
     }
-    protected function findUser(string $username)
+    protected function findUser(string $username): ?User
     {
         $qb = $this->entityManager->createQueryBuilder()->from(User::class, 'user')
             ->leftJoin('user.roles', 'roles')
             ->select(['user', 'roles']);
         $qb->andWhere('user.username = :username')
             ->setParameter(':username', $username);
-        $user = $qb->getQuery()->getOneOrNullResult(Query::HYDRATE_ARRAY);
+        $user = $qb->getQuery()->getOneOrNullResult();
         return $user;
     }
     public function getAuthId(): ?string
     {
-        $sessionId = $_SESSION[$this->sessionKey] ?? null;
-        if (!empty($sessionId)) {
-            return $sessionId;
-        }
-        $jwtAuthId = $this->getAuthIdFromJWT();
-        if (!empty($jwtAuthId)) {
-            $_SESSION[$this->sessionKey] = $jwtAuthId;
-            return $jwtAuthId;
-        }
-
-        return null;
+        return ($this->session instanceof AuthSession) ? $this->session->getSub() : null;
     }
-
-    /**
-     *  Overwrite to verify token to different apps and secure keys
-     */
-    public function getAuthIdFromJWT(): ?string
+    protected function updateJWT(): void
     {
-        $token = AuthJWTManager::getTokenFromAuthoriaztionHeader();
-        if (empty($token)) {
-            return null;
-        }
-        $data = AuthJWTManager::getTokenData($token, $this->jwtSecureKey, $this->jwtAlgoritm);
-        if (!static::validateJWTData($data)) {
-            return null;
-        }
-        return $data["preferred_username"] ?? null;
-    }
-
-    public function validateJWTData(array $data): bool
-    {
-        $exp = $data["exp"] ?? null;
-        if (empty($exp)) {
-            return false;
-        }
-        $currentDate = new DateTime();
-        if ($exp < $currentDate->getTimestamp()) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * Overwrite this method to add or overwrite data to the jwt
-     *
-     * @return array
-     */
-    protected function createJWTAditionalData(): array
-    {
-
-        return [];
-    }
-
-    private function updateJWT(): void
-    {
-        $user = $this->user;
-        $roles = $this->getRoles();
-        $user["roles"] = $roles;
-        $additionalData = $this->createJWTAditionalData();
-        $token = AuthJWTManager::createUserToken($user, $this->jwtSecureKey, $this->jwtDefaultExpirationTime, $additionalData, $this->jwtAlgoritm);
-        AuthJWTManager::addTokenToResponseHeader($token);
-        $this->currentJWT = $token;
-    }
-    public function getCurrentJWT(): ?string
-    {
-        return $this->currentJWT;
+        $session = clone $this->session;
+        $session->setIat(new DateTime());
+        $token = AuthJWTManager::createToken($session, $this->jwtSecureKey, $this->jwtAlgoritm);
+        AuthJWTManager::addJWTToHeader($token);
     }
 
     /**
@@ -478,22 +462,63 @@ class AuthService implements IAuthService
     }
 
     /**
-     * Get the value of jwtDefaultExpirationTime
+     * Get the value of jwtExpirationTimeInSeconds
      */
-    public function getJwtDefaultExpirationTime()
+    public function getjwtExpirationTimeInSeconds()
     {
-        return $this->jwtDefaultExpirationTime;
+        return $this->jwtExpirationTimeInSeconds;
     }
 
     /**
-     * Set the value of jwtDefaultExpirationTime
+     * Set the value of jwtExpirationTimeInSeconds
      *
      * @return  self
      */
-    public function setJwtDefaultExpirationTime($jwtDefaultExpirationTime)
+    public function setjwtExpirationTimeInSeconds($jwtExpirationTimeInSeconds)
     {
-        $this->jwtDefaultExpirationTime = $jwtDefaultExpirationTime;
+        $this->jwtExpirationTimeInSeconds = $jwtExpirationTimeInSeconds;
 
         return $this;
+    }
+    protected function userToSession(User $user): AuthSession
+    {
+        $iss = $this->getISS();
+        $jwtId = sprintf("%s::%s", $iss, $user->getUsername());
+        $currenttime = new DateTime();
+        $expiration = new DateTime();
+        $expiration->modify("+{$this->jwtExpirationTimeInSeconds} seconds");
+        $session = new AuthSession();
+        $roles = $this->getUserRoles($user);
+        $session->setAuth_time($currenttime)
+            ->setSub($user->getUsername())
+            ->setBirth_family_name($user->getLastName())
+            ->setBirth_given_name($user->getFirstName())
+            ->setEmail($user->getEmail())
+            ->setExi($this->jwtExpirationTimeInSeconds)
+            ->setExp($expiration)
+            ->setFamily_name($user->getLastName())
+            ->setGiven_name($user->getFirstName())
+            ->setIss($iss)
+            ->setJti($jwtId)
+            ->setName($user->getFirstName() . " " . $user->getLastName())
+            ->setPicture($user->getPicture())
+            ->setPreferred_username($user->getUsername())
+            ->setRoles($roles);
+        return $session;
+    }
+    protected function getISS()
+    {
+        return $_SERVER["SERVER_NAME"];
+    }
+
+    protected function getUserRoles(User $user): array
+    {
+        $rolesObj = $user->getRoles();
+        $roles = [];
+        /** @var Role */
+        foreach ($roles as $role) {
+            $roles[] = $role->getCode();
+        }
+        return $roles;
     }
 }

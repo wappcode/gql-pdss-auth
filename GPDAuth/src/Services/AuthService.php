@@ -72,9 +72,12 @@ class AuthService implements IAuthService
      */
     protected $newJWT = null;
 
+    protected $iss = null;
+
 
     public function __construct(
         EntityManager $entityManager,
+        string $iss,
         string $authMethod = IAuthService::AUTHENTICATION_METHOD_SESSION,
         ?string $jwtSecureKey = null
     ) {
@@ -84,24 +87,9 @@ class AuthService implements IAuthService
         $this->jwtSecureKey = $jwtSecureKey;
         $this->jwtExpirationTimeInSeconds = 1200; // 20 minutos
         $this->authMethod = $authMethod;
-        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT) {
-            $this->loginJWT();
-        }
-        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION) {
-            $this->loginSession();
-        }
-        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
-            $this->loginSession();
-            if (!($this->session instanceof AuthSession)) {
-                $this->loginJWT();
-            }
-        }
-        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION) {
-            $this->loginJWT();
-            if (!($this->session instanceof AuthSession)) {
-                $this->loginSession();
-            }
-        }
+        $this->iss = $iss;
+        // Se inicializa en el constructor ya que solo carga los datos del usuario no lanza excepciones de autentificación
+        $this->initSession();
     }
     /**
      *
@@ -121,73 +109,15 @@ class AuthService implements IAuthService
         $this->setSession($session);
     }
 
-    protected function loginJWT()
-    {
-        $jwt = AuthJWTManager::retriveJWT();
-        if (empty($jwt)) {
-            return;
-        }
-        $jwtData = AuthJWTManager::getJWTData($jwt, $this->jwtSecureKey, $this->jwtAlgoritm);
-        if (empty($jwtData)) {
-            return;
-        }
-        $session = new AuthSession();
-        $session->fillFromArray($jwtData);
-        $userId = null;
-        // busca al usuario siempre y cuando se el mismo idprovider
-        if ($session->getIss() === $this->getISS()) {
-            $user = $this->findUser($session->getSub());
-            $userId = ($user instanceof User) ? $user->getId() : null;
-        }
-        $this->setPermissions($session->getRoles(), $userId);
-        $this->setSession($session);
-    }
-
-    protected function loginSession()
-    {
-        $username = $_SESSION[$this->sessionKey];
-        if (empty($username)) {
-            return;
-        }
-        $user = $this->findUser($username);
-        if (!($user instanceof User)) {
-            return;
-        }
-        $session = $this->userToSession($user);
-        $this->setPermissions($session->getRoles(), $user->getId());
-        $this->setSession($session);
-    }
-
     /**
      * @return void
      */
     public function logout(): void
     {
-        $this->session = null;
-        $this->permissions = null;
-        $this->roles = null;
-        $this->newJWT = null;
+        $this->clearSession();
         $_SESSION[$this->sessionKey] = null;
         AuthJWTManager::addJWTToHeader("");
     }
-
-    /**
-     * Realiza el login asignando directamente al usuario
-     */
-    public function setSession(AuthSession $session): void
-    {
-        $this->logout();
-        $this->session = $session;
-        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
-            $this->updateJWT();
-        }
-        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
-            $_SESSION[$this->sessionKey] = $session->getSub();
-        }
-    }
-
-
-
     /**
      * Se considera que esta firmado si tiene registro de usuario
      *
@@ -195,13 +125,13 @@ class AuthService implements IAuthService
      */
     public function isSigned(): bool
     {
-        return ($this->session instanceof AuthSession && !empty($this->session->getSub()));
+        $session = $this->getSession();
+        return ($session instanceof AuthSession && !empty($session->getSub()));
     }
     public function getSession(): ?AuthSession
     {
         return $this->session;
     }
-
     public function hasRole(string $role): bool
     {
         $roles = $this->getRoles();
@@ -278,8 +208,211 @@ class AuthService implements IAuthService
     }
     public function getRoles(): array
     {
-        return $this->session->getRoles();
+        return $this->getSession()->getRoles();
     }
+    public function getPermissions(): array
+    {
+        return $this->permissions ?? [];
+    }
+
+    public function getAuthId(): ?string
+    {
+        $session = $this->getSession();
+        return ($session instanceof AuthSession) ? $session->getSub() : null;
+    }
+    /**
+     * Get nuevo JWT que se utilizara como respuesta de la solicitud
+     *
+     * @return  ?string
+     */
+    public function getNewJWT(): ?string
+    {
+        return $this->newJWT;
+    }
+
+
+    /**
+     * Get the value of jwtAlgoritm
+     *
+     * @return  string
+     */
+    public function getJwtAlgoritm(): string
+    {
+        return $this->jwtAlgoritm;
+    }
+
+    /**
+     * Set the value of jwtAlgoritm
+     *
+     * @param  string  $jwtAlgoritm
+     *
+     * @return  self
+     */
+    public function setJwtAlgoritm(string $jwtAlgoritm): AuthService
+    {
+        $this->jwtAlgoritm = $jwtAlgoritm;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of sessionKey
+     *
+     * @return  string
+     */
+    public function getSessionKey(): string
+    {
+        return $this->sessionKey;
+    }
+
+    /**
+     * Set the value of sessionKey
+     *
+     * @param  string  $sessionKey
+     *
+     * @return  self
+     */
+    public function setSessionKey(string $sessionKey): AuthService
+    {
+        $this->sessionKey = $sessionKey;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of jwtSecureKey
+     *
+     * @return  string
+     */
+    public function getJwtSecureKey(): ?string
+    {
+        return $this->jwtSecureKey;
+    }
+
+    /**
+     * Set the value of jwtSecureKey
+     *
+     * @param  string  $jwtSecureKey
+     *
+     * @return  self
+     */
+    public function setJwtSecureKey(?string $jwtSecureKey): AuthService
+    {
+        $this->jwtSecureKey = $jwtSecureKey;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of jwtExpirationTimeInSeconds
+     */
+    public function getjwtExpirationTimeInSeconds(): int
+    {
+        return $this->jwtExpirationTimeInSeconds;
+    }
+
+    /**
+     * Set the value of jwtExpirationTimeInSeconds
+     *
+     * @return  self
+     */
+    public function setjwtExpirationTimeInSeconds(int $jwtExpirationTimeInSeconds): AuthService
+    {
+        $this->jwtExpirationTimeInSeconds = $jwtExpirationTimeInSeconds;
+
+        return $this;
+    }
+
+
+    /**
+     * Inicializa los datos de la sesión objtenidos ya se de sesion php o de jwt
+     *
+     * @return void
+     */
+    protected function initSession()
+    {
+        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT) {
+            $this->loginJWT();
+        }
+        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION) {
+            $this->loginSession();
+        }
+        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
+            $this->loginSession();
+            if (!($this->session instanceof AuthSession)) {
+                $this->loginJWT();
+            }
+        }
+        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION) {
+            $this->loginJWT();
+            if (!($this->session instanceof AuthSession)) {
+                $this->loginSession();
+            }
+        }
+    }
+
+    protected function loginJWT()
+    {
+        $jwt = AuthJWTManager::retriveJWT();
+        if (empty($jwt)) {
+            return;
+        }
+        $jwtData = AuthJWTManager::getJWTData($jwt, $this->jwtSecureKey, $this->jwtAlgoritm);
+        if (empty($jwtData)) {
+            return;
+        }
+        $session = new AuthSession();
+        $session->fillFromArray($jwtData);
+        $userId = null;
+        // busca al usuario siempre y cuando se el mismo idprovider
+        if ($session->getIss() === $this->getISS()) {
+            $user = $this->findUser($session->getSub());
+            $userId = ($user instanceof User) ? $user->getId() : null;
+        }
+        $this->setPermissions($session->getRoles(), $userId);
+        $this->setSession($session);
+    }
+
+    protected function loginSession()
+    {
+        $username = $_SESSION[$this->sessionKey];
+        if (empty($username)) {
+            return;
+        }
+        $user = $this->findUser($username);
+        if (!($user instanceof User)) {
+            return;
+        }
+        $session = $this->userToSession($user);
+        $this->setPermissions($session->getRoles(), $user->getId());
+        $this->setSession($session);
+    }
+
+    protected function clearSession(): void
+    {
+        $this->session = null;
+        $this->permissions = null;
+        $this->roles = null;
+        $this->newJWT = null;
+    }
+
+
+    /**
+     * Realiza el login asignando directamente al usuario
+     */
+    protected function setSession(AuthSession $session): void
+    {
+        $this->clearSession();
+        $this->session = $session;
+        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
+            $this->updateJWT();
+        }
+        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
+            $_SESSION[$this->sessionKey] = $session->getSub();
+        }
+    }
+
+
     /**
      * Sets the user permissions
      *
@@ -287,7 +420,7 @@ class AuthService implements IAuthService
      * @param mixed $userId int|string
      * @return array  Permission as array
      */
-    public function setPermissions(array $rolesCodes, $userId = null): array
+    protected function setPermissions(array $rolesCodes, $userId = null): array
     {
         if (!is_array($this->permissions)) {
             $qb = $this->entityManager->createQueryBuilder()->from(Permission::class, 'permission')
@@ -315,10 +448,6 @@ class AuthService implements IAuthService
         return $this->permissions;
     }
 
-    public function getPermissions(): array
-    {
-        return $this->permissions ?? [];
-    }
 
     protected function validUser(string $password, ?User $user): bool
     {
@@ -393,12 +522,12 @@ class AuthService implements IAuthService
         $user = $qb->getQuery()->getOneOrNullResult();
         return $user;
     }
-    public function getAuthId(): ?string
-    {
-        return ($this->session instanceof AuthSession) ? $this->session->getSub() : null;
-    }
+
     protected function updateJWT(): void
     {
+        if (!$this->session) {
+            return;
+        }
         $session = clone $this->session;
         $session->setIat(new DateTime());
         $token = AuthJWTManager::createToken($session, $this->jwtSecureKey, $this->jwtAlgoritm);
@@ -406,106 +535,7 @@ class AuthService implements IAuthService
         $this->newJWT = $token;
     }
 
-    /**
-     * Get nuevo JWT que se utilizara como respuesta de la solicitud
-     *
-     * @return  ?string
-     */
-    public function getNewJWT()
-    {
-        return $this->newJWT;
-    }
-    /**
-     * Get the value of jwtAlgoritm
-     *
-     * @return  string
-     */
-    public function getJwtAlgoritm()
-    {
-        return $this->jwtAlgoritm;
-    }
 
-    /**
-     * Set the value of jwtAlgoritm
-     *
-     * @param  string  $jwtAlgoritm
-     *
-     * @return  self
-     */
-    public function setJwtAlgoritm(string $jwtAlgoritm)
-    {
-        $this->jwtAlgoritm = $jwtAlgoritm;
-
-        return $this;
-    }
-
-    /**
-     * Get the value of sessionKey
-     *
-     * @return  string
-     */
-    public function getSessionKey()
-    {
-        return $this->sessionKey;
-    }
-
-    /**
-     * Set the value of sessionKey
-     *
-     * @param  string  $sessionKey
-     *
-     * @return  self
-     */
-    public function setSessionKey(string $sessionKey)
-    {
-        $this->sessionKey = $sessionKey;
-
-        return $this;
-    }
-
-    /**
-     * Get the value of jwtSecureKey
-     *
-     * @return  string
-     */
-    public function getJwtSecureKey()
-    {
-        return $this->jwtSecureKey;
-    }
-
-    /**
-     * Set the value of jwtSecureKey
-     *
-     * @param  string  $jwtSecureKey
-     *
-     * @return  self
-     */
-    public function setJwtSecureKey(string $jwtSecureKey)
-    {
-        $this->jwtSecureKey = $jwtSecureKey;
-
-        return $this;
-    }
-
-    /**
-     * Get the value of jwtExpirationTimeInSeconds
-     */
-    public function getjwtExpirationTimeInSeconds()
-    {
-        return $this->jwtExpirationTimeInSeconds;
-    }
-
-    /**
-     * Set the value of jwtExpirationTimeInSeconds
-     *
-     * @return  self
-     */
-    public function setjwtExpirationTimeInSeconds($jwtExpirationTimeInSeconds)
-    {
-        $this->jwtExpirationTimeInSeconds = $jwtExpirationTimeInSeconds;
-
-        return $this;
-    }
     protected function userToSession(User $user): AuthSession
     {
         $iss = $this->getISS();
@@ -534,7 +564,7 @@ class AuthService implements IAuthService
     }
     protected function getISS()
     {
-        return $_SERVER["SERVER_NAME"];
+        return $this->iss;
     }
 
     protected function getUserRoles(User $user): array

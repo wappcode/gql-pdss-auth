@@ -22,5 +22,6 @@ interface IAuthService
     public function hasAllPermissions(array $resources, array $permission, ?array $scopes = null): bool;
     public function getRoles(): array;
     public function getSession(): ?AuthSession;
-    public function setSession(AuthSession $session): void;
+    public function getAuthId(): ?string;
+    public function getNewJWT(): ?string;
 }

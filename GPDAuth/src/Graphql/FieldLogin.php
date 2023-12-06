@@ -53,6 +53,7 @@ class FieldLogin
                 $result = [
                     'data' => $data,
                     'permissions' => $permissions,
+                    'roles' => $data["roles"],
                     'jwt' => $token
                 ];
                 return $result;

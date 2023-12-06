@@ -23,6 +23,9 @@ class TypeFactorySessionData
                 'data' => [
                     'type' => Type::nonNull($serviceManager->get(TypeFactoryAuthSession::NAME)),
                 ],
+                'roles' => [
+                    'type' => Type::listOf(Type::string())
+                ],
                 'permissions' => [
                     'type' => Type::nonNull(Type::listOf($serviceManager->get(TypeSessionDataPermission::class))),
                 ],

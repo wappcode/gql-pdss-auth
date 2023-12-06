@@ -338,6 +338,7 @@ class AuthSession
             if ($item instanceof DateTime) {
                 return $item->getTimestamp();
             }
+            return $item;
         }, $data);
         return $data;
     }

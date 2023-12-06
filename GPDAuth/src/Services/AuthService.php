@@ -124,6 +124,9 @@ class AuthService implements IAuthService
     protected function loginJWT()
     {
         $jwt = AuthJWTManager::retriveJWT();
+        if (empty($jwt)) {
+            return;
+        }
         $jwtData = AuthJWTManager::getJWTData($jwt, $this->jwtSecureKey, $this->jwtAlgoritm);
         if (empty($jwtData)) {
             return;
@@ -143,6 +146,9 @@ class AuthService implements IAuthService
     protected function loginSession()
     {
         $username = $_SESSION[$this->sessionKey];
+        if (empty($username)) {
+            return;
+        }
         $user = $this->findUser($username);
         if (!($user instanceof User)) {
             return;

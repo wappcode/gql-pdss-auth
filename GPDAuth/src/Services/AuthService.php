@@ -15,6 +15,7 @@ use GPDAuth\Library\AuthJWTManager;
 use GPDAuth\Library\PasswordManager;
 use GPDAuth\Library\InvalidUserException;
 use GPDAuth\Models\AuthSessionUser;
+use GPDCore\Library\GQLException;
 
 @session_start();
 class AuthService implements IAuthService
@@ -96,8 +97,6 @@ class AuthService implements IAuthService
         $this->jwtExpirationTimeInSeconds = 1200; // 20 minutos
         $this->authMethod = $authMethod;
         $this->iss = $iss;
-        // Se inicializa en el constructor ya que solo carga los datos del usuario no lanza excepciones de autentificación
-        $this->initSession();
     }
     /**
      *
@@ -113,7 +112,8 @@ class AuthService implements IAuthService
             throw new InvalidUserException('Invalid username and password');
         }
         $session = $this->userToSession($user);
-        $this->setPermissions($session->getRoles(), $user->getId());
+        $roles = $session->getRoles() ?? [];
+        $this->setPermissions($roles, $user->getId());
         $this->setSession($session);
     }
 
@@ -341,7 +341,7 @@ class AuthService implements IAuthService
      *
      * @return void
      */
-    protected function initSession()
+    public function initSession()
     {
         if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT) {
             $this->loginJWT();
@@ -369,20 +369,28 @@ class AuthService implements IAuthService
         if (empty($jwt)) {
             return;
         }
-        $jwtData = AuthJWTManager::getJWTData($jwt, $this->jwtSecureKey, $this->jwtAlgoritm);
-        if (empty($jwtData)) {
-            return;
+        if (empty($this->jwtAlgoritm) || empty($this->jwtSecureKey)) {
+            throw new Exception("Invalid JWT configuration. SecureKey or Algoritm are missing");
         }
-        $session = new AuthSession();
-        $session->fillFromArray($jwtData);
-        $userId = null;
-        // busca al usuario siempre y cuando se el mismo idprovider
-        if ($session->getIss() === $this->getISS()) {
-            $user = $this->findUser($session->getSub());
-            $userId = ($user instanceof User) ? $user->getId() : null;
+        try {
+            $jwtData = AuthJWTManager::getJWTData($jwt, $this->jwtSecureKey, $this->jwtAlgoritm);
+            if (empty($jwtData)) {
+                return;
+            }
+            $session = new AuthSession();
+            $session->fillFromArray($jwtData);
+            $userId = null;
+            // busca al usuario siempre y cuando se el mismo idprovider
+            if ($session->getIss() === $this->getISS()) {
+                $user = $this->findUser($session->getSub());
+                $userId = ($user instanceof User) ? $user->getId() : null;
+            }
+            $roles = $session->getRoles() ?? [];
+            $this->setPermissions($roles, $userId);
+            $this->setSession($session);
+        } catch (Exception $e) {
+            $this->clearSession();
         }
-        $this->setPermissions($session->getRoles(), $userId);
-        $this->setSession($session);
     }
 
     protected function loginSession()
@@ -396,7 +404,8 @@ class AuthService implements IAuthService
             return;
         }
         $session = $this->userToSession($user);
-        $this->setPermissions($session->getRoles(), $user->getId());
+        $roles = $session->getRoles() ?? [];
+        $this->setPermissions($roles, $user->getId());
         $this->setSession($session);
     }
 
@@ -406,6 +415,7 @@ class AuthService implements IAuthService
         $this->permissions = null;
         $this->roles = null;
         $this->newJWT = null;
+        $this->user = null;
     }
 
 

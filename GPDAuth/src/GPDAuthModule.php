@@ -60,6 +60,7 @@ class GPDAuthModule extends AbstractModule
                     $authService->setJwtAlgoritm($config->get(AuthConfig::JWT_ALGORITHM_KEY));
                     $authService->setjwtExpirationTimeInSeconds($config->get(AuthConfig::JWT_EXPIRATION_TIME_KEY));
                     $authService->setJwtSecureKey($config->get(AuthConfig::JWT_SECURE_KEY));
+                    $authService->initSession();
                     return $authService;
                 },
 

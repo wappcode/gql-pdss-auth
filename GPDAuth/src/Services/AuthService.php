@@ -14,8 +14,8 @@ use GPDAuth\Library\IAuthService;
 use GPDAuth\Library\AuthJWTManager;
 use GPDAuth\Library\PasswordManager;
 use GPDAuth\Library\InvalidUserException;
+use GPDAuth\Models\AuthSessionPermission;
 use GPDAuth\Models\AuthSessionUser;
-use GPDCore\Library\GQLException;
 
 @session_start();
 class AuthService implements IAuthService
@@ -113,8 +113,8 @@ class AuthService implements IAuthService
         }
         $session = $this->userToSession($user);
         $roles = $session->getRoles() ?? [];
-        $this->setPermissions($roles, $user->getId());
         $this->setSession($session);
+        $this->setPermissionsFromDB($roles, $user->getId());
     }
 
     /**
@@ -166,7 +166,7 @@ class AuthService implements IAuthService
     public function hasPermission(string $resource, string $permissionValue, ?string $scope = null): bool
     {
         $permission = $this->findPermission($resource, $permissionValue, $scope);
-        $permissionAccess = $permission["access"] ?? Permission::DENY;
+        $permissionAccess = ($permission instanceof AuthSessionPermission) ? $permission->getAccess() : Permission::DENY;
         return $permissionAccess === Permission::ALLOW;
     }
     public function hasSomePermissions(array $resources, array $permissionsValues, ?array $scopes = null): bool
@@ -220,11 +220,33 @@ class AuthService implements IAuthService
     }
     public function getRoles(): array
     {
-        return $this->getSession()->getRoles();
+        return $this->getSession()->getRoles() ?? [];
+    }
+    /**
+     * Establece los roles
+     *
+     * @param array $roles
+     * @return AuthService
+     */
+    public function setRoles(array $roles): AuthService
+    {
+        $this->roles = $roles;
+        return $this;
     }
     public function getPermissions(): array
     {
         return $this->permissions ?? [];
+    }
+    /**
+     * Establece los permisos
+     *
+     * @param array $permissions [AuthSessionPermission]
+     * @return AuthService
+     */
+    public function setPermissions(array $permissions): AuthService
+    {
+        $this->permissions = $permissions;
+        return $this;
     }
 
     public function getAuthId(): ?string
@@ -386,8 +408,8 @@ class AuthService implements IAuthService
                 $userId = ($user instanceof User) ? $user->getId() : null;
             }
             $roles = $session->getRoles() ?? [];
-            $this->setPermissions($roles, $userId);
             $this->setSession($session);
+            $this->setPermissionsFromDB($roles, $userId);
         } catch (Exception $e) {
             $this->clearSession();
         }
@@ -405,8 +427,8 @@ class AuthService implements IAuthService
         }
         $session = $this->userToSession($user);
         $roles = $session->getRoles() ?? [];
-        $this->setPermissions($roles, $user->getId());
         $this->setSession($session);
+        $this->setPermissionsFromDB($roles, $user->getId());
     }
 
     protected function clearSession(): void
@@ -422,7 +444,7 @@ class AuthService implements IAuthService
     /**
      * Realiza el login asignando directamente al usuario
      */
-    protected function setSession(AuthSession $session): void
+    public function setSession(AuthSession $session): AuthService
     {
         $this->clearSession();
         $this->session = $session;
@@ -433,17 +455,19 @@ class AuthService implements IAuthService
         if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
             $_SESSION[$this->sessionKey] = $session->getSub();
         }
+        return $this;
     }
 
 
     /**
-     * Sets the user permissions
-     *
+     * Sets the user permissions from database
+     * Establece los permisos del usuario obtenidos desde los registros de la base de datos
+     * Esta función debe llamarse despues de setSession o clearSession ya que estos métodos limpia todos los datos de la sesión y los permisos
      * @param array $rolesCodes [string]
      * @param mixed $userId int|string
      * @return array  Permission as array
      */
-    protected function setPermissions(array $rolesCodes, $userId = null): array
+    protected function setPermissionsFromDB(array $rolesCodes, $userId = null): array
     {
         if (!is_array($this->permissions)) {
             $qb = $this->entityManager->createQueryBuilder()->from(Permission::class, 'permission')
@@ -463,10 +487,16 @@ class AuthService implements IAuthService
             }
             $qb->setParameter(':rolesCodes', $rolesCodes)
                 ->orderBy('permission.updated', 'desc');
-            $permissions = $qb->getQuery()->getArrayResult() ?? [];
-            $permissions = $this->sortPermissions($permissions);
-            $permissions = $this->standardizePermissions($permissions);
-            $this->permissions = $permissions;
+            $permissions = $qb->getQuery()->getResult() ?? [];
+            $permissions = $this->sortDBPermissions($permissions);
+            $this->permissions = array_map(function (Permission $permissionObj) {
+                $resource = $permissionObj->getResource()->getCode();
+                $access = $permissionObj->getAccess();
+                $value = $permissionObj->getValue();
+                $scope = $permissionObj->getScope();
+                $permission = new AuthSessionPermission($resource, $access, $value, $scope);
+                return $permission;
+            }, $permissions);
         }
         return $this->permissions;
     }
@@ -488,22 +518,30 @@ class AuthService implements IAuthService
     }
 
     /**
-     * Ordena los permisos dando prioridad a usuario, roles y al final permisos globales
+     * Ordena los permisos que provienen de la base de datos. Da prioridad a usuario, roles y al final permisos globales
      * el orden es descendiente por fecha de actualización
      */
-    protected function sortPermissions(array $permissions): array
+    protected function sortDBPermissions(array $permissions): array
     {
 
-        usort($permissions, function ($a, $b) {
-            $userA = isset($a["user"]["id"]) ? -1 : 1;
-            $userB = isset($b["user"]["id"]) ? -1 : 1;
+        usort($permissions, function (Permission $a, Permission $b) {
+            // ordena primero los permisos que son de usuario
+            $userA = ($a->getUser() instanceof User) ? -1 : 1;
+            $userB = ($b->getUser() instanceof User) ? -1 : 1;
             if ($userA != $userB) {
                 return $userA <=> $userB;
             }
-            /** @var DateTimeInterface */
-            $updatedA = ($a["updated"] instanceof DateTimeInterface) ? $a["updated"] : new DateTime($a["updated"]);
-            /** @var DateTimeInterface */
-            $updatedB = ($b["updated"] instanceof DateTimeInterface) ? $b["updated"] : new DateTime($b["updated"]);
+            // ordena segundo los permisos que son de roles
+            $roleA = ($a->getRole() instanceof Role) ? -1 : 1;
+            $roleB = ($b->getRole() instanceof Role) ? -1 : 1;
+            if ($roleA != $roleB) {
+                return $roleA <=> $roleB;
+            }
+
+            // ordena al final los permisos por fecha en forma descendente para darle importancia a los últimos
+
+            $updatedA = $a->getUpdated();
+            $updatedB = $b->getUpdated();
             $timeA = $updatedA->getTimestamp();
             $timeB = $updatedB->getTimestamp();
             return $timeB <=> $timeA; // orden descendente por fecha
@@ -512,23 +550,22 @@ class AuthService implements IAuthService
         return $permissions;
     }
 
-    protected function standardizePermissions(array $permissions): array
-    {
-        $standardizedPermissions = array_map(function ($permission) {
-            $permission["resource"] = $permission["resource"]["code"];
-            $permission["role"] = $permission["role"]["code"];
-            return $permission;
-        }, $permissions);
-        return $standardizedPermissions;
-    }
-
-    protected function findPermission(string $resource, string $permissionValue, ?string $scope): ?array
+    /**
+     * Localiza un determinado permiso
+     *
+     * @param string $resource
+     * @param string $permissionValue
+     * @param string|null $scope
+     * @return AuthSessionPermission|null
+     */
+    protected function findPermission(string $resource, string $permissionValue, ?string $scope): ?AuthSessionPermission
     {
         $result = null;
         $permissions = $this->getPermissions();
+        /** @var AuthSessionPermission */
         foreach ($permissions as $permission) {
-            if ($resource != $permission["resource"] || ($permissionValue != $permission["value"] && $permission["value"] != Permission::ALL)) continue;
-            if ($scope === null || $scope == $permission["scope"]) {
+            if ($resource != $permission->getResource() || ($permissionValue != $permission->getValue() && $permission->getValue() != Permission::ALL)) continue;
+            if ($scope === null || $scope == $permission->getScope()) {
                 $result = $permission;
                 break;
             }

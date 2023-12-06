@@ -47,11 +47,11 @@ class FieldLogin
             $auth = $context->getServiceManager()->get(AuthService::class);
             try {
                 $auth->login($username, $password);
-                $user = $auth->getUser();
+                $data = $auth->getSession()->toArray();
                 $permissions = $auth->getPermissions();
-                $token = $auth->getCurrentJWT();
+                $token = $auth->getNewJWT();
                 $result = [
-                    'user' => $user,
+                    'data' => $data,
                     'permissions' => $permissions,
                     'jwt' => $token
                 ];

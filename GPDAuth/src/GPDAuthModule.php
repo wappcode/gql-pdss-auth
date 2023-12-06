@@ -5,9 +5,11 @@ namespace GPDAuth;
 use GPDAuth\Graphql\FieldLogin;
 use GPDAuth\Graphql\FieldSignedUser;
 use GPDAuth\Graphql\ResolversUser;
+use GPDAuth\Graphql\TypeFactoryAuthSession;
 use GPDAuth\Graphql\TypeFactorySessionData;
 use GPDAuth\Graphql\TypeSessionDataPermission;
 use GPDAuth\Library\AuthConfig;
+use GPDAuth\Library\IAuthService;
 use GPDAuth\Services\AuthService;
 use GPDCore\Library\AbstractModule;
 use Laminas\ServiceManager\ServiceManager;
@@ -31,6 +33,10 @@ class GPDAuthModule extends AbstractModule
                 TypeSessionDataPermission::NAME => TypeSessionDataPermission::class
             ],
             'factories' => [
+                TypeFactoryAuthSession::NAME => function (ServiceManager $sm) use ($context) {
+                    $type = TypeFactoryAuthSession::create($context);
+                    return $type;
+                },
                 TypeFactorySessionData::NAME => function (ServiceManager $sm) use ($context) {
                     $type = TypeFactorySessionData::create($context);
                     return $type;
@@ -41,11 +47,11 @@ class GPDAuthModule extends AbstractModule
                     $entityManager = $this->context->getEntityManager();
                     $authService = new AuthService(
                         $entityManager,
-                        $config->get(AuthConfig::AUTH_SESSION_KEY),
-                        $config->get(AuthConfig::JWT_SECURE_KEY),
-                        $config->get(AuthConfig::JWT_ALGORITHM_KEY),
-                        $config->get(AuthConfig::JWT_EXPIRATION_TIME_KEY),
+                        $config->get(AuthConfig::AUTH_METHOD_KET),
                     );
+                    $authService->setJwtAlgoritm($config->get(AuthConfig::JWT_ALGORITHM_KEY));
+                    $authService->setjwtExpirationTimeInSeconds($config->get(AuthConfig::JWT_EXPIRATION_TIME_KEY));
+                    $authService->setJwtSecureKey($config->get(AuthConfig::JWT_SECURE_KEY));
                     return $authService;
                 },
 

@@ -65,10 +65,18 @@ class AuthService implements IAuthService
 
     protected $authMethod;
 
+    /**
+     * Nuevo JWT que se utilizara como respuesta de la solicitud
+     *
+     * @var ?string
+     */
+    protected $newJWT = null;
+
+
     public function __construct(
         EntityManager $entityManager,
         string $authMethod = IAuthService::AUTHENTICATION_METHOD_SESSION,
-        ?string $jwtSecureKey
+        ?string $jwtSecureKey = null
     ) {
         $this->entityManager = $entityManager;
         $this->jwtAlgoritm = "HS256";
@@ -152,7 +160,9 @@ class AuthService implements IAuthService
         $this->session = null;
         $this->permissions = null;
         $this->roles = null;
+        $this->newJWT = null;
         $_SESSION[$this->sessionKey] = null;
+        AuthJWTManager::addJWTToHeader("");
     }
 
     /**
@@ -387,8 +397,18 @@ class AuthService implements IAuthService
         $session->setIat(new DateTime());
         $token = AuthJWTManager::createToken($session, $this->jwtSecureKey, $this->jwtAlgoritm);
         AuthJWTManager::addJWTToHeader($token);
+        $this->newJWT = $token;
     }
 
+    /**
+     * Get nuevo JWT que se utilizara como respuesta de la solicitud
+     *
+     * @return  ?string
+     */
+    public function getNewJWT()
+    {
+        return $this->newJWT;
+    }
     /**
      * Get the value of jwtAlgoritm
      *

@@ -1,1 +1,1 @@
-{"version":1,"defects":[],"times":{"InitTest::testOk":0.006}}
+{"version":1,"defects":{"LoginTest::testLogin":4,"EchoProtectedTest::testInvalidToken":3,"EchoProtectedTest::testValidToken":4},"times":{"InitTest::testOk":0.006,"LoginTest::testLogin":0.225,"EchoProtectedTest::testInvalidToken":0.133,"EchoProtectedTest::testValidToken":0.439}}

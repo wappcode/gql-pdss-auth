@@ -50,8 +50,10 @@ class FieldLogin
                 $data = $auth->getSession()->toArray();
                 $permissions = $auth->getPermissions();
                 $token = $auth->getNewJWT();
+                $user = $auth->getUser()->toArray();
                 $result = [
                     'data' => $data,
+                    'user' => $user,
                     'permissions' => $permissions,
                     'roles' => $data["roles"],
                     'jwt' => $token

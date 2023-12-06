@@ -14,6 +14,7 @@ use GPDAuth\Library\IAuthService;
 use GPDAuth\Library\AuthJWTManager;
 use GPDAuth\Library\PasswordManager;
 use GPDAuth\Library\InvalidUserException;
+use GPDAuth\Models\AuthSessionUser;
 
 @session_start();
 class AuthService implements IAuthService
@@ -23,6 +24,13 @@ class AuthService implements IAuthService
      * @var ?AuthSession
      */
     protected $session;
+
+    /**
+     * Usuario de la sesión
+     *
+     * @var ?AuthSessionUser
+     */
+    protected $user;
     /**
      *
      * @var array
@@ -131,6 +139,10 @@ class AuthService implements IAuthService
     public function getSession(): ?AuthSession
     {
         return $this->session;
+    }
+    public function getUser(): ?AuthSessionUser
+    {
+        return $this->user;
     }
     public function hasRole(string $role): bool
     {
@@ -404,6 +416,7 @@ class AuthService implements IAuthService
     {
         $this->clearSession();
         $this->session = $session;
+        $this->user = $this->sessionToUser($this->session);
         if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
             $this->updateJWT();
         }
@@ -576,5 +589,19 @@ class AuthService implements IAuthService
             $roles[] = $role->getCode();
         }
         return $roles;
+    }
+    protected function sessionToUser(?AuthSession $session): ?AuthSessionUser
+    {
+        if (!($session instanceof AuthSession)) {
+            return null;
+        }
+        $user = new AuthSessionUser();
+        $user->setFullName($session->getName())
+            ->setFirstName($session->getGiven_name())
+            ->setLastName($session->getFamily_name())
+            ->setEmail($session->getEmail())
+            ->setPicture($session->getPicture())
+            ->setUsername($session->getSub());
+        return $user;
     }
 }

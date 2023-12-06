@@ -340,7 +340,14 @@ class AuthSession
             }
             return $item;
         }, $data);
-        return $data;
+        // quita las propiedades que no tienen valor
+        $dataStandardize = [];
+        foreach ($data as $key => $value) {
+            if (!empty($value)) {
+                $dataStandardize[$key] = $value;
+            }
+        }
+        return $dataStandardize;
     }
     public function fillFromArray(array $data)
     {

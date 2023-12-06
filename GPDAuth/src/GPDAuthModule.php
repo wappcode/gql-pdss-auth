@@ -6,6 +6,7 @@ use GPDAuth\Graphql\FieldLogin;
 use GPDAuth\Graphql\FieldSignedUser;
 use GPDAuth\Graphql\ResolversUser;
 use GPDAuth\Graphql\TypeFactoryAuthSession;
+use GPDAuth\Graphql\TypeFactoryAuthSessionUser;
 use GPDAuth\Graphql\TypeFactorySessionData;
 use GPDAuth\Graphql\TypeSessionDataPermission;
 use GPDAuth\Library\AuthConfig;
@@ -39,6 +40,10 @@ class GPDAuthModule extends AbstractModule
                 },
                 TypeFactorySessionData::NAME => function (ServiceManager $sm) use ($context) {
                     $type = TypeFactorySessionData::create($context);
+                    return $type;
+                },
+                TypeFactoryAuthSessionUser::NAME => function (ServiceManager $sm) use ($context) {
+                    $type = TypeFactoryAuthSessionUser::create($context);
                     return $type;
                 },
 

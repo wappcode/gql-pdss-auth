@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "23d830d3d4bb71525cb06d9d960a6adf",
+    "content-hash": "8e2f3f581bdf9ef3d64979776d6093b4",
     "packages": [
         {
             "name": "firebase/php-jwt",
-            "version": "v6.9.0",
+            "version": "v6.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/firebase/php-jwt.git",
-                "reference": "f03270e63eaccf3019ef0f32849c497385774e11"
+                "reference": "a49db6f0a5033aef5143295342f1c95521b075ff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/firebase/php-jwt/zipball/f03270e63eaccf3019ef0f32849c497385774e11",
-                "reference": "f03270e63eaccf3019ef0f32849c497385774e11",
+                "url": "https://api.github.com/repos/firebase/php-jwt/zipball/a49db6f0a5033aef5143295342f1c95521b075ff",
+                "reference": "a49db6f0a5033aef5143295342f1c95521b075ff",
                 "shasum": ""
             },
             "require": {
@@ -65,39 +65,9 @@
             ],
             "support": {
                 "issues": "https://github.com/firebase/php-jwt/issues",
-                "source": "https://github.com/firebase/php-jwt/tree/v6.9.0"
+                "source": "https://github.com/firebase/php-jwt/tree/v6.10.0"
             },
-            "time": "2023-10-05T00:24:42+00:00"
-        },
-        {
-            "name": "wappcode/graphql-basic-client",
-            "version": "1.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/wappcode/graphql-basic-client.git",
-                "reference": "a95a741525164ffea152444b67b90bc73fc927d1"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/wappcode/graphql-basic-client/zipball/a95a741525164ffea152444b67b90bc73fc927d1",
-                "reference": "a95a741525164ffea152444b67b90bc73fc927d1",
-                "shasum": ""
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^9"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "GQLBasicClient\\": "GQLBasicClient/src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "support": {
-                "issues": "https://github.com/wappcode/graphql-basic-client/issues",
-                "source": "https://github.com/wappcode/graphql-basic-client/tree/1.0.0"
-            },
-            "time": "2023-07-12T21:59:09+00:00"
+            "time": "2023-12-01T16:26:39+00:00"
         }
     ],
     "packages-dev": [
@@ -1984,16 +1954,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "9.6.13",
+            "version": "9.6.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "f3d767f7f9e191eab4189abe41ab37797e30b1be"
+                "reference": "05017b80304e0eb3f31d90194a563fd53a6021f1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/f3d767f7f9e191eab4189abe41ab37797e30b1be",
-                "reference": "f3d767f7f9e191eab4189abe41ab37797e30b1be",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/05017b80304e0eb3f31d90194a563fd53a6021f1",
+                "reference": "05017b80304e0eb3f31d90194a563fd53a6021f1",
                 "shasum": ""
             },
             "require": {
@@ -2067,7 +2037,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.6.13"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.6.15"
             },
             "funding": [
                 {
@@ -2083,7 +2053,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-09-19T05:39:22+00:00"
+            "time": "2023-12-01T16:55:19+00:00"
         },
         {
             "name": "psr/cache",
@@ -4504,6 +4474,36 @@
                 "source": "https://github.com/wappcode/gql-pdss-lib/tree/2.2.0"
             },
             "time": "2023-11-27T21:44:29+00:00"
+        },
+        {
+            "name": "wappcode/graphql-basic-client",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/wappcode/graphql-basic-client.git",
+                "reference": "306229533c35747be29aa835a67baadeaf5243de"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/wappcode/graphql-basic-client/zipball/306229533c35747be29aa835a67baadeaf5243de",
+                "reference": "306229533c35747be29aa835a67baadeaf5243de",
+                "shasum": ""
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "GQLBasicClient\\": "GQLBasicClient/src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "support": {
+                "issues": "https://github.com/wappcode/graphql-basic-client/issues",
+                "source": "https://github.com/wappcode/graphql-basic-client/tree/1.0.1"
+            },
+            "time": "2023-12-06T18:44:53+00:00"
         },
         {
             "name": "wappcode/pdss-utilities",

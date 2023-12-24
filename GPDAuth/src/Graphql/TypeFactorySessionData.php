@@ -2,10 +2,10 @@
 
 namespace GPDAuth\Graphql;
 
-use GPDAuth\Entities\User;
+use GraphQL\Type\Definition\Type;
 use GPDCore\Library\IContextService;
 use GraphQL\Type\Definition\ObjectType;
-use GraphQL\Type\Definition\Type;
+use GPDAuth\Graphql\TypeFactoryAuthSessionUser;
 
 class TypeFactorySessionData
 {
@@ -20,8 +20,14 @@ class TypeFactorySessionData
             'name' => $name,
             'description' => $description,
             'fields' => [
+                'data' => [
+                    'type' => Type::nonNull($serviceManager->get(TypeFactoryAuthSession::NAME)),
+                ],
                 'user' => [
-                    'type' => Type::nonNull($types->getOutput(User::class))
+                    'type' => Type::nonNull($serviceManager->get(TypeFactoryAuthSessionUser::NAME))
+                ],
+                'roles' => [
+                    'type' => Type::listOf(Type::string())
                 ],
                 'permissions' => [
                     'type' => Type::nonNull(Type::listOf($serviceManager->get(TypeSessionDataPermission::class))),

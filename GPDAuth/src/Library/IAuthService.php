@@ -2,10 +2,15 @@
 
 namespace GPDAuth\Library;
 
-use GPDAuth\Entities\User;
+use GPDAuth\Models\AuthSession;
 
 interface IAuthService
 {
+    const AUTHENTICATION_METHOD_SESSION = 'SESSION';
+    const AUTHENTICATION_METHOD_JWT = 'JWT';
+    const AUTHENTICATION_METHOD_JWT_OR_SESSION = 'JWT_OR_SESSION';
+    const AUTHENTICATION_METHOD_SESSION_OR_JWT = 'SESSION_OR_JWT';
+
     public function login(string $username, string $password);
     public function logout(): void;
     public function isSigned(): bool;
@@ -16,6 +21,7 @@ interface IAuthService
     public function hasSomePermissions(array $resources, array $permission, ?array $scopes = null): bool;
     public function hasAllPermissions(array $resources, array $permission, ?array $scopes = null): bool;
     public function getRoles(): array;
-    public function getUser(): ?array;
-    public function setUser(array $user): void;
+    public function getSession(): ?AuthSession;
+    public function getAuthId(): ?string;
+    public function getNewJWT(): ?string;
 }

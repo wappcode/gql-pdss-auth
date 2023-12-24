@@ -12,6 +12,7 @@ services:
     platform: linux/x86_64
     volumes:
       - ~/opt/dockerMysql8.0.28:/var/lib/mysql
+      - ./commands:/home/commands
     healthcheck:
             test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
             timeout: 5s

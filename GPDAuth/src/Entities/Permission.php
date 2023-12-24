@@ -54,19 +54,23 @@ class Permission extends AbstractEntityModel
     protected $role;
 
     /**
+     * Tipo de acceso ALLOW | DENY
      * @ORM\Column(type="string", name="permission_access", nullable=false, length=255)
      * @var string
      */
     protected $access;
 
     /**
+     * Solo se asigna un permiso a la vez.
+     * Si se requieren otros permisos se debe crear un registro para cada uno o utilizar Permission ALL para que aplique a todos
      * @ORM\Column(type="string", name="permision_value", nullable=false, length=255)
      * @var string
      */
     protected $value;
 
     /**
-     * Los valores se guardan como cadenas separadas por coma
+     * Solo se asigna un scope a la vez
+     * Si se requieren diferentes scopes debe haber un registro para cada scope o utlizar SCOPE ALL para que se asigne a todos los scopes
      * @ORM\Column(type="string", nullable=true)
      * @var string
      */

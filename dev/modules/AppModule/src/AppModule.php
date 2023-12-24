@@ -2,7 +2,11 @@
 
 namespace AppModule;
 
+use Exception;
+use GPDAuth\Services\AuthService;
 use GPDCore\Library\AbstractModule;
+use GPDCore\Library\GQLException;
+use GPDCore\Library\IContextService;
 use GraphQL\Type\Definition\Type;
 
 class AppModule extends AbstractModule
@@ -52,6 +56,23 @@ class AppModule extends AbstractModule
                     return $args["message"];
                 }
             ],
+            'echoProtected' => [
+                'type' => Type::nonNull(Type::string()),
+                'args' => [
+                    'message' => Type::nonNull(Type::string()),
+                ],
+                'resolve' => function ($root, $args, IContextService $context, $info) {
+                    /** @var AuthService */
+                    $auth = $context->getServiceManager()->get(AuthService::class);
+                    if (!$auth->isSigned()) {
+                        throw new GQLException("No autorizado");
+                    }
+                    $user = $auth->getUser();
+                    $msg = $args["message"];
+                    $message = sprintf("%s -> Usuario: %s - %s", $msg, $user->getFullName(), $user->getUsername());
+                    return $message;
+                }
+            ]
         ];
     }
     /**

@@ -417,7 +417,7 @@ class AuthService implements IAuthService
 
     protected function loginSession()
     {
-        $username = $_SESSION[$this->sessionKey];
+        $username = $_SESSION[$this->sessionKey] ?? null;
         if (empty($username)) {
             return;
         }

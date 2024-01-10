@@ -8,6 +8,7 @@ use GPDCore\Services\ContextService;
 use Laminas\ServiceManager\ServiceManager;
 
 require_once __DIR__ . "/../../vendor/autoload.php";
+error_reporting(E_ALL);
 $configFile = __DIR__ . "/../config/doctrine.local.php";
 $cacheDir = __DIR__ . "/../data/DoctrineORMModule";
 $enviroment = getenv("APP_ENV");

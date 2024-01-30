@@ -404,6 +404,10 @@ class AuthService implements IAuthService
             $userId = null;
             // busca al usuario siempre y cuando se el mismo idprovider
             if ($session->getIss() === $this->getISS()) {
+                $sub = $session->getSub();
+                if (empty($sub)) {
+                    throw new Exception("Sub value is required");
+                }
                 $user = $this->findUser($session->getSub());
                 $userId = ($user instanceof User) ? $user->getId() : null;
             }

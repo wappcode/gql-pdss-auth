@@ -2,11 +2,9 @@
 
 namespace GPDAuth\Graphql;
 
-use Exception;
-use GPDAuth\Entities\User;
 use GPDAuth\Library\NoSignedException;
+use GPDAuth\Models\AuthSessionPermission;
 use GPDAuth\Services\AuthService;
-use GPDCore\Library\GQLException;
 use GPDCore\Library\IContextService;
 
 class FieldSignedUser
@@ -34,16 +32,21 @@ class FieldSignedUser
         return function ($root, array $args, IContextService $context, $info) {
             /** @var AuthService */
             $auth = $context->getServiceManager()->get(AuthService::class);
-            $user = $auth->getUser();
+            $user = $auth->getUser()->toArray();
             if (empty($user)) {
                 throw new NoSignedException();
             }
-            $permissions = $auth->getPermissions();
-            $token = $auth->getCurrentJWT();
+            $data = $auth->getSession()->toArray();
+            $permissions = array_map(function (AuthSessionPermission $permission) {
+                return $permission->toArray();
+            }, $auth->getPermissions());
+            $token = $auth->getNewJWT();
             return [
-                "user" => $user,
-                "permissions" => $permissions,
-                "jwt" => $token
+                'data' => $data,
+                'user' => $user,
+                'permissions' => $permissions,
+                'roles' => $data["roles"] ?? [],
+                'jwt' => $token
             ];
         };
     }

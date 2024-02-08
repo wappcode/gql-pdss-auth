@@ -90,7 +90,7 @@ class GPDAuthModule extends AbstractModule
     {
         return [
             "login" => FieldLogin::get($this->context, $proxy = null),
-            "getSignedUser" => FieldSignedUser::get($this->context, $proxy = null)
+            "getSessionData" => FieldSignedUser::get($this->context, $proxy = null)
         ];
     }
     /**

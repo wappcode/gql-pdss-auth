@@ -24,7 +24,8 @@ class FieldSignedUser
         $sessionDataType = $serviceManager->get(TypeFactorySessionData::NAME);
         return [
             "type" => $sessionDataType,
-            "resolve" => $proxyResolve
+            "resolve" => $proxyResolve,
+            "description" => "Recover session data of signed user"
         ];
     }
     private static function createResolve(): callable

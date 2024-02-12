@@ -163,12 +163,58 @@ class AuthService implements IAuthService
         return count($intersect) == count($intersectUnique);
         return true;
     }
+    /**
+     * Localiza un determinado permiso con acceso autorizado
+     * Los permisos con acceso denegado retornan null
+     *
+     * @param string $resource
+     * @param string $permissionValue
+     * @return AuthSessionPermission|null
+     */
+    public function findPermission(string $resource, string $permissionValue): ?AuthSessionPermission
+    {
+        $result = null;
+        $permissions = $this->getPermissions();
+        /** @var AuthSessionPermission */
+        foreach ($permissions as $permission) {
+            if ($resource != $permission->getResource() || ($permissionValue != $permission->getValue() && $permission->getValue() != Permission::ALL)) continue;
+            if ($permission->getAccess() == Permission::ALLOW) {
+                return $permission;
+            } else {
+                return null;
+            }
+        }
+        return $result;
+    }
+    /**
+     * Determina si el usuario tiene permiso para un determinado recurso
+     * Solo se consideran permisos con acceso autorizado
+     *
+     * @param string $resource
+     * @param string $permissionValue
+     * @param string|null $scope
+     * @return boolean
+     */
     public function hasPermission(string $resource, string $permissionValue, ?string $scope = null): bool
     {
         $permission = $this->findPermission($resource, $permissionValue, $scope);
-        $permissionAccess = ($permission instanceof AuthSessionPermission) ? $permission->getAccess() : Permission::DENY;
-        return $permissionAccess === Permission::ALLOW;
+        if (!($permission instanceof AuthSessionPermission)) {
+            return false;
+        }
+        if (!empty($scope) && $scope != $permission->getScope()) {
+            return false;
+        }
+        return $permission->getAccess() === Permission::ALLOW;
     }
+    /**
+     * Determina si el usuario tiene algun permiso para alguno de los recursos
+     * Solo se consideran permisos con acceso autorizado
+     *
+     * @param array $resources
+     * @param array $permissionsValues
+     * @param array|null $scopes
+     * @return boolean
+     */
     public function hasSomePermissions(array $resources, array $permissionsValues, ?array $scopes = null): bool
     {
         $result = false;
@@ -192,6 +238,15 @@ class AuthService implements IAuthService
         }
         return $result;
     }
+    /**
+     * Determina si el usuario tiene todos los permisos para todos los recursos
+     * Solo se consideran permisos con acceso autorizado
+     *
+     * @param array $resources
+     * @param array $permissionsValues
+     * @param array|null $scopes
+     * @return boolean
+     */
     public function hasAllPermissions(array $resources, array $permissionsValues, ?array $scopes = null): bool
     {
         if (empty($resources) || empty($permissionsValues)) {
@@ -554,28 +609,7 @@ class AuthService implements IAuthService
         return $permissions;
     }
 
-    /**
-     * Localiza un determinado permiso
-     *
-     * @param string $resource
-     * @param string $permissionValue
-     * @param string|null $scope
-     * @return AuthSessionPermission|null
-     */
-    protected function findPermission(string $resource, string $permissionValue, ?string $scope): ?AuthSessionPermission
-    {
-        $result = null;
-        $permissions = $this->getPermissions();
-        /** @var AuthSessionPermission */
-        foreach ($permissions as $permission) {
-            if ($resource != $permission->getResource() || ($permissionValue != $permission->getValue() && $permission->getValue() != Permission::ALL)) continue;
-            if ($scope === null || $scope == $permission->getScope()) {
-                $result = $permission;
-                break;
-            }
-        }
-        return $result;
-    }
+
     protected function findUser(string $username): ?User
     {
         $qb = $this->entityManager->createQueryBuilder()->from(User::class, 'user')

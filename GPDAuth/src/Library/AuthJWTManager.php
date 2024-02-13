@@ -2,12 +2,9 @@
 
 namespace GPDAuth\Library;
 
-use DateTime;
-use DateTimeImmutable;
 use Exception;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use GPDAuth\Models\AuthSession;
 
 class AuthJWTManager
 {
@@ -71,14 +68,14 @@ class AuthJWTManager
     /**
      * Create a JWT 
      *
-     * @param AuthSession $session
+     * @param array $session
      * @param string $secureKey
      * @param string $algorithm
      * @return string
      */
-    public static function createToken(AuthSession $session,  string $secureKey, string $algorithm = 'HS256'): string
+    public static function createToken(array $session,  string $secureKey, string $algorithm = 'HS256'): string
     {
-        $payload = $session->toArray();
+        $payload = $session;
         $jwt = JWT::encode($payload, $secureKey, $algorithm);
         return $jwt;
     }

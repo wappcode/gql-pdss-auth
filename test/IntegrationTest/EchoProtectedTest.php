@@ -55,7 +55,7 @@ class EchoProtectedTest extends TestCase
       "message" => $message,
     ];
     $headers = [
-      "Authorization:Bearer " . $jwt
+      "Authorization: Bearer " . $jwt
     ];
     $result = $this->gqlClient->execute($query, $variables, $headers);
     return $result;

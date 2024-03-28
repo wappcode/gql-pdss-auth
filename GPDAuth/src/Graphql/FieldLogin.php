@@ -7,7 +7,6 @@ use GPDAuth\Services\AuthService;
 use GPDCore\Library\GQLException;
 use GraphQL\Type\Definition\Type;
 use GPDCore\Library\IContextService;
-use GPDAuth\Graphql\TypeFactorySessionData;
 use GPDAuth\Models\AuthSessionPermission;
 
 class FieldLogin
@@ -48,14 +47,13 @@ class FieldLogin
             $auth = $context->getServiceManager()->get(AuthService::class);
             try {
                 $auth->login($username, $password);
-                $data = $auth->getSession()->toArray();
+                $data = $auth->getSession();
                 $permissions = array_map(function (AuthSessionPermission $permission) {
                     return $permission->toArray();
                 }, $auth->getPermissions());
                 $token = $auth->getNewJWT();
                 $user = $auth->getUser()->toArray();
                 $result = [
-                    'data' => $data,
                     'user' => $user,
                     'permissions' => $permissions,
                     'roles' => $data["roles"] ?? [],

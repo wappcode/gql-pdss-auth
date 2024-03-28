@@ -20,9 +20,6 @@ class TypeFactorySessionData
             'name' => $name,
             'description' => $description,
             'fields' => [
-                'data' => [
-                    'type' => Type::nonNull($serviceManager->get(TypeFactoryAuthSession::NAME)),
-                ],
                 'user' => [
                     'type' => Type::nonNull($serviceManager->get(TypeFactoryAuthSessionUser::NAME))
                 ],

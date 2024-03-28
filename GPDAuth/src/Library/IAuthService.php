@@ -2,7 +2,6 @@
 
 namespace GPDAuth\Library;
 
-use GPDAuth\Models\AuthSession;
 
 interface IAuthService
 {
@@ -21,7 +20,8 @@ interface IAuthService
     public function hasSomePermissions(array $resources, array $permission, ?array $scopes = null): bool;
     public function hasAllPermissions(array $resources, array $permission, ?array $scopes = null): bool;
     public function getRoles(): array;
-    public function getSession(): ?AuthSession;
+    public function getSession(): ?array;
     public function getAuthId(): ?string;
     public function getNewJWT(): ?string;
+    public function setRenewJWT(bool $renew);
 }

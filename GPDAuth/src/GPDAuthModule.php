@@ -3,17 +3,15 @@
 namespace GPDAuth;
 
 use GPDAuth\Graphql\FieldLogin;
-use GPDAuth\Graphql\FieldSignedUser;
+use GPDAuth\Library\AuthConfig;
+use GPDAuth\Services\AuthService;
 use GPDAuth\Graphql\ResolversUser;
-use GPDAuth\Graphql\TypeFactoryAuthSession;
-use GPDAuth\Graphql\TypeFactoryAuthSessionUser;
+use GPDCore\Library\AbstractModule;
+use GPDAuth\Graphql\FieldSignedUser;
+use Laminas\ServiceManager\ServiceManager;
 use GPDAuth\Graphql\TypeFactorySessionData;
 use GPDAuth\Graphql\TypeSessionDataPermission;
-use GPDAuth\Library\AuthConfig;
-use GPDAuth\Library\IAuthService;
-use GPDAuth\Services\AuthService;
-use GPDCore\Library\AbstractModule;
-use Laminas\ServiceManager\ServiceManager;
+use GPDAuth\Graphql\TypeFactoryAuthSessionUser;
 
 class GPDAuthModule extends AbstractModule
 {
@@ -34,10 +32,6 @@ class GPDAuthModule extends AbstractModule
                 TypeSessionDataPermission::NAME => TypeSessionDataPermission::class
             ],
             'factories' => [
-                TypeFactoryAuthSession::NAME => function (ServiceManager $sm) use ($context) {
-                    $type = TypeFactoryAuthSession::create($context);
-                    return $type;
-                },
                 TypeFactorySessionData::NAME => function (ServiceManager $sm) use ($context) {
                     $type = TypeFactorySessionData::create($context);
                     return $type;

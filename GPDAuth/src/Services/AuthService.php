@@ -4,11 +4,9 @@ namespace GPDAuth\Services;
 
 use DateTime;
 use Exception;
-use DateTimeInterface;
 use GPDAuth\Entities\Role;
 use GPDAuth\Entities\User;
 use Doctrine\ORM\EntityManager;
-use GPDAuth\Models\AuthSession;
 use GPDAuth\Entities\Permission;
 use GPDAuth\Library\IAuthService;
 use GPDAuth\Library\AuthJWTManager;
@@ -22,7 +20,7 @@ class AuthService implements IAuthService
 {
 
     /**
-     * @var ?AuthSession
+     * @var ?array
      */
     protected $session;
 
@@ -84,6 +82,8 @@ class AuthService implements IAuthService
     protected $iss = null;
 
 
+    protected $renewJWT = true;
+
     public function __construct(
         EntityManager $entityManager,
         string $iss,
@@ -112,7 +112,7 @@ class AuthService implements IAuthService
             throw new InvalidUserException('Invalid username and password');
         }
         $session = $this->userToSession($user);
-        $roles = $session->getRoles() ?? [];
+        $roles = $session["roles"] ?? [];
         $this->setSession($session);
         $this->setPermissionsFromDB($roles, $user->getId());
     }
@@ -134,9 +134,9 @@ class AuthService implements IAuthService
     public function isSigned(): bool
     {
         $session = $this->getSession();
-        return ($session instanceof AuthSession && !empty($session->getSub()));
+        return isset($session["sub"]) && !empty($session["sub"]);
     }
-    public function getSession(): ?AuthSession
+    public function getSession(): ?array
     {
         return $this->session;
     }
@@ -163,12 +163,58 @@ class AuthService implements IAuthService
         return count($intersect) == count($intersectUnique);
         return true;
     }
+    /**
+     * Localiza un determinado permiso con acceso autorizado
+     * Los permisos con acceso denegado retornan null
+     *
+     * @param string $resource
+     * @param string $permissionValue
+     * @return AuthSessionPermission|null
+     */
+    public function findPermission(string $resource, string $permissionValue): ?AuthSessionPermission
+    {
+        $result = null;
+        $permissions = $this->getPermissions();
+        /** @var AuthSessionPermission */
+        foreach ($permissions as $permission) {
+            if ($resource != $permission->getResource() || ($permissionValue != $permission->getValue() && $permission->getValue() != Permission::ALL)) continue;
+            if ($permission->getAccess() == Permission::ALLOW) {
+                return $permission;
+            } else {
+                return null;
+            }
+        }
+        return $result;
+    }
+    /**
+     * Determina si el usuario tiene permiso para un determinado recurso
+     * Solo se consideran permisos con acceso autorizado
+     *
+     * @param string $resource
+     * @param string $permissionValue
+     * @param string|null $scope
+     * @return boolean
+     */
     public function hasPermission(string $resource, string $permissionValue, ?string $scope = null): bool
     {
         $permission = $this->findPermission($resource, $permissionValue, $scope);
-        $permissionAccess = ($permission instanceof AuthSessionPermission) ? $permission->getAccess() : Permission::DENY;
-        return $permissionAccess === Permission::ALLOW;
+        if (!($permission instanceof AuthSessionPermission)) {
+            return false;
+        }
+        if (!empty($scope) && $scope != $permission->getScope()) {
+            return false;
+        }
+        return $permission->getAccess() === Permission::ALLOW;
     }
+    /**
+     * Determina si el usuario tiene algun permiso para alguno de los recursos
+     * Solo se consideran permisos con acceso autorizado
+     *
+     * @param array $resources
+     * @param array $permissionsValues
+     * @param array|null $scopes
+     * @return boolean
+     */
     public function hasSomePermissions(array $resources, array $permissionsValues, ?array $scopes = null): bool
     {
         $result = false;
@@ -192,6 +238,15 @@ class AuthService implements IAuthService
         }
         return $result;
     }
+    /**
+     * Determina si el usuario tiene todos los permisos para todos los recursos
+     * Solo se consideran permisos con acceso autorizado
+     *
+     * @param array $resources
+     * @param array $permissionsValues
+     * @param array|null $scopes
+     * @return boolean
+     */
     public function hasAllPermissions(array $resources, array $permissionsValues, ?array $scopes = null): bool
     {
         if (empty($resources) || empty($permissionsValues)) {
@@ -220,7 +275,7 @@ class AuthService implements IAuthService
     }
     public function getRoles(): array
     {
-        return $this->getSession()->getRoles() ?? [];
+        return $this->getSession()["roles"] ?? [];
     }
     /**
      * Establece los roles
@@ -252,7 +307,7 @@ class AuthService implements IAuthService
     public function getAuthId(): ?string
     {
         $session = $this->getSession();
-        return ($session instanceof AuthSession) ? $session->getSub() : null;
+        return $session["sub"] ?? null;
     }
     /**
      * Get nuevo JWT que se utilizara como respuesta de la solicitud
@@ -373,13 +428,13 @@ class AuthService implements IAuthService
         }
         if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
             $this->loginSession();
-            if (!($this->session instanceof AuthSession)) {
+            if (empty($this->session)) {
                 $this->loginJWT();
             }
         }
         if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION) {
             $this->loginJWT();
-            if (!($this->session instanceof AuthSession)) {
+            if (!empty($this->session)) {
                 $this->loginSession();
             }
         }
@@ -399,19 +454,19 @@ class AuthService implements IAuthService
             if (empty($jwtData)) {
                 return;
             }
-            $session = new AuthSession();
-            $session->fillFromArray($jwtData);
+            $session = [];
+            $session = $jwtData;
             $userId = null;
             // busca al usuario siempre y cuando se el mismo idprovider
-            if ($session->getIss() === $this->getISS()) {
-                $sub = $session->getSub();
+            if ($session["iss"] === $this->getISS()) {
+                $sub = $session["sub"] ?? null;
                 if (empty($sub)) {
                     throw new Exception("Sub value is required");
                 }
-                $user = $this->findUser($session->getSub());
+                $user = $this->findUser($sub);
                 $userId = ($user instanceof User) ? $user->getId() : null;
             }
-            $roles = $session->getRoles() ?? [];
+            $roles = $session["roles"] ?? [];
             $this->setSession($session);
             $this->setPermissionsFromDB($roles, $userId);
         } catch (Exception $e) {
@@ -430,7 +485,7 @@ class AuthService implements IAuthService
             return;
         }
         $session = $this->userToSession($user);
-        $roles = $session->getRoles() ?? [];
+        $roles = $session["roles"] ?? [];
         $this->setSession($session);
         $this->setPermissionsFromDB($roles, $user->getId());
     }
@@ -448,7 +503,7 @@ class AuthService implements IAuthService
     /**
      * Realiza el login asignando directamente al usuario
      */
-    public function setSession(AuthSession $session): AuthService
+    public function setSession(array $session): AuthService
     {
         $this->clearSession();
         $this->session = $session;
@@ -457,7 +512,7 @@ class AuthService implements IAuthService
             $this->updateJWT();
         }
         if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
-            $_SESSION[$this->sessionKey] = $session->getSub();
+            $_SESSION[$this->sessionKey] = $session["sub"] ?? null;
         }
         return $this;
     }
@@ -554,28 +609,7 @@ class AuthService implements IAuthService
         return $permissions;
     }
 
-    /**
-     * Localiza un determinado permiso
-     *
-     * @param string $resource
-     * @param string $permissionValue
-     * @param string|null $scope
-     * @return AuthSessionPermission|null
-     */
-    protected function findPermission(string $resource, string $permissionValue, ?string $scope): ?AuthSessionPermission
-    {
-        $result = null;
-        $permissions = $this->getPermissions();
-        /** @var AuthSessionPermission */
-        foreach ($permissions as $permission) {
-            if ($resource != $permission->getResource() || ($permissionValue != $permission->getValue() && $permission->getValue() != Permission::ALL)) continue;
-            if ($scope === null || $scope == $permission->getScope()) {
-                $result = $permission;
-                break;
-            }
-        }
-        return $result;
-    }
+
     protected function findUser(string $username): ?User
     {
         $qb = $this->entityManager->createQueryBuilder()->from(User::class, 'user')
@@ -587,44 +621,58 @@ class AuthService implements IAuthService
         return $user;
     }
 
+    // Actualza el JWT si hay session y esta habilitada la opción
     protected function updateJWT(): void
     {
-        if (!$this->session) {
+        if (!$this->session || !$this->renewJWT) {
             return;
         }
-        $session = clone $this->session;
-        $session->setIat(new DateTime());
+        $session = $this->session;
+        $currentDate = new DateTime();
+        $session["iat"] = $currentDate->getTimestamp();
         $token = AuthJWTManager::createToken($session, $this->jwtSecureKey, $this->jwtAlgoritm);
         AuthJWTManager::addJWTToHeader($token);
         $this->newJWT = $token;
     }
 
 
-    protected function userToSession(User $user): AuthSession
+    /**
+     * Sobreescribir este método para  agregar claims personalizados o modificar los existentes
+     *
+     * @return array
+     */
+    protected function getCustomOrModifiedClaims(): array
+    {
+        return [];
+    }
+    protected function userToSession(User $user): array
     {
         $iss = $this->getISS();
         $jwtId = sprintf("%s::%s", $iss, $user->getUsername());
         $currenttime = new DateTime();
         $expiration = new DateTime();
         $expiration->modify("+{$this->jwtExpirationTimeInSeconds} seconds");
-        $session = new AuthSession();
         $roles = $this->getUserRoles($user);
-        $session->setAuth_time($currenttime)
-            ->setSub($user->getUsername())
-            ->setBirth_family_name($user->getLastName())
-            ->setBirth_given_name($user->getFirstName())
-            ->setEmail($user->getEmail())
-            ->setExi($this->jwtExpirationTimeInSeconds)
-            ->setExp($expiration)
-            ->setFamily_name($user->getLastName())
-            ->setGiven_name($user->getFirstName())
-            ->setIss($iss)
-            ->setJti($jwtId)
-            ->setName($user->getFirstName() . " " . $user->getLastName())
-            ->setPicture($user->getPicture())
-            ->setPreferred_username($user->getUsername())
-            ->setRoles($roles);
-        return $session;
+        $session = [
+            "auth_time" => $currenttime->getTimestamp(),
+            "sub" => $user->getUsername(),
+            "birth_family_name" => $user->getLastName(),
+            "birth_given_name" => $user->getFirstName(),
+            "email" => $user->getEmail(),
+            "exi" => $this->jwtExpirationTimeInSeconds,
+            "exp" => $expiration->getTimestamp(),
+            "family_name" => $user->getLastName(),
+            "given_name" => $user->getFirstName(),
+            "iss" => $iss,
+            "jti" => $jwtId,
+            "name" => $user->getFirstName() . " " . $user->getLastName(),
+            "picture" => $user->getPicture(),
+            "preferred_username" => $user->getUsername(),
+            "roles" => $roles,
+        ];
+        $customClaims = $this->getCustomOrModifiedClaims();
+
+        return array_merge($session, $customClaims);
     }
     protected function getISS()
     {
@@ -636,23 +684,35 @@ class AuthService implements IAuthService
         $rolesObj = $user->getRoles();
         $roles = [];
         /** @var Role */
-        foreach ($roles as $role) {
+        foreach ($rolesObj as $role) {
             $roles[] = $role->getCode();
         }
         return $roles;
     }
-    protected function sessionToUser(?AuthSession $session): ?AuthSessionUser
+    protected function sessionToUser(?array $session): ?AuthSessionUser
     {
-        if (!($session instanceof AuthSession)) {
+        if (empty($session)) {
             return null;
         }
         $user = new AuthSessionUser();
-        $user->setFullName($session->getName())
-            ->setFirstName($session->getGiven_name())
-            ->setLastName($session->getFamily_name())
-            ->setEmail($session->getEmail())
-            ->setPicture($session->getPicture())
-            ->setUsername($session->getSub());
+        $user->setFullName($session["name"] ?? null)
+            ->setFirstName($session["given_name"] ?? null)
+            ->setLastName($session["family_name"] ?? null)
+            ->setEmail($session["email"] ?? null)
+            ->setPicture($session["picture"] ?? null)
+            ->setUsername($session["sub"] ?? null);
         return $user;
+    }
+
+    /**
+     * Set the value of renewJWT
+     *
+     * @return  self
+     */
+    public function setRenewJWT(bool $renewJWT)
+    {
+        $this->renewJWT = $renewJWT;
+
+        return $this;
     }
 }

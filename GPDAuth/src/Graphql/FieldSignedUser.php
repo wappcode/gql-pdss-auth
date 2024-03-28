@@ -37,13 +37,12 @@ class FieldSignedUser
             if (empty($user)) {
                 throw new NoSignedException();
             }
-            $data = $auth->getSession()->toArray();
+            $data = $auth->getSession();
             $permissions = array_map(function (AuthSessionPermission $permission) {
                 return $permission->toArray();
             }, $auth->getPermissions());
             $token = $auth->getNewJWT();
             return [
-                'data' => $data,
                 'user' => $user,
                 'permissions' => $permissions,
                 'roles' => $data["roles"] ?? [],

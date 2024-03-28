@@ -1,0 +1,64 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+
+include __DIR__ . '/../vendor/autoload.php';
+
+use Firebase\JWT\JWT;
+
+$algorithm = readline("Enter the algorithm, supported algorithms ES384','ES256', 'ES256K', 'HS256', 'HS384', 'HS512', 'RS256', 'RS384', and 'RS512. Default HS256 ");
+
+if (empty($algorithm)) {
+    $algorithm = "HS256";
+} else {
+    $algorithm = trim($algorithm);
+}
+
+$secureKey = readline("Enter the secure key ");
+
+if (empty($secureKey)) {
+    throw new Exception("You must enter the secure key");
+}
+$secureKey = trim($secureKey);
+$payloadInput = readline("Enter the payload (json string exaple {}) ");
+
+if (empty($payloadInput)) {
+    throw new Exception("You must enter the payload ");
+}
+$payloadInput = trim($payloadInput);
+try {
+    $payload = json_decode($payloadInput, true);
+} catch (Exception $e) {
+    throw new Exception("Invalid payload ");
+}
+$keyId = readline("Enter the key ID. Leave empty if no key ID not needed ");
+$headInput = readline("Enter the head (json string example {}). Leave empty if no head is needed ");
+
+
+if (empty($keyId)) {
+    $keyId = null;
+} else {
+    $keyId  = trim($keyId);
+}
+
+if (empty($headInput)) {
+    $header = null;
+} else {
+
+    try {
+        $headInput = trim($headInput);
+        $header = json_decode($headInput, true);
+    } catch (Exception $e) {
+        throw new Exception("Invalid header");
+    }
+}
+
+$jwt = JWT::encode($payload, $secureKey, $algorithm, $keyId, $header);
+
+echo "##############";
+echo "\n\n";
+echo $jwt;
+echo "\n\n";
+echo "##############";

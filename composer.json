@@ -19,5 +19,6 @@
   },
   "require": {
     "firebase/php-jwt": "^6.3"
-  }
+  },
+  "bin": ["bin/create-jwt"]
 }

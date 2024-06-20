@@ -1,6 +1,6 @@
 {
   "name": "wappcode/gql-pdss-auth",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "license": "MIT",
   "autoload": {
     "psr-4": {
@@ -20,5 +20,7 @@
   "require": {
     "firebase/php-jwt": "^6.3"
   },
-  "bin": ["bin/create-jwt"]
+  "bin": [
+    "bin/create-jwt"
+  ]
 }

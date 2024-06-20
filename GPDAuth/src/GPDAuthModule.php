@@ -5,9 +5,11 @@ namespace GPDAuth;
 use GPDAuth\Graphql\FieldLogin;
 use GPDAuth\Library\AuthConfig;
 use GPDAuth\Services\AuthService;
+use GPDAuth\Graphql\ResolversRole;
 use GPDAuth\Graphql\ResolversUser;
 use GPDCore\Library\AbstractModule;
 use GPDAuth\Graphql\FieldSignedUser;
+use GPDAuth\Graphql\ResolversPermission;
 use Laminas\ServiceManager\ServiceManager;
 use GPDAuth\Graphql\TypeFactorySessionData;
 use GPDAuth\Graphql\TypeSessionDataPermission;
@@ -72,7 +74,13 @@ class GPDAuthModule extends AbstractModule
     function getResolvers(): array
     {
         return [
-            'User::fullName' => ResolversUser::getFullNameResolve()
+            'User::fullName' => ResolversUser::getFullNameResolve(),
+            'User::roles' => ResolversUser::getRolesResolve($proxy = null),
+            'Role::users' => ResolversRole::getUserResolve($proxy = null),
+            'Permission::user' => ResolversPermission::getUserResolve($proxy = null),
+            'Permission::role' => ResolversPermission::getRoleResolve($proxy = null),
+            'Permission::resource' => ResolversPermission::getResourceResolve($proxy = null),
+
         ];
     }
     /**

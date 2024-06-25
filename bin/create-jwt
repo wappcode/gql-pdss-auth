@@ -22,7 +22,7 @@ if (empty($secureKey)) {
     throw new Exception("You must enter the secure key");
 }
 $secureKey = trim($secureKey);
-$payloadInput = readline("Enter the payload (json string exaple: \n {\"sub\":\"demo\",\"birth_family_name\":\"López\",\"birth_given_name\":\"Pancho\",\"email\":\"demo@demo.local.lan\",\"exp\":157680000,\"iss\":\"localhost\",\"name\":\"Pancho López\",\"preferred_username\":\"Pancho López\",\"roles\":[\"ADMIN\"]}\n date values like exp (expiration) must be numeric timestapm in seconds ");
+$payloadInput = readline("Enter the payload (json string exaple: \n {\"sub\":\"demo\",\"name\":\"Pancho López\",\"family_name\":\"López\",\"given_name\":\"Pancho\",\"email\":\"demo@demo.local.lan\",\"exp\":4730400000,\"iss\":\"toyotaemailmanager\",\"preferred_username\":\"Pancho López\",\"roles\":[\"ADMIN\"]} \n date values like exp (expiration) must be numeric timestapm in seconds.\n ADD JWT PAYLOAD: ");
 
 if (empty($payloadInput)) {
     throw new Exception("You must enter the payload ");

@@ -761,7 +761,7 @@ class AuthService implements IAuthService
         $config = $this->getIssuerConfig($iss);
         $issRoles = $config[AuthConfig::AUTH_ISS_ALLOWED_ROLES] ?? [];
         $allowedRoles = [];
-        foreach ($issRoles as $role) {
+        foreach ($sessionRoles as $role) {
             $allowedRole = $issRoles[$role] ?? null;
             if (!empty($allowedRole)) {
                 $allowedRoles[] = $allowedRole;

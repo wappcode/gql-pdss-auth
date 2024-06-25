@@ -14,7 +14,7 @@ class AuthSessionUser
     /**
      * Undocumented variable
      *
-     * @var string
+     * @var ?string
      */
     private $firstName
         /**
@@ -76,7 +76,7 @@ class AuthSessionUser
     /**
      * Get undocumented variable
      *
-     * @return  string
+     * @return  ?string
      */
     public function getFirstName()
     {
@@ -90,7 +90,7 @@ class AuthSessionUser
      *
      * @return  self
      */
-    public function setFirstName(string $firstName)
+    public function setFirstName(?string $firstName)
     {
         $this->firstName = $firstName;
 

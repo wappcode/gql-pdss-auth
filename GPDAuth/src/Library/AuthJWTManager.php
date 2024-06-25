@@ -84,4 +84,19 @@ class AuthJWTManager
     {
         header("{$header}: Bearer {$token}");
     }
+
+    public static function getISSNoVerified(string $jwt): ?string
+    {
+
+        if (empty($jwt)) {
+            return null;
+        }
+        $sections = explode(".", $jwt);
+        if (!isset($sections[1]) || empty($sections[1])) {
+            return null;
+        }
+        $jwtDataStr = base64_decode($sections[1]);
+        $jwtData = json_decode($jwtDataStr, true);
+        return $jwtData["iss"] ?? null;
+    }
 }

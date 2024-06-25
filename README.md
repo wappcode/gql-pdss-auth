@@ -52,6 +52,17 @@ return [
     AuthConfig::JWT_ALGORITHM_KEY => 'HS256',
     AuthConfig::AUTH_METHOD_KEY => IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT,
     AuthConfig::AUTH_ISS_KEY => $_SERVER["SERVER_NAME"] ?? "localhost",
+    AuthConfig::JWT_ISS_CONFIG => [
+        // se agregan los datos de los iss usando el nombre como clave
+        "https://issurl" => [  //  url o id del iss
+            AuthConfig::JWT_SECURE_KEY => "secure_key_to_iss",// opcional si no esta definido utiliza la clave de la configuración local
+            AuthConfig::JWT_ALGORITHM_KEY => "HS256", // opcional si no esta definido utiliza el algoritmo de la configuración local
+            AuthConfig::AUTH_ISS_ALLOWED_ROLES => [ // array con los roles permitidos para el iss  se permite el mapeo de un rol del iss a uno del sistema
+                "iss_admin_role" => "admin",
+                "custom_role" => "custom_role"
+            ]
+        ]
+    ]
     // .....
 ];
 ```

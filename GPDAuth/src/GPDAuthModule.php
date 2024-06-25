@@ -51,11 +51,12 @@ class GPDAuthModule extends AbstractModule
                         $entityManager,
                         $config->get(AuthConfig::AUTH_ISS_KEY),
                         $config->get(AuthConfig::AUTH_METHOD_KEY),
+                        $config->get(AuthConfig::JWT_SECURE_KEY),
+                        $config->get(AuthConfig::JWT_ISS_CONFIG, [])
                     );
 
                     $authService->setJwtAlgoritm($config->get(AuthConfig::JWT_ALGORITHM_KEY));
                     $authService->setjwtExpirationTimeInSeconds($config->get(AuthConfig::JWT_EXPIRATION_TIME_KEY));
-                    $authService->setJwtSecureKey($config->get(AuthConfig::JWT_SECURE_KEY));
                     $authService->initSession();
                     return $authService;
                 },

@@ -8,6 +8,7 @@ use GPDAuth\Entities\Role;
 use GPDAuth\Entities\User;
 use Doctrine\ORM\EntityManager;
 use GPDAuth\Entities\Permission;
+use GPDAuth\Library\AuthConfig;
 use GPDAuth\Library\IAuthService;
 use GPDAuth\Library\AuthJWTManager;
 use GPDAuth\Library\PasswordManager;
@@ -84,11 +85,19 @@ class AuthService implements IAuthService
 
     protected $renewJWT = true;
 
+    /**
+     * 
+     *
+     * @var array
+     */
+    protected $issuersConfig = [];
+
     public function __construct(
         EntityManager $entityManager,
         string $iss,
         string $authMethod = IAuthService::AUTHENTICATION_METHOD_SESSION,
-        ?string $jwtSecureKey = null
+        ?string $jwtSecureKey = null,
+        array $issuersConfig = []
     ) {
         $this->entityManager = $entityManager;
         $this->jwtAlgoritm = "HS256";
@@ -97,6 +106,7 @@ class AuthService implements IAuthService
         $this->jwtExpirationTimeInSeconds = 1200; // 20 minutos
         $this->authMethod = $authMethod;
         $this->iss = $iss;
+        $this->issuersConfig = $issuersConfig;
     }
     /**
      *
@@ -450,7 +460,16 @@ class AuthService implements IAuthService
             throw new Exception("Invalid JWT configuration. SecureKey or Algoritm are missing");
         }
         try {
-            $jwtData = AuthJWTManager::getJWTData($jwt, $this->jwtSecureKey, $this->jwtAlgoritm);
+            $jwtSecureKey = $this->jwtSecureKey;
+            $jwtAlgoritm = $this->jwtAlgoritm;
+            $requestIss = AuthJWTManager::getISSNoVerified($jwt);
+            if (!empty($requestIss) && $requestIss != $this->iss) {
+                $requestIssConfig = $this->getIssuerConfig($requestIss);
+                $jwtSecureKey = $requestIssConfig[AuthConfig::JWT_SECURE_KEY] ?? $this->jwtSecureKey;
+                $jwtAlgoritm = $requestIssConfig[AuthConfig::JWT_ALGORITHM_KEY] ?? $this->jwtAlgoritm;
+            }
+
+            $jwtData = AuthJWTManager::getJWTData($jwt, $jwtSecureKey, $jwtAlgoritm);
             if (empty($jwtData)) {
                 return;
             }
@@ -465,7 +484,11 @@ class AuthService implements IAuthService
                 }
                 $user = $this->findUser($sub);
                 $userId = ($user instanceof User) ? $user->getId() : null;
+            } elseif (!empty($requestIss)) {
+                // Filtra los roles permitidos para el issue
+                $session["roles"] = $this->filterIssRoles($requestIss, $session["roles"] ?? []);
             }
+
             $roles = $session["roles"] ?? [];
             $this->setSession($session);
             $this->setPermissionsFromDB($roles, $userId);
@@ -714,5 +737,36 @@ class AuthService implements IAuthService
         $this->renewJWT = $renewJWT;
 
         return $this;
+    }
+
+    private function getIssuerConfig(string $iss)
+    {
+
+        $config = $this->issuersConfig[$iss] ?? [];
+        return $config;
+    }
+
+    /**
+     * Recupera los roles permitidos para un issuer
+     *
+     * @param string $iss
+     * @param array|null $sessionRoles
+     * @return array
+     */
+    private function filterIssRoles(string $iss, ?array $sessionRoles): array
+    {
+        if (empty($sessionRoles)) {
+            return [];
+        }
+        $config = $this->getIssuerConfig($iss);
+        $issRoles = $config[AuthConfig::AUTH_ISS_ALLOWED_ROLES] ?? [];
+        $allowedRoles = [];
+        foreach ($issRoles as $role) {
+            $allowedRole = $issRoles[$role] ?? null;
+            if (!empty($allowedRole)) {
+                $allowedRoles[] = $allowedRole;
+            }
+        }
+        return $allowedRoles;
     }
 }

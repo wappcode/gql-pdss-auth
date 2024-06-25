@@ -542,7 +542,7 @@ class AuthService implements IAuthService
                 $qb->andWhere($qb->expr()->orX($conditionUser, $condigionRole, $conditionGlobal))
                     ->setParameter(':userId', $userId);
             } else {
-                $qb->andWhere($qb->expr()->orX($$condigionRole, $conditionGlobal));
+                $qb->andWhere($qb->expr()->orX($condigionRole, $conditionGlobal));
             }
             $qb->setParameter(':rolesCodes', $rolesCodes)
                 ->orderBy('permission.updated', 'desc');

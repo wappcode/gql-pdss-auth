@@ -24,7 +24,7 @@ Si se esta usando un archivo Dockerfile para compilar la imagen yhay cambios usa
 
 Ingresar a bash del servicio php
 
-    docker exec -it talentotoyota-php7.4 bash
+    docker exec -it gqlpdssauth-php7.4 bash
 
 ## Xdebug
 

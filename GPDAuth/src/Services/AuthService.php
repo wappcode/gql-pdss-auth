@@ -236,6 +236,7 @@ class AuthService implements IAuthService
                         $result = true;
                         break 2;
                     }
+                    continue;
                 }
                 foreach ($scopes as $scope) {
                     $flag = $this->hasPermission($resource, $permissionValue, $scope);
@@ -271,6 +272,7 @@ class AuthService implements IAuthService
                         $result = false;
                         break 2;
                     }
+                    continue;
                 }
                 foreach ($scopes as $scope) {
                     $flag = $this->hasPermission($resource, $permissionValue, $scope);

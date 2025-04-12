@@ -1,0 +1,28 @@
+type Query {
+login(username: String!, password: String!): SessionData
+getSessionData: SessionData
+echo(message: String!): String!
+echoProtected(message: String!): String!
+}
+
+type SessionData{
+
+user: AuthSessionUser!
+roles: [String]
+permissions: [SessionDataPermission]!
+jwt: String
+}
+type AuthSessionUser{
+fullName: String!
+firstName: String!
+lastName: String
+username: String!
+email: String
+picture: String
+}
+type SessionDataPermission{
+resource: String!
+access: String!
+value: String!
+scope: String
+}

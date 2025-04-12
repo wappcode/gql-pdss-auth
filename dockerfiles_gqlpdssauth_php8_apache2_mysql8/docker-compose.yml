@@ -1,0 +1,47 @@
+version: '3.7'
+services:
+  gqlpdssauth-mysql:
+    container_name: gqlpdssauth-mysql8
+    image: mysql:8.0.28
+    command: --default-authentication-plugin=mysql_native_password
+    restart: "no"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${GQLPDSSAUTH_DBPASSWORD:-dbpassword}
+    ports:
+      - "${GQLPDSSAUTH_MYSQL_PORT:-3308}:3306"
+    platform: linux/x86_64
+    volumes:
+      - ~/opt/dockerMysql8.0.28:/var/lib/mysql
+      - ./commands:/home/commands
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      timeout: 5s
+      retries: 60
+  gqlpdssauth-php:
+    depends_on:
+      gqlpdssauth-mysql:
+        condition: service_healthy
+    container_name: gqlpdssauth-php8.3
+    image: jesusabarcag/php-dev:8.3
+    volumes:
+      - ..:/var/www/html
+      - ./sites-enabled:/etc/apache2/sites-enabled
+      - ./xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+      - ./commands:/home/commands
+    ports:
+      - "${GQLPDSSAUTH_APP_PORT:-8080}:8080"
+    entrypoint: sh -c "/home/commands/run.sh"
+    restart: "no"
+    platform: linux/x86_64
+    environment:
+      - GQLPDSSAUTH_APP_PORT=${GQLPDSSAUTH_APP_PORT:-8080}
+      - GQLPDSSAUTH_DBUSER=${GQLPDSSAUTH_DBUSER:-root}
+      - GQLPDSSAUTH_DBPASSWORD=${GQLPDSSAUTH_DBPASSWORD:-dbpassword}
+      - GQLPDSSAUTH_DBNAME=${GQLPDSSAUTH_DBNAME:-gqlpdss_authdb}
+      - GQLPDSSAUTH_DBHOST=gqlpdssauth-mysql
+      - GPDAUTH_CONFIG__JWT_SECURE_KEY=${GPDAUTH_CONFIG__JWT_SECURE_KEY:-jr&nz(9n#}
+      - GPDAUTH_CONFIG__GPDAUTH_CONFIG__AUTH_SESSION_KEY=${GPDAUTH_CONFIG__GPDAUTH_CONFIG__AUTH_SESSION_KEY:-gpd_auth_session_key}
+      - GPDAUTH_CONFIG__GJWT_EXPIRATION_TIME_KEY=${GPDAUTH_CONFIG__GJWT_EXPIRATION_TIME_KEY:-1200}
+      - GPDAUTH_CONFIG__JWT_ALGORITHM_KEY=${GPDAUTH_CONFIG__JWT_ALGORITHM_KEY:-HS256}
+      - GPDAUTH_CONFIG__AUTH_METHOD_KEY=${GPDAUTH_CONFIG__AUTH_METHOD_KEY:-SESSION_OR_JWT}
+      - GPDAUTH_CONFIG__AUTH_ISS_KEY=${GPDAUTH_CONFIG__AUTH_ISS_KEY:-gqlpdssauth-php}

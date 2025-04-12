@@ -13,10 +13,8 @@ use GraphQL\Doctrine\Annotation as API;
 
 
 
-/**
- * @ORM\Entity()
- * @ORM\Table(name="gpd_auth_permissions")
- */
+#[ORM\Entity()]
+#[ORM\Table(name: "gpd_auth_permissions")]
 class Permission extends AbstractEntityModel
 {
 
@@ -32,69 +30,46 @@ class Permission extends AbstractEntityModel
     const UPLOAD = "UPLOAD";
     const DOWNLOAD = "DOWNLOAD";
 
-    /**
-     * @ORM\ManyToOne(targetEntity="\GPDAuth\Entities\Resource")
-     * @ORM\JoinColumn(name="resource_id", referencedColumnName="id", nullable=false)
-     * @var \GPDAuth\Entities\Resource
-     */
+    #[ORM\ManyToOne(targetEntity: "\GPDAuth\Entities\Resource")]
+    #[ORM\JoinColumn(name: "resource_id", referencedColumnName: "id", nullable: false)]
+
     protected $resource;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="\GPDAuth\Entities\User")
-     * @ORM\JoinColumn(name="user_id", referencedColumnName="id", nullable=true)
-     * @var \GPDAuth\Entities\User
-     */
+    #[ORM\ManyToOne(targetEntity: "\GPDAuth\Entities\User")]
+    #[ORM\JoinColumn(name: "user_id", referencedColumnName: "id", nullable: true)]
+
     protected $user;
 
-    /**
-     * @ORM\ManyToOne(targetEntity="\GPDAuth\Entities\Role")
-     * @ORM\JoinColumn(name="role_id", referencedColumnName="id", nullable=true)
-     * @var \GPDAuth\Entities\Role
-     */
+    #[ORM\ManyToOne(targetEntity: "\GPDAuth\Entities\Role")]
+    #[ORM\JoinColumn(name: "role_id", referencedColumnName: "id", nullable: true)]
+
     protected $role;
 
-    /**
-     * Tipo de acceso ALLOW | DENY
-     * @ORM\Column(type="string", name="permission_access", nullable=false, length=255)
-     * @var string
-     */
+    #ipo de acceso ALLOW | DENY
+    #[ORM\Column(type: "string", name: "permission_access", nullable: false, length: 255)]
+
     protected $access;
 
-    /**
-     * Solo se asigna un permiso a la vez.
-     * Si se requieren otros permisos se debe crear un registro para cada uno o utilizar Permission ALL para que aplique a todos
-     * @ORM\Column(type="string", name="permision_value", nullable=false, length=255)
-     * @var string
-     */
+    #olo se asigna un permiso a la vez.
+    #i se requieren otros permisos se debe crear un registro para cada uno o utilizar Permission ALL para que aplique a todos
+    #var string
+
     protected $value;
 
-    /**
-     * Solo se asigna un scope a la vez
-     * Si se requieren diferentes scopes debe haber un registro para cada scope o utlizar SCOPE ALL para que se asigne a todos los scopes
-     * @ORM\Column(type="string", nullable=true)
-     * @var string
-     */
+    #olo se asigna un scope a la vez
+    #i se requieren diferentes scopes debe haber un registro para cada scope o utlizar SCOPE ALL para que se asigne a todos los scopes
+    #var string
+
     protected $scope;
 
 
 
-    /**
-     * Get the value of resource
-     *
-     * @return  \GPDAuth\Entities\Resource
-     */
     public function getResource(): Resource
     {
         return $this->resource;
     }
 
-    /**
-     * Set the value of resource
-     *
-     * @param  \GPDAuth\Entities\Resource  $resource
-     *
-     * @return  self
-     */
+
     public function setResource(Resource $resource)
     {
         $this->resource = $resource;
@@ -102,23 +77,11 @@ class Permission extends AbstractEntityModel
         return $this;
     }
 
-    /**
-     * Get the value of user
-     *
-     * @return  ?\GPDAuth\Entities\User
-     */
     public function getUser(): ?User
     {
         return $this->user;
     }
 
-    /**
-     * Set the value of user
-     *
-     * @param  ?\GPDAuth\Entities\User  $user
-     *
-     * @return  self
-     */
     public function setUser(?User $user)
     {
         $this->user = $user;
@@ -126,23 +89,12 @@ class Permission extends AbstractEntityModel
         return $this;
     }
 
-    /**
-     * Get the value of role
-     *
-     * @return  ?\GPDAuth\Entities\Role
-     */
+
     public function getRole(): ?Role
     {
         return $this->role;
     }
 
-    /**
-     * Set the value of role
-     *
-     * @param  ?\GPDAuth\Entities\Role  $role
-     *
-     * @return  self
-     */
     public function setRole(?Role $role)
     {
         $this->role = $role;
@@ -150,25 +102,12 @@ class Permission extends AbstractEntityModel
         return $this;
     }
 
-    /**
-     * Get the value of type
-     *
-     * @return  string
-     */
     public function getValue(): string
     {
         return $this->value;
     }
 
-    /**
-     * Set the value of value
-     *
-     * @API\Input(type="GPDAuth\Graphql\TypePermissionValue")
-     * 
-     * @param  string  $value
-     *
-     * @return  self
-     */
+
     public function setValue(string $value)
     {
         $this->value = $value;
@@ -176,25 +115,13 @@ class Permission extends AbstractEntityModel
         return $this;
     }
 
-    /**
-     * Get the value of access
-     *
-     * @return  string
-     */
+
     public function getAccess()
     {
         return $this->access;
     }
 
-    /**
-     * Set the value of access
-     *
-     * @API\Input(type="GPDAuth\Graphql\TypePermissionAccess")
-     * 
-     * @param  string  $access
-     *
-     * @return  self
-     */
+
     public function setAccess(string $access)
     {
         $this->access = $access;
@@ -202,23 +129,12 @@ class Permission extends AbstractEntityModel
         return $this;
     }
 
-    /**
-     * Get the value of scope
-     * @API\Field(type="?string", description="keys separados por comas")
-     * @return  string
-     */
     public function getScope(): ?string
     {
         return $this->scope;
     }
 
-    /**
-     * Set the value of scope
-     * @API\Input(type="?string", description="keys separados por comas")
-     * @param  string  $scope
-     *
-     * @return  self
-     */
+
     public function setScope(string $scope)
     {
         $this->scope = $scope;

@@ -1,3 +1,4 @@
 dev/    export-ignore
 dev-docs/    export-ignore
 dockerfiles_gqlpdssauth_php7_apache2_mysql8/ export-ignore
+dockerfiles_gqlpdssauth_php8_apache2_mysql8/ export-ignore

@@ -8,7 +8,8 @@
     }
   },
   "require-dev": {
-    "wappcode/gqlpdss": "4.1.1",
+    "wappcode/gqlpdss": "dev-master",
+    "wappcode/pdss-utilities": "dev-master",
     "phpunit/phpunit": "^9.6",
     "wappcode/graphql-basic-client": "^1.0"
   },

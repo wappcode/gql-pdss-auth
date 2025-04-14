@@ -26,6 +26,10 @@ class GPDAuthModule extends AbstractModule
     {
         return require(__DIR__ . '/../config/module.config.php');
     }
+    function getSchema(): string
+    {
+        return file_get_contents(__DIR__ . '/../config/schema-auth.graphql');
+    }
     function getServicesAndGQLTypes(): array
     {
         $context = $this->context;
@@ -34,15 +38,6 @@ class GPDAuthModule extends AbstractModule
                 TypeSessionDataPermission::NAME => TypeSessionDataPermission::class
             ],
             'factories' => [
-                TypeFactorySessionData::NAME => function (ServiceManager $sm) use ($context) {
-                    $type = TypeFactorySessionData::create($context);
-                    return $type;
-                },
-                TypeFactoryAuthSessionUser::NAME => function (ServiceManager $sm) use ($context) {
-                    $type = TypeFactoryAuthSessionUser::create($context);
-                    return $type;
-                },
-
                 AuthService::class => function (ServiceManager $sm) {
                     $config = $this->context->getConfig();
                     $entityManager = $this->context->getEntityManager();
@@ -81,28 +76,9 @@ class GPDAuthModule extends AbstractModule
             'Permission::user' => ResolversPermission::getUserResolve($proxy = null),
             'Permission::role' => ResolversPermission::getRoleResolve($proxy = null),
             'Permission::resource' => ResolversPermission::getResourceResolve($proxy = null),
+            'Query::login' => FieldLogin::createResolve(),
+            'Query::getSessionData' => FieldSignedUser::createResolve(),
 
         ];
-    }
-    /**
-     * Array con los graphql Queries del módulo
-     *
-     * @return array
-     */
-    function getQueryFields(): array
-    {
-        return [
-            "login" => FieldLogin::get($this->context, $proxy = null),
-            "getSessionData" => FieldSignedUser::get($this->context, $proxy = null)
-        ];
-    }
-    /**
-     * Array con los graphql mutations del módulo
-     *
-     * @return array
-     */
-    function getMutationFields(): array
-    {
-        return [];
     }
 }

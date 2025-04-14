@@ -3943,12 +3943,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/wappcode/gql-pdss-lib.git",
-                "reference": "179fd63816091d204f2b1de89199d47a7e113a10"
+                "reference": "cc2f91aea9175d67c3c8aa95f68fe6a5d4546709"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wappcode/gql-pdss-lib/zipball/179fd63816091d204f2b1de89199d47a7e113a10",
-                "reference": "179fd63816091d204f2b1de89199d47a7e113a10",
+                "url": "https://api.github.com/repos/wappcode/gql-pdss-lib/zipball/cc2f91aea9175d67c3c8aa95f68fe6a5d4546709",
+                "reference": "cc2f91aea9175d67c3c8aa95f68fe6a5d4546709",
                 "shasum": ""
             },
             "require": {
@@ -3987,7 +3987,7 @@
                 "issues": "https://github.com/wappcode/gql-pdss-lib/issues",
                 "source": "https://github.com/wappcode/gql-pdss-lib/tree/master"
             },
-            "time": "2025-04-12T01:11:37+00:00"
+            "time": "2025-04-14T16:06:45+00:00"
         },
         {
             "name": "wappcode/graphql-basic-client",

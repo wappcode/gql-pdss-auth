@@ -12,33 +12,8 @@ use GPDAuth\Models\AuthSessionPermission;
 class FieldLogin
 {
 
-    /**
-     * @var IContextService
-     */
-    protected $context;
 
-    public static function get(IContextService $context, ?callable $proxy)
-    {
-        $resolve = FieldLogin::createResolve();
-        $proxyResolve = is_callable($proxy) ? $proxy($resolve) : $resolve;
-        $serviceManager = $context->getServiceManager();
-        $sessionDataType = $serviceManager->get(TypeFactorySessionData::NAME);
-        return [
-            "type" => $sessionDataType,
-            "args" => [
-                [
-                    "name" => "username",
-                    "type" => Type::nonNull(Type::string())
-                ],
-                [
-                    "name" => "password",
-                    "type" => Type::nonNull(Type::string())
-                ],
-            ],
-            "resolve" => $proxyResolve
-        ];
-    }
-    private static function createResolve(): callable
+    public static function createResolve(): callable
     {
         return function ($root, array $args, IContextService $context, $info) {
             $username = $args["username"] ?? '';
@@ -67,10 +42,6 @@ class FieldLogin
     }
 
 
-    private function __construct(IContextService $context)
-    {
-    }
-    private function __clone()
-    {
-    }
+    private function __construct(IContextService $context) {}
+    private function __clone() {}
 }

@@ -9,7 +9,6 @@ use GPDAuth\Entities\Role;
 use GPDAuth\Entities\User;
 use GPDAuth\Entities\Resource;
 use GPDCore\Entities\AbstractEntityModel;
-use GraphQL\Doctrine\Annotation as API;
 
 
 
@@ -17,8 +16,6 @@ use GraphQL\Doctrine\Annotation as API;
 #[ORM\Table(name: "gpd_auth_permissions")]
 class Permission extends AbstractEntityModel
 {
-
-    const RELATIONS_MANY_TO_ONE = ['resource', 'user', 'role'];
 
     const ALLOW = "ALLOW";
     const DENY = "DENY";
@@ -33,36 +30,38 @@ class Permission extends AbstractEntityModel
     #[ORM\ManyToOne(targetEntity: "\GPDAuth\Entities\Resource")]
     #[ORM\JoinColumn(name: "resource_id", referencedColumnName: "id", nullable: false)]
 
-    protected $resource;
+    protected Resource $resource;
 
     #[ORM\ManyToOne(targetEntity: "\GPDAuth\Entities\User")]
     #[ORM\JoinColumn(name: "user_id", referencedColumnName: "id", nullable: true)]
 
-    protected $user;
+    protected ?User $user;
 
     #[ORM\ManyToOne(targetEntity: "\GPDAuth\Entities\Role")]
     #[ORM\JoinColumn(name: "role_id", referencedColumnName: "id", nullable: true)]
 
-    protected $role;
+    protected ?Role $role;
 
     #ipo de acceso ALLOW | DENY
     #[ORM\Column(type: "string", name: "permission_access", nullable: false, length: 255)]
-
     protected $access;
 
-    #olo se asigna un permiso a la vez.
-    #i se requieren otros permisos se debe crear un registro para cada uno o utilizar Permission ALL para que aplique a todos
-    #var string
+    /**
+     * Solo se asigna un permiso a la vez.
+     *  Si se requieren otros permisos se debe crear un registro para cada uno o utilizar Permission ALL para que aplique a todos
+     * @var string
+     */
+    #[ORM\Column(type: "string", length: 255, nullable: false, name: "permision_value")]
+    protected string $value;
 
-    protected $value;
-
-    #olo se asigna un scope a la vez
-    #i se requieren diferentes scopes debe haber un registro para cada scope o utlizar SCOPE ALL para que se asigne a todos los scopes
-    #var string
-
+    /** 
+     * Solo se asigna un scope a la vez
+     * Si se requieren diferentes scopes debe haber un registro para cada scope o utlizar SCOPE ALL para que se asigne a todos los scopes
+     * 
+     * @var string
+     */
+    #[ORM\Column(type: "string", nullable: true)]
     protected $scope;
-
-
 
     public function getResource(): Resource
     {
@@ -116,7 +115,7 @@ class Permission extends AbstractEntityModel
     }
 
 
-    public function getAccess()
+    public function getAccess(): string
     {
         return $this->access;
     }

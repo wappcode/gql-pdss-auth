@@ -10,25 +10,7 @@ use GPDCore\Library\IContextService;
 class FieldSignedUser
 {
 
-    /**
-     * @var IContextService
-     */
-    protected $context;
-
-    public static function get(IContextService $context, ?callable $proxy)
-    {
-        $resolve = FieldSignedUser::createResolve();
-        $proxyResolve = is_callable($proxy) ? $proxy($resolve) : $resolve;
-        $types = $context->getTypes();
-        $serviceManager = $context->getServiceManager();
-        $sessionDataType = $serviceManager->get(TypeFactorySessionData::NAME);
-        return [
-            "type" => $sessionDataType,
-            "resolve" => $proxyResolve,
-            "description" => "Recover session data of signed user"
-        ];
-    }
-    private static function createResolve(): callable
+    public static function createResolve(): callable
     {
         return function ($root, array $args, IContextService $context, $info) {
             /** @var AuthService */
@@ -51,10 +33,6 @@ class FieldSignedUser
         };
     }
 
-    private function __construct(IContextService $context)
-    {
-    }
-    private function __clone()
-    {
-    }
+    private function __construct(IContextService $context) {}
+    private function __clone() {}
 }

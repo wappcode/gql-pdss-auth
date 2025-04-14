@@ -1,0 +1,4 @@
+type Query {
+    echo(message: String!): String
+    echoProtected(message:String!):String
+}

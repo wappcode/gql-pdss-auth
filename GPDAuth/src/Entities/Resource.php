@@ -16,23 +16,16 @@ use GraphQL\Doctrine\Annotation as API;
 class Resource extends AbstractEntityModel
 {
     #[ORM\Column(type: "string", unique: true, nullable: false)]
-
-
-    protected $code;
+    protected string $code;
 
     #[ORM\Column(type: "string", nullable: false)]
+    protected  string $title;
 
-
-    protected $title;
     #[ORM\Column(type: "string", nullable: true)]
-
-
-    protected $description;
+    protected ?string $description;
 
     #[ORM\Column(type: "json", nullable: true)]
-
-
-    protected $scopes;
+    protected array $scopes;
 
 
 

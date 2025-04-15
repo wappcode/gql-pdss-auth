@@ -71,18 +71,24 @@ class AuthService extends AbstractAuthService
         if (empty($jwtData)) {
             return;
         }
-        $session = [];
         $session = $jwtData;
-        $userId = null;
+        $username = $this->getUsernameFromSessionData($session);
+        $requestIss = $session["iss"] ?? null;
+        $permissions = [];
         try {
             // busca al usuario siempre y cuando se el mismo idprovider
-            if ($session["iss"] === $this->getISS()) {
-                $sub = $this->getUsernameFromSessionData($session);
-                if (empty($sub)) {
+            if ($requestIss === $this->getISS()) {
+                if (empty($username)) {
                     throw new Exception("Sub value is required");
                 }
-                $user = $this->findUser($sub);
-                $userId = ($user instanceof User) ? $user->getId() : null;
+                $user = $this->findUser($username);
+                if ($user instanceof User) {
+                    if (!$user->getActive()) {
+                        throw new Exception("Inactive user");
+                    }
+                    $session = $this->userToSession($user);
+                    $permissions = $this->getPermissionsFromDB($session["roles"], $username);
+                }
             } elseif (!empty($requestIss)) {
                 // Filtra los roles permitidos para el issue
                 $session["roles"] = $this->filterIssRoles($requestIss, $session["roles"] ?? []);
@@ -90,7 +96,8 @@ class AuthService extends AbstractAuthService
 
             $roles = $session["roles"] ?? [];
             $this->setSession($session);
-            $this->getPermissionsFromDB($roles, $userId);
+            $this->setRoles($roles);
+            $this->setPermissions($permissions);
         } catch (Exception $e) {
             $this->clearSession();
         }
@@ -115,9 +122,10 @@ class AuthService extends AbstractAuthService
         $session = $this->userToSession($user);
         $roles = $session["roles"] ?? [];
         $username = $this->getUsernameFromSessionData($session);
+        $permissions = $this->getPermissionsFromDB($roles, $username);
         $this->setSession($session);
         $this->setRoles($roles);
-        $this->getPermissionsFromDB($roles, $$username);
+        $this->setPermissions($permissions);
     }
 
 

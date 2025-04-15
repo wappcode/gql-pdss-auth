@@ -41,13 +41,16 @@ class GPDAuthModule extends AbstractModule
                 AuthService::class => function (ServiceManager $sm) {
                     $config = $this->context->getConfig();
                     $entityManager = $this->context->getEntityManager();
-
+                    $authISSKey = $config->get(AuthConfig::AUTH_ISS_KEY);
+                    $authMethod = $config->get(AuthConfig::AUTH_METHOD_KEY);
+                    $authSecureKey = $config->get(AuthConfig::JWT_SECURE_KEY);
+                    $authIssConfig = $config->get(AuthConfig::JWT_ISS_CONFIG, []);
                     $authService = new AuthService(
                         $entityManager,
-                        $config->get(AuthConfig::AUTH_ISS_KEY),
-                        $config->get(AuthConfig::AUTH_METHOD_KEY),
-                        $config->get(AuthConfig::JWT_SECURE_KEY),
-                        $config->get(AuthConfig::JWT_ISS_CONFIG, [])
+                        $authISSKey,
+                        $authMethod,
+                        $authSecureKey,
+                        $authIssConfig
                     );
 
                     $authService->setJwtAlgoritm($config->get(AuthConfig::JWT_ALGORITHM_KEY));

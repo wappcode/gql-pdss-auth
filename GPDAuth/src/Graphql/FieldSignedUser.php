@@ -2,6 +2,7 @@
 
 namespace GPDAuth\Graphql;
 
+use GPDAuth\Library\AuthJWTManager;
 use GPDAuth\Library\NoSignedException;
 use GPDAuth\Models\AuthSessionPermission;
 use GPDAuth\Services\AuthService;
@@ -23,7 +24,7 @@ class FieldSignedUser
             $permissions = array_map(function (AuthSessionPermission $permission) {
                 return $permission->toArray();
             }, $auth->getPermissions());
-            $token = $auth->getNewJWT();
+            $token = AuthJWTManager::retriveJWT();
             return [
                 'user' => $user,
                 'permissions' => $permissions,

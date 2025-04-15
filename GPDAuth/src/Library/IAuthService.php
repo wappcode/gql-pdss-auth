@@ -22,6 +22,4 @@ interface IAuthService
     public function getRoles(): array;
     public function getSession(): ?array;
     public function getAuthId(): ?string;
-    public function getNewJWT(): ?string;
-    public function setRenewJWT(bool $renew);
 }

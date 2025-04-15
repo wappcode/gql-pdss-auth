@@ -3,6 +3,7 @@
 namespace GPDAuth\Graphql;
 
 use Exception;
+use GPDAuth\Library\AuthJWTManager;
 use GPDAuth\Services\AuthService;
 use GPDCore\Library\GQLException;
 use GraphQL\Type\Definition\Type;
@@ -26,7 +27,7 @@ class FieldLogin
                 $permissions = array_map(function (AuthSessionPermission $permission) {
                     return $permission->toArray();
                 }, $auth->getPermissions());
-                $token = $auth->getNewJWT();
+                $token = $auth->createNewJWTFromSession();
                 $user = $auth->getUser()->toArray();
                 $result = [
                     'user' => $user,

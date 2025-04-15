@@ -63,18 +63,7 @@ abstract class AbstractAuthService implements IAuthService
 
     protected $authMethod;
 
-    /**
-     * Nuevo JWT que se utilizara como respuesta de la solicitud
-     *
-     * @var ?string
-     */
-    protected $newJWT = null;
-
     protected $iss = null;
-
-
-    protected $renewJWT = true;
-
     /**
      * 
      *
@@ -131,6 +120,16 @@ abstract class AbstractAuthService implements IAuthService
     protected abstract function getCustomOrModifiedClaims(): array;
 
 
+
+    // Crea un JWT actualizado
+    public function createNewJWTFromSession(): string
+    {
+        $session = $this->session;
+        $currentDate = new DateTime();
+        $session["iat"] = $currentDate->getTimestamp();
+        $token = AuthJWTManager::createToken($session, $this->jwtSecureKey, $this->jwtAlgoritm);
+        return $token;
+    }
     /**
      * @return void
      */
@@ -311,16 +310,6 @@ abstract class AbstractAuthService implements IAuthService
         $session = $this->getSession();
         return $session["sub"] ?? null;
     }
-    /**
-     * Get nuevo JWT que se utilizara como respuesta de la solicitud
-     *
-     * @return  ?string
-     */
-    public function getNewJWT(): ?string
-    {
-        return $this->newJWT;
-    }
-
 
     /**
      * Get the value of jwtAlgoritm
@@ -481,7 +470,7 @@ abstract class AbstractAuthService implements IAuthService
 
     protected function getUsernameFromSessionData(array $sessionData)
     {
-        $sub = $session["sub"] ?? null;
+        $sub = $sessionData["sub"] ?? null;
         return $sub;
     }
 
@@ -492,7 +481,6 @@ abstract class AbstractAuthService implements IAuthService
         $this->session = null;
         $this->permissions = null;
         $this->roles = null;
-        $this->newJWT = null;
         $this->user = null;
     }
 
@@ -505,39 +493,11 @@ abstract class AbstractAuthService implements IAuthService
         $this->clearSession();
         $this->session = $session;
         $this->user = $this->sessionToUser($this->session);
-        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
-            $this->updateJWT();
-        }
         if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
             $_SESSION[$this->sessionKey] = $session["sub"] ?? null;
         }
         return $this;
     }
-
-
-
-
-
-
-
-
-
-    // Actualza el JWT si hay session y esta habilitada la opción
-    protected function updateJWT(): void
-    {
-        if (!$this->session || !$this->renewJWT) {
-            return;
-        }
-        $session = $this->session;
-        $currentDate = new DateTime();
-        $session["iat"] = $currentDate->getTimestamp();
-        $token = AuthJWTManager::createToken($session, $this->jwtSecureKey, $this->jwtAlgoritm);
-        AuthJWTManager::addJWTToHeader($token);
-        $this->newJWT = $token;
-    }
-
-
-
 
     protected function getISS()
     {
@@ -560,17 +520,7 @@ abstract class AbstractAuthService implements IAuthService
         return $user;
     }
 
-    /**
-     * Set the value of renewJWT
-     *
-     * @return  self
-     */
-    public function setRenewJWT(bool $renewJWT)
-    {
-        $this->renewJWT = $renewJWT;
 
-        return $this;
-    }
 
     private function getIssuerConfig(string $iss)
     {

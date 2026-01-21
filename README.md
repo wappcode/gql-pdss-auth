@@ -40,24 +40,25 @@ Establecer configuración por archivo
 
 <?php
 
-use GPDAuth\Library\AuthConfig;
+use GPDAuth\Library\AuthConfigKey;
 use GPDAuth\Library\AuthMethod;
+use GPDAuth\Library\JwtAlgorithm;
 
 return [
     // configuración de otros módulos
     // .....
-    AuthConfig::JWT_SECURE_KEY => "secret_key",
-    AuthConfig::AUTH_SESSION_KEY => "gpd_auth_session_key", // key o indice asociativo del array $_SESSION para authentificación
-    AuthConfig::JWT_EXPIRATION_TIME_KEY => 1200, // Tiempo en segundos
-    AuthConfig::JWT_ALGORITHM_KEY => 'HS256',
-    AuthConfig::AUTH_METHOD_KEY => AuthMethod::SessionOrJwt,
-    AuthConfig::AUTH_ISS_KEY => $_SERVER["SERVER_NAME"] ?? "localhost",
-    AuthConfig::JWT_ISS_CONFIG => [
+    AuthConfigKey::JwtSecureKey->value => "secret_key",
+    AuthConfigKey::AuthSessionKey->value => "gpd_auth_session_key", // key o indice asociativo del array $_SESSION para authentificación
+    AuthConfigKey::JwtExpirationTime->value => 1200, // Tiempo en segundos
+    AuthConfigKey::JwtAlgorithm->value => JwtAlgorithm::HS256->value,
+    AuthConfigKey::AuthMethodKey->value => AuthMethod::SessionOrJwt,
+    AuthConfigKey::AuthIssKey->value => $_SERVER["SERVER_NAME"] ?? "localhost",
+    AuthConfigKey::JwtIssConfig->value => [
         // se agregan los datos de los iss usando el nombre como clave
         "https://issurl" => [  //  url o id del iss
-            AuthConfig::JWT_SECURE_KEY => "secure_key_to_iss",// opcional si no esta definido utiliza la clave de la configuración local
-            AuthConfig::JWT_ALGORITHM_KEY => "HS256", // opcional si no esta definido utiliza el algoritmo de la configuración local
-            AuthConfig::AUTH_ISS_ALLOWED_ROLES => [ // array con los roles permitidos para el iss  se permite el mapeo de un rol del iss a uno del sistema
+            AuthConfigKey::JwtSecureKey->value => "secure_key_to_iss",// opcional si no esta definido utiliza la clave de la configuración local
+            AuthConfigKey::JwtAlgorithm->value => JwtAlgorithm::HS256->value, // opcional si no esta definido utiliza el algoritmo de la configuración local
+            AuthConfigKey::AuthIssAllowedRoles->value => [ // array con los roles permitidos para el iss  se permite el mapeo de un rol del iss a uno del sistema
                 "iss_admin_role" => "admin",
                 "custom_role" => "custom_role"
             ]

@@ -3,7 +3,7 @@
 namespace GPDAuth;
 
 use GPDAuth\Graphql\FieldLogin;
-use GPDAuth\Library\AuthConfig;
+use GPDAuth\Library\AuthConfigKey;
 use GPDAuth\Services\AuthService;
 use GPDAuth\Graphql\ResolversRole;
 use GPDAuth\Graphql\ResolversUser;
@@ -41,10 +41,10 @@ class GPDAuthModule extends AbstractModule
                 AuthService::class => function (ServiceManager $sm) {
                     $config = $this->context->getConfig();
                     $entityManager = $this->context->getEntityManager();
-                    $authISSKey = $config->get(AuthConfig::AUTH_ISS_KEY);
-                    $authMethod = $config->get(AuthConfig::AUTH_METHOD_KEY);
-                    $authSecureKey = $config->get(AuthConfig::JWT_SECURE_KEY);
-                    $authIssConfig = $config->get(AuthConfig::JWT_ISS_CONFIG, []);
+                    $authISSKey = $config->get(AuthConfigKey::AuthIssKey->value);
+                    $authMethod = $config->get(AuthConfigKey::AuthMethodKey->value);
+                    $authSecureKey = $config->get(AuthConfigKey::JwtSecureKey->value);
+                    $authIssConfig = $config->get(AuthConfigKey::JwtIssConfig->value, []);
                     $authService = new AuthService(
                         $entityManager,
                         $authISSKey,
@@ -53,8 +53,8 @@ class GPDAuthModule extends AbstractModule
                         $authIssConfig
                     );
 
-                    $authService->setJwtAlgoritm($config->get(AuthConfig::JWT_ALGORITHM_KEY));
-                    $authService->setjwtExpirationTimeInSeconds($config->get(AuthConfig::JWT_EXPIRATION_TIME_KEY));
+                    $authService->setJwtAlgoritm($config->get(AuthConfigKey::JwtAlgorithm->value));
+                    $authService->setjwtExpirationTimeInSeconds($config->get(AuthConfigKey::JwtExpirationTime->value));
                     $authService->initSession();
                     return $authService;
                 },

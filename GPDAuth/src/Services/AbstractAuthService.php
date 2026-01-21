@@ -5,9 +5,10 @@ namespace GPDAuth\Services;
 use DateTime;
 use Exception;
 use GPDAuth\Entities\Permission;
-use GPDAuth\Library\AuthConfig;
 use GPDAuth\Library\AuthServiceInterface;
 use GPDAuth\Library\AuthMethod;
+use GPDAuth\Library\AuthConfigKey;
+use GPDAuth\Library\JwtAlgorithm;
 use GPDAuth\Library\AuthJWTManager;
 use GPDAuth\Models\AuthSessionPermission;
 use GPDAuth\Models\AuthSessionUser;
@@ -458,8 +459,8 @@ abstract class AbstractAuthService implements AuthServiceInterface
             $requestIss = AuthJWTManager::getISSNoVerified($jwt);
             if (!empty($requestIss) && $requestIss != $this->iss) {
                 $requestIssConfig = $this->getIssuerConfig($requestIss);
-                $jwtSecureKey = $requestIssConfig[AuthConfig::JWT_SECURE_KEY] ?? $this->jwtSecureKey;
-                $jwtAlgoritm = $requestIssConfig[AuthConfig::JWT_ALGORITHM_KEY] ?? $this->jwtAlgoritm;
+                $jwtSecureKey = $requestIssConfig[AuthConfigKey::JwtSecureKey->value] ?? $this->jwtSecureKey;
+                $jwtAlgoritm = $requestIssConfig[AuthConfigKey::JwtAlgorithm->value] ?? $this->jwtAlgoritm;
             }
             $jwtData = AuthJWTManager::getJWTData($jwt, $jwtSecureKey, $jwtAlgoritm);
             return $jwtData;
@@ -577,7 +578,7 @@ abstract class AbstractAuthService implements AuthServiceInterface
             return [];
         }
         $config = $this->getIssuerConfig($iss);
-        $issRoles = $config[AuthConfig::AUTH_ISS_ALLOWED_ROLES] ?? [];
+        $issRoles = $config[AuthConfigKey::AuthIssAllowedRoles->value] ?? [];
         $allowedRoles = [];
         foreach ($sessionRoles as $role) {
             $allowedRole = $issRoles[$role] ?? null;

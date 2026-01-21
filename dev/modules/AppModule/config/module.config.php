@@ -1,7 +1,7 @@
 <?php
 
-use GPDAuth\Library\AuthConfig;
+use GPDAuth\Library\AuthConfigKey;
 
 return [
-    AuthConfig::JWT_SECURE_KEY  => "llt5051a29f6f9169c92d86972ba6f84285"
+    AuthConfigKey::JwtSecureKey->value  => "llt5051a29f6f9169c92d86972ba6f84285"
 ];

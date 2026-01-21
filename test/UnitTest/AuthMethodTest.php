@@ -144,20 +144,20 @@ class AuthMethodTest extends TestCase
     }
 
     /**
-     * Test backwards compatibility
+     * Test backwards compatibility with legacy values
      */
     public function testBackwardsCompatibility()
     {
-        // Las constantes deprecadas deberían seguir funcionando por compatibilidad
-        $this->assertEquals('SESSION', \GPDAuth\Library\AuthServiceInterface::AUTHENTICATION_METHOD_SESSION);
-        $this->assertEquals('JWT', \GPDAuth\Library\AuthServiceInterface::AUTHENTICATION_METHOD_JWT);
-        $this->assertEquals('JWT_OR_SESSION', \GPDAuth\Library\AuthServiceInterface::AUTHENTICATION_METHOD_JWT_OR_SESSION);
-        $this->assertEquals('SESSION_OR_JWT', \GPDAuth\Library\AuthServiceInterface::AUTHENTICATION_METHOD_SESSION_OR_JWT);
+        // Test que los valores del enum coincidan con los valores legacy esperados
+        $this->assertEquals('SESSION', AuthMethod::Session->value);
+        $this->assertEquals('JWT', AuthMethod::Jwt->value);
+        $this->assertEquals('JWT_OR_SESSION', AuthMethod::JwtOrSession->value);
+        $this->assertEquals('SESSION_OR_JWT', AuthMethod::SessionOrJwt->value);
         
-        // Conversión de constantes a enum
-        $this->assertEquals(AuthMethod::Session, AuthMethod::fromString(\GPDAuth\Library\AuthServiceInterface::AUTHENTICATION_METHOD_SESSION));
-        $this->assertEquals(AuthMethod::Jwt, AuthMethod::fromString(\GPDAuth\Library\AuthServiceInterface::AUTHENTICATION_METHOD_JWT));
-        $this->assertEquals(AuthMethod::JwtOrSession, AuthMethod::fromString(\GPDAuth\Library\AuthServiceInterface::AUTHENTICATION_METHOD_JWT_OR_SESSION));
-        $this->assertEquals(AuthMethod::SessionOrJwt, AuthMethod::fromString(\GPDAuth\Library\AuthServiceInterface::AUTHENTICATION_METHOD_SESSION_OR_JWT));
+        // Conversión de strings legacy a enum
+        $this->assertEquals(AuthMethod::Session, AuthMethod::fromString('SESSION'));
+        $this->assertEquals(AuthMethod::Jwt, AuthMethod::fromString('JWT'));
+        $this->assertEquals(AuthMethod::JwtOrSession, AuthMethod::fromString('JWT_OR_SESSION'));
+        $this->assertEquals(AuthMethod::SessionOrJwt, AuthMethod::fromString('SESSION_OR_JWT'));
     }
 }

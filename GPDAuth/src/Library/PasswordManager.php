@@ -2,46 +2,45 @@
 
 namespace GPDAuth\Library;
 
+use InvalidArgumentException;
+
 class PasswordManager
 {
-    // Algoritmos de hash seguros (recomendados)
-    const ARGON2ID = 'argon2id';
-    const BCRYPT = 'bcrypt';
-    
-    // Algoritmos legacy (deprecados, solo para compatibilidad)
-    const SHA256 = 'sha256';
-    const SHA1 = 'sha1';
-    const MD5 = 'md5';
 
     /**
      * Codifica una contraseña usando el algoritmo especificado
      * 
      * @param string $password La contraseña a codificar
      * @param string|null $salt Salt para algoritmos legacy (ignorado para bcrypt/argon2id)
-     * @param string|null $hashAlgorithm Algoritmo a usar (default: argon2id)
+     * @param HashAlgorithm|string|null $hashAlgorithm Algoritmo a usar (default: argon2id)
      * @param array $options Opciones específicas del algoritmo
      * @return string Hash de la contraseña
      */
-    public static function encode(string $password, ?string $salt = null, ?string $hashAlgorithm = null, array $options = []): string
+    public static function encode(string $password, ?string $salt = null, HashAlgorithm|string|null $hashAlgorithm = null, array $options = []): string
     {
-        $algo = $hashAlgorithm ?? static::ARGON2ID;
+        // Convertir string legacy a enum si es necesario
+        if (is_string($hashAlgorithm)) {
+            $hashAlgorithm = HashAlgorithm::fromString($hashAlgorithm);
+        }
+        
+        $algo = $hashAlgorithm ?? HashAlgorithm::getDefault();
         
         switch ($algo) {
-            case static::ARGON2ID:
+            case HashAlgorithm::Argon2id:
                 return static::encodeArgon2id($password, $options);
                 
-            case static::BCRYPT:
+            case HashAlgorithm::Bcrypt:
                 return static::encodeBcrypt($password, $options);
                 
             // Algoritmos legacy (deprecados)
-            case static::SHA256:
-            case static::SHA1:
-            case static::MD5:
+            case HashAlgorithm::Sha256:
+            case HashAlgorithm::Sha1:
+            case HashAlgorithm::Md5:
                 if ($salt) $password = $password . $salt;
-                return hash($algo, $password);
+                return hash($algo->value, $password);
                 
             default:
-                throw new \InvalidArgumentException("Algoritmo de hash no soportado: {$algo}");
+                throw new InvalidArgumentException("Algoritmo de hash no soportado: {$algo->value}");
         }
     }
 
@@ -51,32 +50,37 @@ class PasswordManager
      * @param string $password Contraseña en texto plano
      * @param string $hash Hash almacenado
      * @param string|null $salt Salt (solo para algoritmos legacy)
-     * @param string|null $hashAlgorithm Algoritmo usado (se detecta automáticamente si no se especifica)
+     * @param HashAlgorithm|string|null $hashAlgorithm Algoritmo usado (se detecta automáticamente si no se especifica)
      * @return bool True si la contraseña es correcta
      */
-    public static function verify(string $password, string $hash, ?string $salt = null, ?string $hashAlgorithm = null): bool
+    public static function verify(string $password, string $hash, ?string $salt = null, HashAlgorithm|string|null $hashAlgorithm = null): bool
     {
         // Si no se especifica algoritmo, intentar detectarlo automáticamente
         if ($hashAlgorithm === null) {
             $hashAlgorithm = static::detectHashAlgorithm($hash);
         }
         
+        // Convertir string legacy a enum si es necesario
+        if (is_string($hashAlgorithm)) {
+            $hashAlgorithm = HashAlgorithm::fromString($hashAlgorithm);
+        }
+        
         switch ($hashAlgorithm) {
-            case static::ARGON2ID:
+            case HashAlgorithm::Argon2id:
                 return password_verify($password, $hash);
                 
-            case static::BCRYPT:
+            case HashAlgorithm::Bcrypt:
                 return password_verify($password, $hash);
                 
             // Algoritmos legacy
-            case static::SHA256:
-            case static::SHA1:
-            case static::MD5:
+            case HashAlgorithm::Sha256:
+            case HashAlgorithm::Sha1:
+            case HashAlgorithm::Md5:
                 $expectedHash = static::encode($password, $salt, $hashAlgorithm);
                 return hash_equals($hash, $expectedHash);
                 
             default:
-                throw new \InvalidArgumentException("Algoritmo de hash no soportado: {$hashAlgorithm}");
+                throw new InvalidArgumentException("Algoritmo de hash no soportado: {$hashAlgorithm->value}");
         }
     }
 
@@ -122,30 +126,30 @@ class PasswordManager
      * Detecta el algoritmo de hash basado en el formato del hash
      * 
      * @param string $hash
-     * @return string
+     * @return HashAlgorithm
      */
-    private static function detectHashAlgorithm(string $hash): string
+    private static function detectHashAlgorithm(string $hash): HashAlgorithm
     {
         // Argon2id hashes start with $argon2id$
         if (strpos($hash, '$argon2id$') === 0) {
-            return static::ARGON2ID;
+            return HashAlgorithm::Argon2id;
         }
         
         // Bcrypt hashes start with $2y$ (or similar variants)
         if (preg_match('/^\$2[axy]?\$/', $hash)) {
-            return static::BCRYPT;
+            return HashAlgorithm::Bcrypt;
         }
         
         // Detectar por longitud para algoritmos legacy
         switch (strlen($hash)) {
             case 32:
-                return static::MD5;
+                return HashAlgorithm::Md5;
             case 40:
-                return static::SHA1;
+                return HashAlgorithm::Sha1;
             case 64:
-                return static::SHA256;
+                return HashAlgorithm::Sha256;
             default:
-                throw new \InvalidArgumentException("No se pudo detectar el algoritmo del hash");
+                throw new InvalidArgumentException("No se pudo detectar el algoritmo del hash");
         }
     }
 
@@ -153,14 +157,21 @@ class PasswordManager
      * Verifica si un hash necesita ser rehaseado (para migración de algoritmos)
      * 
      * @param string $hash
-     * @param string $algorithm
+     * @param HashAlgorithm|string $algorithm
      * @param array $options
      * @return bool
      */
-    public static function needsRehash(string $hash, string $algorithm = self::ARGON2ID, array $options = []): bool
+    public static function needsRehash(string $hash, HashAlgorithm|string $algorithm = null, array $options = []): bool
     {
+        $algorithm = $algorithm ?? HashAlgorithm::getDefault();
+        
+        // Convertir string legacy a enum si es necesario
+        if (is_string($algorithm)) {
+            $algorithm = HashAlgorithm::fromString($algorithm);
+        }
+        
         switch ($algorithm) {
-            case static::ARGON2ID:
+            case HashAlgorithm::Argon2id:
                 $defaultOptions = [
                     'memory_cost' => 65536,
                     'time_cost' => 4,
@@ -169,7 +180,7 @@ class PasswordManager
                 $options = array_merge($defaultOptions, $options);
                 return password_needs_rehash($hash, PASSWORD_ARGON2ID, $options);
                 
-            case static::BCRYPT:
+            case HashAlgorithm::Bcrypt:
                 $defaultOptions = ['cost' => 12];
                 $options = array_merge($defaultOptions, $options);
                 return password_needs_rehash($hash, PASSWORD_BCRYPT, $options);
@@ -177,20 +188,27 @@ class PasswordManager
             default:
                 // Para algoritmos legacy, siempre recomendar rehashing a algoritmo seguro
                 $currentAlgo = static::detectHashAlgorithm($hash);
-                return in_array($currentAlgo, [static::SHA256, static::SHA1, static::MD5]);
+                return $currentAlgo->isLegacy();
         }
     }
 
     /**
      * Crea un salt para algoritmos legacy (deprecado)
      * 
-     * @param string $hashAlgorithm
+     * @param HashAlgorithm|string $hashAlgorithm
      * @return string
      * @deprecated Use Argon2id o Bcrypt que manejan el salt automáticamente
      */
-    public static function createSalt(string $hashAlgorithm = 'sha256'): string
+    public static function createSalt(HashAlgorithm|string $hashAlgorithm = null): string
     {
+        $hashAlgorithm = $hashAlgorithm ?? HashAlgorithm::Sha256;
+        
+        // Convertir string legacy a enum si es necesario
+        if (is_string($hashAlgorithm)) {
+            $hashAlgorithm = HashAlgorithm::fromString($hashAlgorithm);
+        }
+        
         $randomkey = uniqid('salt', true);
-        return hash($hashAlgorithm, $randomkey);
+        return hash($hashAlgorithm->value, $randomkey);
     }
 }

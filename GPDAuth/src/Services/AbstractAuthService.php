@@ -6,13 +6,14 @@ use DateTime;
 use Exception;
 use GPDAuth\Entities\Permission;
 use GPDAuth\Library\AuthConfig;
-use GPDAuth\Library\IAuthService;
+use GPDAuth\Library\AuthServiceInterface;
+use GPDAuth\Library\AuthMethod;
 use GPDAuth\Library\AuthJWTManager;
 use GPDAuth\Models\AuthSessionPermission;
 use GPDAuth\Models\AuthSessionUser;
 
 @session_start();
-abstract class AbstractAuthService implements IAuthService
+abstract class AbstractAuthService implements AuthServiceInterface
 {
 
     /**
@@ -61,7 +62,12 @@ abstract class AbstractAuthService implements IAuthService
      */
     protected $jwtExpirationTimeInSeconds;
 
-    protected $authMethod;
+    /**
+     * Método de autenticación utilizado
+     * 
+     * @var AuthMethod
+     */
+    protected AuthMethod $authMethod;
 
     protected $iss = null;
     /**
@@ -73,7 +79,7 @@ abstract class AbstractAuthService implements IAuthService
 
     public function __construct(
         string $iss,
-        string $authMethod = IAuthService::AUTHENTICATION_METHOD_SESSION,
+        AuthMethod|string $authMethod = AuthMethod::Session,
         ?string $jwtSecureKey = null,
         array $issuersConfig = []
     ) {
@@ -81,7 +87,12 @@ abstract class AbstractAuthService implements IAuthService
         $this->sessionKey = "gpdauth_session_id";
         $this->jwtSecureKey = $jwtSecureKey;
         $this->jwtExpirationTimeInSeconds = 1200; // 20 minutos
-        $this->authMethod = $authMethod;
+        
+        // Convertir string a enum si es necesario (compatibilidad hacia atrás)
+        $this->authMethod = $authMethod instanceof AuthMethod 
+            ? $authMethod 
+            : AuthMethod::tryFromString($authMethod, AuthMethod::Session);
+            
         $this->iss = $iss;
         $this->issuersConfig = $issuersConfig;
     }
@@ -412,21 +423,21 @@ abstract class AbstractAuthService implements IAuthService
      */
     public function initSession()
     {
-        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT) {
+        if ($this->authMethod === AuthMethod::Jwt) {
             $this->loginJWT();
         }
-        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION) {
+        if ($this->authMethod === AuthMethod::Session) {
             $this->loginSession();
         }
-        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
+        if ($this->authMethod === AuthMethod::SessionOrJwt) {
             $this->loginSession();
             if (empty($this->session)) {
                 $this->loginJWT();
             }
         }
-        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION) {
+        if ($this->authMethod === AuthMethod::JwtOrSession) {
             $this->loginJWT();
-            if (!empty($this->session)) {
+            if (empty($this->session)) {
                 $this->loginSession();
             }
         }
@@ -493,7 +504,7 @@ abstract class AbstractAuthService implements IAuthService
         $this->clearSession();
         $this->session = $session;
         $this->user = $this->sessionToUser($this->session);
-        if ($this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_JWT_OR_SESSION || $this->authMethod == IAuthService::AUTHENTICATION_METHOD_SESSION_OR_JWT) {
+        if ($this->authMethod->usesSession()) {
             $_SESSION[$this->sessionKey] = $session["sub"] ?? null;
         }
         return $this;

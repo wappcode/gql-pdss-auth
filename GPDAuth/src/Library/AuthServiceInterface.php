@@ -2,14 +2,12 @@
 
 namespace GPDAuth\Library;
 
-
-interface IAuthService
+/**
+ * Interface para servicios de autenticación
+ * Define los métodos necesarios para manejar la autenticación de usuarios
+ */
+interface AuthServiceInterface
 {
-    const AUTHENTICATION_METHOD_SESSION = 'SESSION';
-    const AUTHENTICATION_METHOD_JWT = 'JWT';
-    const AUTHENTICATION_METHOD_JWT_OR_SESSION = 'JWT_OR_SESSION';
-    const AUTHENTICATION_METHOD_SESSION_OR_JWT = 'SESSION_OR_JWT';
-
     public function login(string $username, string $password);
     public function logout(): void;
     public function isSigned(): bool;

@@ -8,7 +8,8 @@ use GPDAuth\Entities\Role;
 use GPDAuth\Entities\User;
 use Doctrine\ORM\EntityManager;
 use GPDAuth\Entities\Permission;
-use GPDAuth\Library\IAuthService;
+use GPDAuth\Library\AuthServiceInterface;
+use GPDAuth\Library\AuthMethod;
 use GPDAuth\Library\PasswordManager;
 use GPDAuth\Library\InvalidUserException;
 use GPDAuth\Models\AuthSessionPermission;
@@ -27,7 +28,7 @@ class AuthService extends AbstractAuthService
     public function __construct(
         EntityManager $entityManager,
         string $iss,
-        string $authMethod = IAuthService::AUTHENTICATION_METHOD_SESSION,
+        AuthMethod|string $authMethod = AuthMethod::Session,
         ?string $jwtSecureKey = null,
         array $issuersConfig = []
     ) {

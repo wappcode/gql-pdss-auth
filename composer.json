@@ -23,5 +23,9 @@
   },
   "bin": [
     "bin/create-jwt"
-  ]
+  ],
+  "scripts": {
+    "test": "phpunit --colors=always",
+    "create-jwt": "php bin/create-jwt"
+  }
 }

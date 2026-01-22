@@ -1,12 +1,12 @@
 <?php
 
-namespace GPDAuth\Library;
+namespace GPDAuth\Models;
 
 /**
  * Interface para servicios de autenticación
  * Define los métodos necesarios para manejar la autenticación de usuarios
  */
-interface AuthServiceInterface
+interface AuthService
 {
     public function login(string $username, string $password);
     public function logout(): void;
@@ -17,7 +17,5 @@ interface AuthServiceInterface
     public function hasPermission(string $resource, string $permission, ?string $scope = null): bool;
     public function hasSomePermissions(array $resources, array $permission, ?array $scopes = null): bool;
     public function hasAllPermissions(array $resources, array $permission, ?array $scopes = null): bool;
-    public function getRoles(): array;
-    public function getSession(): ?array;
-    public function getAuthId(): ?string;
+    public function getAuthenticatedUser(): ?AuthenticatedUser;
 }

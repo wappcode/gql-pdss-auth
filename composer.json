@@ -1,10 +1,11 @@
 {
   "name": "wappcode/gql-pdss-auth",
-  "version": "3.1.5",
+  "version": "4-dev",
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "GPDAuth\\": "GPDAuth/src"
+      "GPDAuth\\": "GPDAuth/src",
+      "GPDAuthJWT\\": "GPDAuthJWT/src"
     }
   },
   "require-dev": {
@@ -15,7 +16,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "AppModule\\": "dev/modules/AppModule/src/"
+      "AppModule\\": "dev/modules/AppModule/src/",
     }
   },
   "require": {

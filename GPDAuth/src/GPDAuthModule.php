@@ -11,9 +11,9 @@ use GPDCore\Library\AbstractModule;
 use GPDAuth\Graphql\FieldSignedUser;
 use GPDAuth\Graphql\ResolversPermission;
 use Laminas\ServiceManager\ServiceManager;
-use GPDAuth\Graphql\TypeFactorySessionData;
 use GPDAuth\Graphql\TypeSessionDataPermission;
-use GPDAuth\Graphql\TypeFactoryAuthSessionUser;
+use GPDAuth\Models\UserRepositoryInterface;
+use GPDAuth\Services\AuthSessionService;
 
 class GPDAuthModule extends AbstractModule
 {
@@ -38,24 +38,20 @@ class GPDAuthModule extends AbstractModule
                 TypeSessionDataPermission::NAME => TypeSessionDataPermission::class
             ],
             'factories' => [
+
+                UserRepositoryInterface::class => function (ServiceManager $sm) use ($context) {
+                    $entityManager = $context->getEntityManager();
+                    return new \GPDAuth\Services\UserRepository($entityManager);
+                },
                 AuthService::class => function (ServiceManager $sm) {
-                    $config = $this->context->getConfig();
-                    $entityManager = $this->context->getEntityManager();
-                    $authISSKey = $config->get(AuthConfigKey::AuthIssKey->value);
-                    $authMethod = $config->get(AuthConfigKey::AuthMethodKey->value);
-                    $authSecureKey = $config->get(AuthConfigKey::JwtSecureKey->value);
-                    $authIssConfig = $config->get(AuthConfigKey::JwtIssConfig->value, []);
-                    $authService = new AuthService(
-                        $entityManager,
-                        $authISSKey,
-                        $authMethod,
-                        $authSecureKey,
-                        $authIssConfig
+                    // Crear repositorios
+                    $userRepository = $sm->get(UserRepositoryInterface::class);
+
+                    // Crear servicio de autenticación
+                    $authService = new AuthSessionService(
+                        $userRepository,
                     );
 
-                    $authService->setJwtAlgoritm($config->get(AuthConfigKey::JwtAlgorithm->value));
-                    $authService->setjwtExpirationTimeInSeconds($config->get(AuthConfigKey::JwtExpirationTime->value));
-                    $authService->initSession();
                     return $authService;
                 },
 

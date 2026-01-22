@@ -5,18 +5,20 @@ getSessionData: SessionData
 
 type SessionData{
 
-user: AuthSessionUser!
+user: AuthenticatedUser!
 roles: [String]
 permissions: [SessionDataPermission]!
 jwt: String
 }
-type AuthSessionUser{
+type AuthenticatedUser{
 fullName: String!
 firstName: String!
 lastName: String
 username: String!
 email: String
 picture: String
+roles: [String!]!
+permissions: [String!]!
 }
 type SessionDataPermission{
 resource: String!

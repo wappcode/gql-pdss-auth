@@ -2,7 +2,7 @@
 
 namespace GPDAuth\Models;
 
-class AuthSessionPermission
+class ResourcePermission
 {
 
     /**

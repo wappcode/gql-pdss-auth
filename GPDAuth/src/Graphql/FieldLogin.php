@@ -8,7 +8,7 @@ use GPDAuth\Services\AuthService;
 use GPDCore\Library\GQLException;
 use GraphQL\Type\Definition\Type;
 use GPDCore\Library\IContextService;
-use GPDAuth\Models\AuthSessionPermission;
+use GPDAuth\Models\ResourcePermission;
 
 class FieldLogin
 {
@@ -24,7 +24,7 @@ class FieldLogin
             try {
                 $auth->login($username, $password);
                 $data = $auth->getSession();
-                $permissions = array_map(function (AuthSessionPermission $permission) {
+                \$permissions = array_map(function (ResourcePermission \$permission) {
                     return $permission->toArray();
                 }, $auth->getPermissions());
                 $token = $auth->createNewJWTFromSession();

@@ -16,11 +16,11 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "AppModule\\": "dev/modules/AppModule/src/",
+      "AppModule\\": "dev/modules/AppModule/src/"
     }
   },
   "require": {
-    "firebase/php-jwt": "^6.3"
+    "firebase/php-jwt": "^7.0.2"
   },
   "bin": [
     "bin/create-jwt"

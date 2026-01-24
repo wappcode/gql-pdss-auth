@@ -28,8 +28,6 @@ abstract class AbstractAuthService implements AuthService
 
     public abstract function logout(): void;
 
-    public  abstract function setSession(array $userId): void;
-
     public function getAuthenticatedUser(): ?AuthenticatedUser
     {
         return $this->authenticatedUser;

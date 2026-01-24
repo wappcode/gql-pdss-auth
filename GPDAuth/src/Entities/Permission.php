@@ -16,17 +16,6 @@ use GPDCore\Entities\AbstractEntityModel;
 #[ORM\Table(name: "gpd_auth_permissions")]
 class Permission extends AbstractEntityModel
 {
-
-    const ALLOW = "ALLOW";
-    const DENY = "DENY";
-    const ALL = "ALL";
-    const VIEW = "VIEW";
-    const CREATE = "CREATE";
-    const UPDATE = "UPDATE";
-    const DELETE = "DELETE";
-    const UPLOAD = "UPLOAD";
-    const DOWNLOAD = "DOWNLOAD";
-
     #[ORM\ManyToOne(targetEntity: "\GPDAuth\Entities\Resource")]
     #[ORM\JoinColumn(name: "resource_id", referencedColumnName: "id", nullable: false)]
 

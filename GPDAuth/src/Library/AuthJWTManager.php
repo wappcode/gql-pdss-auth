@@ -3,8 +3,11 @@
 namespace GPDAuth\Library;
 
 use Exception;
+use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use GPDAuthJWT\Models\UnverifiedJWT;
+use stdClass;
 
 class AuthJWTManager
 {
@@ -41,19 +44,37 @@ class AuthJWTManager
         return $jwt;
     }
 
-    /**
-     * Retrive JWT data (payload) before validate security.
-     * Be careful
-     */
-    public static function getJWTDataNoValidation(string $jwt): array
+    public static function decodeWithoutVerification(string $jwt): UnverifiedJWT
     {
-        list($header, $payload, $signature) = explode('.', $jwt);
-        $jsonToken = base64_decode($payload);
-        $data = json_decode($jsonToken, true);
-        return $data;
+        [$h, $p] = explode('.', $jwt);
+        return new UnverifiedJWT(
+            JWT::jsonDecode(JWT::urlsafeB64Decode($h)),
+            JWT::jsonDecode(JWT::urlsafeB64Decode($p))
+        );
     }
 
-    public static function getJWTData(string $token, string $secureKey, string $algorithm = 'HS256'): ?array
+    public static function getPublicKeyFromJWK(array $jwk): ?Key
+    {
+        $kid = $jwk['kid'] ?? null;
+        if (empty($kid)) {
+            return null;
+        }
+        $publicKeys = JWK::parseKeySet(['keys' => [$jwk]]);
+
+        return $publicKeys[$kid] ?? null;
+    }
+
+
+
+    /**
+     * Decodificar y verificar un JWT
+     *
+     * @param string $token
+     * @param Key|ArrayAccess<string, Key>|array<string, Key> $keyOrKeyArray
+     * @param string $algorithm
+     * @return object|null
+     */
+    public static function decode(string $token,  $secureKey, string $algorithm = 'RS256', ?stdClass &$headers = null): ?object
     {
         if (empty($secureKey)) {
             throw new Exception("Empty jwt secure key");
@@ -61,9 +82,8 @@ class AuthJWTManager
         if (empty($token)) {
             return null;
         }
-        $data = JWT::decode($token, new Key($secureKey, $algorithm));
-        $data_array = (array) $data;
-        return $data_array;
+        $data = JWT::decode($token, new Key($secureKey, $algorithm), $headers);
+        return $data;
     }
     /**
      * Create a JWT 

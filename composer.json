@@ -20,7 +20,9 @@
     }
   },
   "require": {
-    "firebase/php-jwt": "^7.0.2"
+    "firebase/php-jwt": "^7.0.2",
+    "wappcode/graphql-basic-client": "^1.0",
+    "guzzlehttp/guzzle": "^7.8"
   },
   "bin": [
     "bin/create-jwt"

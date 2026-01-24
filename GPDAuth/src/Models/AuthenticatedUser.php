@@ -261,7 +261,7 @@ class AuthenticatedUser
     /**
      * Get user permissions
      *
-     * @return  array
+     * @return  array [ResourcePermission]
      */
     public function getPermissions()
     {
@@ -271,7 +271,7 @@ class AuthenticatedUser
     /**
      * Set user permissions
      *
-     * @param  array  $permissions  User permissions
+     * @param  array  $permissions  [ResourcePermission]
      *
      * @return  self
      */

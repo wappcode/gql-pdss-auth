@@ -137,6 +137,7 @@ class AuthTokenController extends AbstractAppController
             'jti'   => bin2hex(random_bytes(16)),
             'gty'   => 'client-credentials',
             'scope' => implode(' ', $finalScopes),
+            'azp'   => $client->getIdentifier(),
         ];
 
         $jwt = JWT::encode(

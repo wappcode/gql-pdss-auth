@@ -21,7 +21,7 @@ use GPDAuth\Models\TokenRepositoryInterface;
  * - Sesiones PHP para navegadores web
  * - Tokens JWT (Access + Refresh) para APIs
  */
-class AuthService extends AuthSessionService
+class AuthService extends AbstractAuthService
 {
     private EntityManager $entityManager;
     private UserRepositoryInterface $userRepository;
@@ -30,7 +30,7 @@ class AuthService extends AuthSessionService
     private string $iss;
     private string $sessionKey;
     private string $jwtSecret;
-    
+
     // Estado de la sesión actual
     private ?array $session = null;
     private ?User $currentUser = null;
@@ -51,7 +51,7 @@ class AuthService extends AuthSessionService
         $this->entityManager = $entityManager;
         $this->jwtSecret = $jwtSecret ?? 'default_secret_change_in_production';
         $this->sessionKey = $sessionKey;
-        
+
         // Inicializar el servicio de tokens
         $this->tokenService = new TokenService(
             $tokenRepository,
@@ -64,6 +64,7 @@ class AuthService extends AuthSessionService
 
 
     /**
+     * TODO: Revisar y ver si se va a utilizar
      * Login para APIs que retorna tokens JWT
      *
      * @param string $username
@@ -141,7 +142,7 @@ class AuthService extends AuthSessionService
 
         // Establecer datos de sesión desde el token
         $this->session = $tokenData;
-        
+
         // Cargar usuario y sus datos
         $username = $tokenData['sub'] ?? null;
         if ($username) {
@@ -237,7 +238,7 @@ class AuthService extends AuthSessionService
 
         // Limpiar sesión PHP
         unset($_SESSION[$this->sessionKey]);
-        
+
         // Limpiar estado interno
         $this->clearSessionData();
     }
@@ -300,7 +301,7 @@ class AuthService extends AuthSessionService
             'name' => trim(($this->currentUser->getFirstName() ?? '') . ' ' . ($this->currentUser->getLastName() ?? '')),
             'email' => $this->currentUser->getEmail(),
             'roles' => $this->roles,
-            'permissions' => array_map(function($permission) {
+            'permissions' => array_map(function ($permission) {
                 return [
                     'resource' => $permission->getResource(),
                     'value' => $permission->getValue(),
@@ -356,10 +357,12 @@ class AuthService extends AuthSessionService
     public function hasPermission(string $resource, string $permissionValue, ?string $scope = null): bool
     {
         foreach ($this->permissions as $permission) {
-            if ($permission->getResource() === $resource && 
+            if (
+                $permission->getResource() === $resource &&
                 ($permission->getValue() === $permissionValue || $permission->getValue() === 'all') &&
                 ($scope === null || $permission->getScope() === $scope) &&
-                $permission->getAccess() === 'allow') {
+                $permission->getAccess() === 'allow'
+            ) {
                 return true;
             }
         }
@@ -405,7 +408,7 @@ class AuthService extends AuthSessionService
         $this->permissions = [];
         foreach ($this->currentUser->getRoles() as $role) {
             foreach ($role->getPermissions() as $permission) {
-                \$authPermission = new ResourcePermission(
+                $authPermission = new ResourcePermission(
                     $permission->getResource(),
                     $permission->getAccess(),
                     $permission->getValue(),

@@ -132,7 +132,8 @@ class AuthM2MService extends AbstractAuthService
         $jwtScopes = isset($jwt->scope) ? explode(' ', $jwt->scope) : [];
 
         $permissions = array_map(function (string $scope) {
-            [$resource, $permissionValue] = explode(':', $scope, 2);
+            $scopeFormated = str_replace('.', ':', strtolower($scope));
+            [$resource, $permissionValue] = explode(':', $scopeFormated, 2);
             $permission = new ResourcePermission($resource, PermissionAccess::ALLOW->value, $permissionValue);
             return $permission;
         }, $jwtScopes);

@@ -1,0 +1,91 @@
+<?php
+
+namespace GPDAuthJWT\Library;
+
+use Exception;
+use Firebase\JWT\JWK;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+use GPDAuth\Entities\PermissionAccess;
+use GPDAuth\Models\ResourcePermission;
+use GPDAuthJWT\Models\UnverifiedJWT;
+use Psr\Http\Message\ServerRequestInterface;
+use stdClass;
+
+class JwtUtilities
+{
+
+
+
+    public static function extractJWTFromRequest(ServerRequestInterface $request): ?string
+    {
+        $auth = $request->getHeaderLine('Authorization');
+
+        if (!str_starts_with($auth, 'Bearer ')) {
+            return null;
+        }
+
+        $jwt = substr($auth, 7);
+        return $jwt;
+    }
+
+    /**
+     * Convierte los scopes del JWT en permisos de recurso
+     *
+     * @param array $jwtScopes
+     * @return array array<ResourcePermission>
+     */
+    public static function convertScopesToPermissions(array $jwtScopes): array
+    {
+        $jwtScopes = isset($jwt->scope) ? explode(' ', $jwt->scope) : [];
+
+        $permissions = array_map(function (string $scope) {
+            $scopeFormated = str_replace('.', ':', strtolower($scope));
+            [$resource, $permissionValue] = explode(':', $scopeFormated, 2);
+            $permission = new ResourcePermission($resource, PermissionAccess::ALLOW->value, $permissionValue);
+            return $permission;
+        }, $jwtScopes);
+
+        return $permissions;
+    }
+
+    public static function decodeUnverified(string $jwt): UnverifiedJWT
+    {
+        [$h, $p] = explode('.', $jwt);
+        return new UnverifiedJWT(
+            JWT::jsonDecode(JWT::urlsafeB64Decode($h)),
+            JWT::jsonDecode(JWT::urlsafeB64Decode($p))
+        );
+    }
+
+    public static function parsePublicKeyFromJWK(array $jwk): ?Key
+    {
+        $kid = $jwk['kid'] ?? null;
+        if (empty($kid)) {
+            return null;
+        }
+        $publicKeys = JWK::parseKeySet(['keys' => [$jwk]]);
+
+        return $publicKeys[$kid] ?? null;
+    }
+
+    /**
+     * Decodificar y verificar un JWT
+     *
+     * @param string $token
+     * @param Key|ArrayAccess<string, Key>|array<string, Key> $keyOrKeyArray
+     * @param string $algorithm
+     * @return object|null
+     */
+    public static function decodeAndVerify(string $token,  $secureKey, string $algorithm = 'RS256', ?stdClass &$headers = null): ?object
+    {
+        if (empty($secureKey)) {
+            throw new Exception("Empty jwt secure key");
+        }
+        if (empty($token)) {
+            return null;
+        }
+        $data = JWT::decode($token, new Key($secureKey, $algorithm), $headers);
+        return $data;
+    }
+}

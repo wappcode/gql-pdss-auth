@@ -4,6 +4,13 @@ namespace GPDAuth\Models;
 
 class AuthenticatedUser
 {
+
+    /**
+     * Tipo de usuario api_client, local_user, extern_user
+     *
+     * @var AuthenticatedUserType
+     */
+    private AuthenticatedUserType $type;
     /**
      * User ID
      *
@@ -67,12 +74,24 @@ class AuthenticatedUser
      */
     private array $roles = [];
 
+
+    private bool $active = true;
+
     public function toArray(): array
     {
         $data = get_object_vars($this);
+        // Convertir el enum a su valor string
+        if (isset($data['type']) && $data['type'] instanceof AuthenticatedUserType) {
+            $data['type'] = $data['type']->value;
+        }
         return $data;
     }
 
+    public function setScopes(array $scopes): self
+    {
+        // No implementation yet
+        return $this;
+    }
     /**
      * Get user ID
      *
@@ -278,6 +297,46 @@ class AuthenticatedUser
     public function setPermissions(array $permissions)
     {
         $this->permissions = $permissions;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of active
+     */
+    public function getActive()
+    {
+        return $this->active;
+    }
+
+    /**
+     * Set the value of active
+     *
+     * @return  self
+     */
+    public function setActive($active)
+    {
+        $this->active = $active;
+
+        return $this;
+    }
+
+    /**
+     * Get the value of type
+     */
+    public function getType(): AuthenticatedUserType
+    {
+        return $this->type;
+    }
+
+    /**
+     * Set the value of type
+     *
+     * @return  self
+     */
+    public function setType(AuthenticatedUserType $type): self
+    {
+        $this->type = $type;
 
         return $this;
     }

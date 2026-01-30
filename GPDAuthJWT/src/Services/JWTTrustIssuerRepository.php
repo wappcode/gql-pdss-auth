@@ -3,21 +3,18 @@
 namespace GPDAuthJWT\Services;
 
 use GPDAuthJWT\Entities\TrustedIssuer;
-use GPDCore\Library\IContextService;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Exception;
 use GPDAuthJWT\Entities\TrustedIssuerAudience;
+use GPDAuthJWT\Models\JWTTrustIssuerRepositoryInterface;
+use GPDCore\Library\AppContextInterface;
 
-class JWTTrustIssuerRepository
+class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
 {
 
 
-    private IContextService $context;
-    public function __construct(IContextService $context)
-    {
-        $this->context = $context;
-    }
+    public function __construct(private AppContextInterface $context) {}
 
 
     public function findIssuer(string $issuer): ?TrustedIssuer

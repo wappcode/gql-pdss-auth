@@ -225,6 +225,53 @@ Actualizar base de datos
 vendor/bin/doctrine orm:schema-tool:update --force
 ```
 
+## Configuración de Apache
+
+Para que la autenticación JWT funcione correctamente con Apache, es necesario configurar el servidor para que pase el header `Authorization` a PHP. Por defecto, Apache no transfiere este header por razones de seguridad.
+
+### Opción 1: Usando SetEnvIf (Recomendado)
+
+Agregar en el archivo de configuración de VirtualHost o en `.htaccess`:
+
+```apache
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+```
+
+### Opción 2: Usando RewriteRule
+
+Alternativamente, si ya tienes `RewriteEngine On` configurado:
+
+```apache
+RewriteEngine On
+RewriteCond %{HTTP:Authorization} ^(.*)
+RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+```
+
+### Ejemplo completo en VirtualHost
+
+```apache
+<VirtualHost *:80>
+    ServerName example.com
+    DocumentRoot /var/www/html/public
+    
+    # Pasar header Authorization a PHP
+    SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+    
+    # Otras configuraciones...
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ /index.php?path=$1 [NC,L,QSA]
+</VirtualHost>
+```
+
+**Nota:** Después de modificar la configuración de Apache, recuerda reiniciar el servicio:
+```bash
+sudo service apache2 restart
+# o en Docker
+docker-compose restart
+```
+
 Crear una instancia de la clase AuthService y utilizar sus métodos para login, revisar roles y revisar permisos
 
 ```

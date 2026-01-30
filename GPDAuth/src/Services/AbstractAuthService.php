@@ -3,7 +3,8 @@
 namespace GPDAuth\Services;
 
 use Exception;
-use GPDAuth\Entities\Permission;
+use GPDAuth\Entities\PermissionAccess;
+use GPDAuth\Entities\PermissionValue;
 use GPDAuth\Models\ResourcePermission;
 use GPDAuth\Models\AuthenticatedUser;
 use GPDAuth\Models\AuthService;
@@ -20,11 +21,11 @@ abstract class AbstractAuthService implements AuthService
      * 
      * Hay que inicializar sesion, roles y permisos
      * 
-     * @param string $username
+     * @param string $identifier (username o client_id)
      * @param string $password
      * @throws Exception
      */
-    public abstract function login(string $username, string $password): void;
+    public abstract function login(string $identifier, string $password, string $grantType): void;
 
     public abstract function logout(): void;
 
@@ -81,7 +82,7 @@ abstract class AbstractAuthService implements AuthService
         if (!empty($scope) && $scope != $permission->getScope()) {
             return false;
         }
-        return $permission->getAccess() === Permission::ALLOW;
+        return $permission->getAccess() === PermissionAccess::ALLOW;
     }
     /**
      * Determina si el usuario tiene algun permiso para alguno de los recursos
@@ -168,8 +169,8 @@ abstract class AbstractAuthService implements AuthService
         $permissions = $this->authenticatedUser?->getPermissions() ?? [];
         /** @var ResourcePermission */
         foreach ($permissions as $permission) {
-            if ($resource != $permission->getResource() || ($permissionValue != $permission->getValue() && $permission->getValue() != Permission::ALL)) continue;
-            if ($permission->getAccess() == Permission::ALLOW) {
+            if ($resource != $permission->getResource() || ($permissionValue != $permission->getValue() && $permission->getValue() != PermissionValue::ALL)) continue;
+            if ($permission->getAccess() == PermissionAccess::ALLOW) {
                 return $permission;
             } else {
                 return null;

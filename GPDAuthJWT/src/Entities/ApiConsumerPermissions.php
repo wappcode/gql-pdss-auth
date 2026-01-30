@@ -4,16 +4,18 @@ namespace GPDAuthJWT\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
 use DateTime;
+use GPDCore\Entities\AbstractEntityModel;
 
 /** Usado para IdP local para Machine to Machine M2M */
 #[ORM\Entity]
 #[ORM\Table(name: "gpd_auth_api_consumer_permissions")]
-class ApiConsumerPermissions
+#[ORM\HasLifecycleCallbacks]
+class ApiConsumerPermissions extends AbstractEntityModel
 {
     #[ORM\Id]
-    #[ORM\ManyToOne(targetEntity: ApiConsumers::class, inversedBy: "consumerPermissions")]
+    #[ORM\ManyToOne(targetEntity: ApiConsumer::class, inversedBy: "consumerPermissions")]
     #[ORM\JoinColumn(name: "consumer_id", referencedColumnName: "id", nullable: false)]
-    private ApiConsumers $consumer;
+    private ApiConsumer $consumer;
 
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: ApiPermission::class, inversedBy: "consumerPermissions")]
@@ -23,19 +25,21 @@ class ApiConsumerPermissions
     #[ORM\Column(name: "granted_at", type: "datetime", nullable: false)]
     private DateTime $grantedAt;
 
-    public function __construct(ApiConsumers $consumer, ApiPermission $permission)
+    public function __construct(ApiConsumer $consumer, ApiPermission $permission)
     {
         $this->consumer = $consumer;
         $this->permission = $permission;
         $this->grantedAt = new DateTime();
     }
 
-    public function getConsumer(): ApiConsumers
+
+
+    public function getConsumer(): ApiConsumer
     {
         return $this->consumer;
     }
 
-    public function setConsumer(ApiConsumers $consumer): self
+    public function setConsumer(ApiConsumer $consumer): self
     {
         $this->consumer = $consumer;
         return $this;
@@ -70,5 +74,12 @@ class ApiConsumerPermissions
     {
         $oneDayAgo = new DateTime('-1 day');
         return $this->grantedAt > $oneDayAgo;
+    }
+
+    #[ORM\PreUpdate]
+    #[ORM\PrePersist]
+    public function updateGrantedAt(): void
+    {
+        $this->grantedAt = new DateTime();
     }
 }

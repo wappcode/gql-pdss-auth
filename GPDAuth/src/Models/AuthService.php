@@ -5,10 +5,11 @@ namespace GPDAuth\Models;
 /**
  * Interface para servicios de autenticación
  * Define los métodos necesarios para manejar la autenticación de usuarios
+ * TODO: Cambiar por AuthServiceInterface 
  */
 interface AuthService
 {
-    public function login(string $username, string $password);
+    public function login(string $username, string $password, string $grantType);
     public function logout(): void;
     public function isSigned(): bool;
     public function hasRole(string $role): bool;

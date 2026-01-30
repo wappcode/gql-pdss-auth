@@ -4,7 +4,10 @@ namespace GPDAuthJWT\Entities;
 
 use GPDCore\Entities\AbstractEntityModelStringId;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use DateTime;
+use GPDAuthJWT\Models\ApiConsumerStatus;
 
 /** Usado para IdP local para Machine to Machine M2M */
 #[ORM\Entity]
@@ -14,19 +17,30 @@ class ApiConsumer extends AbstractEntityModelStringId
   #[ORM\Column(name: "identifier", type: "string", length: 100, unique: true, nullable: false)]
   private string $identifier;
 
+  #[ORM\Column(name: "name", type: "string", length: 100, unique: true, nullable: false)]
+  private string $name;
+
   #[ORM\Column(name: "secret_hash", type: "string", length: 255, nullable: false)]
   private string $secretHash;
 
-  /**
-   * revoked, active,suspended
-   *
-   * @var string
-   */
-  #[ORM\Column(name: "status", type: "string", length: 20, nullable: false)]
-  private string $status;
+  #[ORM\Column(name: "status", type: "string", length: 20, nullable: false, enumType: ApiConsumerStatus::class)]
+  private ApiConsumerStatus $status;
 
   #[ORM\Column(name: "revoked_at", type: "datetime", nullable: true)]
   private ?DateTime $revokedAt = null;
+
+  #[ORM\OneToMany(mappedBy: "consumer", targetEntity: ApiConsumerPermissions::class)]
+  private Collection $permissions;
+
+  #[ORM\OneToMany(mappedBy: "customer", targetEntity: ApiCustomerGrants::class)]
+  private Collection $grants;
+
+  public function __construct()
+  {
+    parent::__construct();
+    $this->permissions = new ArrayCollection();
+    $this->grants = new ArrayCollection();
+  }
 
   public function getIdentifier(): string
   {
@@ -50,12 +64,12 @@ class ApiConsumer extends AbstractEntityModelStringId
     return $this;
   }
 
-  public function getStatus(): string
+  public function getStatus(): ApiConsumerStatus
   {
     return $this->status;
   }
 
-  public function setStatus(string $status): self
+  public function setStatus(ApiConsumerStatus $status): self
   {
     $this->status = $status;
     return $this;
@@ -77,7 +91,7 @@ class ApiConsumer extends AbstractEntityModelStringId
    */
   public function isActive(): bool
   {
-    return $this->status === 'active';
+    return $this->status === ApiConsumerStatus::ACTIVE;
   }
 
   /**
@@ -85,7 +99,7 @@ class ApiConsumer extends AbstractEntityModelStringId
    */
   public function isSuspended(): bool
   {
-    return $this->status === 'suspended';
+    return $this->status === ApiConsumerStatus::SUSPENDED;
   }
 
   /**
@@ -93,7 +107,7 @@ class ApiConsumer extends AbstractEntityModelStringId
    */
   public function isRevoked(): bool
   {
-    return $this->status === 'revoked';
+    return $this->status === ApiConsumerStatus::REVOKED;
   }
 
   /**
@@ -101,7 +115,7 @@ class ApiConsumer extends AbstractEntityModelStringId
    */
   public function activate(): self
   {
-    $this->status = 'active';
+    $this->status = ApiConsumerStatus::ACTIVE;
     $this->revokedAt = null;
     return $this;
   }
@@ -111,7 +125,7 @@ class ApiConsumer extends AbstractEntityModelStringId
    */
   public function suspend(): self
   {
-    $this->status = 'suspended';
+    $this->status = ApiConsumerStatus::SUSPENDED;
     return $this;
   }
 
@@ -120,8 +134,86 @@ class ApiConsumer extends AbstractEntityModelStringId
    */
   public function revoke(): self
   {
-    $this->status = 'revoked';
+    $this->status = ApiConsumerStatus::REVOKED;
     $this->revokedAt = new DateTime();
+    return $this;
+  }
+
+  /**
+   * @return Collection<int, ApiPermission>
+   */
+  public function getPermissions(): Collection
+  {
+    return $this->permissions;
+  }
+
+  public function addPermission(ApiPermission $permission): self
+  {
+    if (!$this->permissions->contains($permission)) {
+      $this->permissions->add($permission);
+    }
+    return $this;
+  }
+
+  public function removePermission(ApiPermission $permission): self
+  {
+    $this->permissions->removeElement($permission);
+    return $this;
+  }
+
+
+  /**
+   * Check if consumer has a specific permission
+   */
+  public function hasPermission(ApiPermission $permission): bool
+  {
+    return $this->permissions->contains($permission);
+  }
+
+  /**
+   * Check if consumer has a permission by name
+   */
+  public function hasPermissionByName(string $permissionName): bool
+  {
+    foreach ($this->permissions as $permission) {
+      if ($permission->getName() === $permissionName) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+
+  public function getGrants()
+  {
+    return $this->grants;
+  }
+
+
+  public function setGrants($grants)
+  {
+    $this->grants = $grants;
+
+    return $this;
+  }
+
+  /**
+   * Get the value of name
+   */
+  public function getName()
+  {
+    return $this->name;
+  }
+
+  /**
+   * Set the value of name
+   *
+   * @return  self
+   */
+  public function setName($name)
+  {
+    $this->name = $name;
+
     return $this;
   }
 }

@@ -31,7 +31,7 @@ class ApiPermission extends AbstractEntityModel
     #[ORM\Column(name: "description", type: "text", nullable: true)]
     private ?string $description = null;
 
-    #[ORM\ManyToMany(targetEntity: ApiConsumers::class, mappedBy: "permissions")]
+    #[ORM\ManyToMany(targetEntity: ApiConsumer::class, mappedBy: "permissions")]
     private Collection $consumers;
 
     public function __construct()
@@ -63,14 +63,14 @@ class ApiPermission extends AbstractEntityModel
     }
 
     /**
-     * @return Collection<int, ApiConsumers>
+     * @return Collection<int, ApiConsumer>
      */
     public function getConsumers(): Collection
     {
         return $this->consumers;
     }
 
-    public function addConsumer(ApiConsumers $consumer): self
+    public function addConsumer(ApiConsumer $consumer): self
     {
         if (!$this->consumers->contains($consumer)) {
             $this->consumers->add($consumer);
@@ -79,7 +79,7 @@ class ApiPermission extends AbstractEntityModel
         return $this;
     }
 
-    public function removeConsumer(ApiConsumers $consumer): self
+    public function removeConsumer(ApiConsumer $consumer): self
     {
         if ($this->consumers->removeElement($consumer)) {
             $consumer->removePermission($this);

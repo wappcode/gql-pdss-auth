@@ -1,0 +1,191 @@
+<?php
+// src/Middleware/JwtAuthMiddleware.php
+
+namespace App\Middleware;
+
+
+use GPDAuth\Models\AuthenticatedUser;
+use GPDAuth\Models\AuthenticatedUserType;
+use GPDAuthJWT\Entities\ApiConsumer;
+use GPDAuthJWT\Entities\TrustedIssuer;
+use GPDAuthJWT\Library\JwtUtilities;
+use GPDAuthJWT\Models\ApiCustomerRepositoryInterface;
+use GPDAuthJWT\Models\JWTTrustIssuerRepositoryInterface;
+use Laminas\Diactoros\Response\JsonResponse;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+use Psr\Http\Server\MiddlewareInterface;
+
+class JwtAuthMiddleware implements MiddlewareInterface
+{
+    /**
+     * Valida la autenticación JWT en la solicitud
+     * Agrega el usuario autenticado a los atributos de la solicitud con el atributo identity
+     * Cuando exitUnAuthorized es true, responde con 401 si la autenticación falla (Aplica para rutas protegidas)
+     * Cuando exitUnAuthorized es false, continúa la cadena de middleware si la autenticación falla (Aplica para rutas públicas o para GraphQL para validar cada query, la validación se hace en los resolvers o middleware de los resolvers, con los datos del atributo identity de request)
+     *
+     * @param JWTTrustIssuerRepositoryInterface $issuerRepository
+     * @param ApiCustomerRepositoryInterface $apiCustomerRepository
+     * @param boolean $exitUnAuthorized
+     */
+    public function __construct(
+        private JWTTrustIssuerRepositoryInterface $issuerRepository,
+        private ApiCustomerRepositoryInterface $apiCustomerRepository,
+        private string $identityKey = 'identity',
+        private bool $exitUnAuthorized = true,
+    ) {}
+
+    public function process(
+        ServerRequestInterface $request,
+        RequestHandlerInterface $handler
+    ): ResponseInterface {
+
+        $jwt = JwtUtilities::extractJWTFromRequest($request);
+        if ($jwt === null) {
+            if ($this->exitUnAuthorized) {
+                return $this->unauthorized('Missing token');
+            } else {
+                return $handler->handle($request);
+            }
+        }
+        try {
+            $decoded = $this->decodeAndValidate($jwt);
+        } catch (\Throwable $e) {
+
+            if ($this->exitUnAuthorized) {
+                return $this->unauthorized($e->getMessage());
+            } else {
+                return $handler->handle($request);
+            }
+        }
+
+        // ¿Es M2M?
+        $isM2M = ($decoded['gty'] ?? null) === 'client-credentials';
+        $permissions = JwtUtilities::convertScopesToPermissions(explode(' ', $decoded['scope'] ?? ''));
+        if ($isM2M) {
+            $client = $this->extractClientFromJwt($decoded);
+            $this->enforceM2MWhitelist($client);
+            $authenticatedUser = (new AuthenticatedUser())
+                ->setFullName($client->getName())
+                ->setType(AuthenticatedUserType::API_CLIENT)
+                ->setId($client->getId())
+                ->setUsername($decoded['iss'] . '|' . $decoded['azp'])
+                ->setFullName($decoded['iss'] . '|' . $decoded['azp'])
+                ->setRoles([])
+                ->setPermissions($permissions);
+        } else {
+            $username = $decoded['iss'] . '|' . $decoded['sub'];
+            $authenticatedUser = (new AuthenticatedUser())
+                ->setType(AuthenticatedUserType::EXTERN_USER)
+                ->setId($username)
+                ->setUsername($username)
+                ->setFullName($decoded["name"] ?? $username)
+                ->setEmail($decoded['email'] ?? null)
+                ->setFirstName($decoded['given_name'] ?? null)
+                ->setLastName($decoded['family_name'] ?? null)
+                ->setPicture($decoded['picture'] ?? null)
+                ->setRoles([])
+                ->setPermissions($permissions);
+        }
+        $request = $request->withAttribute($this->identityKey, $authenticatedUser);
+        $request = $request->withAttribute('jwt_payload', $decoded);
+        return $handler->handle(
+            $request
+        );
+    }
+
+    private function decodeAndValidate(string $jwt): array
+    {
+        // Decodificar sin verificar para obtener header y payload
+        $unverified = JwtUtilities::decodeUnverified($jwt);
+        $header = (array) $unverified->getHeader();
+        $payload = (array) $unverified->getPayload();
+
+        $iss = $payload['iss'] ?? null;
+        $kid = $header['kid'] ?? null;
+
+        if (!$iss) {
+            throw new \RuntimeException('Missing issuer');
+        }
+
+        // Buscar el issuer en la base de datos
+        $trustedIssuer = $this->issuerRepository->findIssuer($iss);
+
+        if (!($trustedIssuer instanceof TrustedIssuer) || $trustedIssuer->isActive()) {
+            throw new \RuntimeException('Untrusted issuer');
+        }
+
+        if (!$kid) {
+            throw new \RuntimeException('Missing key ID');
+        }
+
+        $jwk = $this->issuerRepository->fetchJWKByKid($trustedIssuer, $kid);
+        if (empty($jwk)) {
+            throw new \RuntimeException('Invalid kid');
+        }
+
+        if (!$jwk) {
+            throw new \RuntimeException('Invalid key ID');
+        }
+
+        $publicKey = JwtUtilities::parsePublicKeyFromJWK($jwk);
+
+        if (!$publicKey) {
+            throw new \RuntimeException('Could not extract public key');
+        }
+        $algorithm = $header->alg ?? 'RS256';
+        $validAlgorithm = $trustedIssuer->getAlg();
+        if ($algorithm !== $validAlgorithm) {
+            throw new \RuntimeException('Invalid algorithm');
+        }
+        // Decodificar y verificar el JWT
+        $decoded = (array) JwtUtilities::decodeAndVerify($jwt, $publicKey, $algorithm);
+
+        // Validar audience
+        $audience = is_array($decoded['aud']) ? $decoded['aud'][0] : $decoded['aud'];
+
+        if (!$this->issuerRepository->isValidAudience($trustedIssuer, $audience)) {
+            throw new \RuntimeException('Invalid audience');
+        }
+        //Expiración (firebase lo valida, pero mejor explícito)
+        if ($decoded['exp'] < time()) {
+            throw new \RuntimeException('Token expired');
+        }
+
+        // TODO:: Validar los scopes o grants permitidos para el issuer
+
+        return $decoded;
+    }
+
+
+    private function extractClientFromJwt(array $jwt): ?ApiConsumer
+    {
+
+        $clientId = $jwt['azp'] ?? $jwt['client_id'] ?? null;
+
+        if ($clientId) {
+            $apiCustomer = $this->apiCustomerRepository->findByIdentifier($clientId);
+            if ($apiCustomer && $apiCustomer->isActive()) {
+                return $apiCustomer;
+            }
+        }
+
+        return null;
+    }
+    private function enforceM2MWhitelist(ApiConsumer $apiCustomer): void
+    {
+
+        if (!$apiCustomer || !$apiCustomer->isActive()) {
+            throw new \RuntimeException('Client not allowed');
+        }
+    }
+
+    private function unauthorized(string $message): ResponseInterface
+    {
+        return new JsonResponse([
+            'error' => 'unauthorized',
+            'message' => $message,
+        ], 401);
+    }
+}

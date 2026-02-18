@@ -1,12 +1,13 @@
 <?php
 
 
-namespace GPDAuthJWT\Models;
+namespace GPDAuthJWT\Services;
 
 use Doctrine\ORM\EntityManager;
 use GPDAuthJWT\Entities\ApiConsumer;
+use GPDAuthJWT\Models\ApiConsumerRepositoryInterface;
 
-class ApiCustomerRepository implements ApiCustomerRepositoryInterface
+class ApiConsumerRepository implements ApiConsumerRepositoryInterface
 {
 
     private EntityManager $entityManager;
@@ -19,7 +20,7 @@ class ApiCustomerRepository implements ApiCustomerRepositoryInterface
     public function findByIdentifier(string $identifier): ?ApiConsumer
     {
         /** @var ApiConsumer | null */
-        $customer = $this->entityManager->getRepository(ApiConsumer::class)->findOneBy(['identifier' => $identifier]);
-        return $customer;
+        $consumer = $this->entityManager->getRepository(ApiConsumer::class)->findOneBy(['identifier' => $identifier]);
+        return $consumer;
     }
 }

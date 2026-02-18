@@ -9,7 +9,7 @@ use GPDAuth\Models\AuthenticatedUserType;
 use GPDAuthJWT\Entities\ApiConsumer;
 use GPDAuthJWT\Entities\TrustedIssuer;
 use GPDAuthJWT\Library\JwtUtilities;
-use GPDAuthJWT\Models\ApiCustomerRepositoryInterface;
+use GPDAuthJWT\Models\ApiConsumerRepositoryInterface;
 use GPDAuthJWT\Models\JWTTrustIssuerRepositoryInterface;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ServerRequestInterface;
@@ -26,12 +26,12 @@ class JwtAuthMiddleware implements MiddlewareInterface
      * Cuando exitUnAuthorized es false, continúa la cadena de middleware si la autenticación falla (Aplica para rutas públicas o para GraphQL para validar cada query, la validación se hace en los resolvers o middleware de los resolvers, con los datos del atributo identity de request)
      *
      * @param JWTTrustIssuerRepositoryInterface $issuerRepository
-     * @param ApiCustomerRepositoryInterface $apiCustomerRepository
+     * @param ApiConsumerRepositoryInterface $apiConsumerRepository
      * @param boolean $exitUnAuthorized
      */
     public function __construct(
         private JWTTrustIssuerRepositoryInterface $issuerRepository,
-        private ApiCustomerRepositoryInterface $apiCustomerRepository,
+        private ApiConsumerRepositoryInterface $apiConsumerRepository,
         private string $identityKey = 'identity',
         private bool $exitUnAuthorized = true,
     ) {}
@@ -64,12 +64,12 @@ class JwtAuthMiddleware implements MiddlewareInterface
         $isM2M = ($decoded['gty'] ?? null) === 'client-credentials';
         $permissions = JwtUtilities::convertScopesToPermissions(explode(' ', $decoded['scope'] ?? ''));
         if ($isM2M) {
-            $client = $this->extractClientFromJwt($decoded);
-            $this->enforceM2MWhitelist($client);
+            $consumer = $this->extractConsumerFromJwt($decoded);
+            $this->enforceM2MWhitelist($consumer);
             $authenticatedUser = (new AuthenticatedUser())
-                ->setFullName($client->getName())
+                ->setFullName($consumer->getName())
                 ->setType(AuthenticatedUserType::API_CLIENT)
-                ->setId($client->getId())
+                ->setId($consumer->getId())
                 ->setUsername($decoded['iss'] . '|' . $decoded['azp'])
                 ->setFullName($decoded['iss'] . '|' . $decoded['azp'])
                 ->setRoles([])
@@ -159,24 +159,24 @@ class JwtAuthMiddleware implements MiddlewareInterface
     }
 
 
-    private function extractClientFromJwt(array $jwt): ?ApiConsumer
+    private function extractConsumerFromJwt(array $jwt): ?ApiConsumer
     {
 
         $clientId = $jwt['azp'] ?? $jwt['client_id'] ?? null;
 
         if ($clientId) {
-            $apiCustomer = $this->apiCustomerRepository->findByIdentifier($clientId);
-            if ($apiCustomer && $apiCustomer->isActive()) {
-                return $apiCustomer;
+            $apiConsumer = $this->apiConsumerRepository->findByIdentifier($clientId);
+            if ($apiConsumer && $apiConsumer->isActive()) {
+                return $apiConsumer;
             }
         }
 
         return null;
     }
-    private function enforceM2MWhitelist(ApiConsumer $apiCustomer): void
+    private function enforceM2MWhitelist(ApiConsumer $apiConsumer): void
     {
 
-        if (!$apiCustomer || !$apiCustomer->isActive()) {
+        if (!$apiConsumer || !$apiConsumer->isActive()) {
             throw new \RuntimeException('Client not allowed');
         }
     }

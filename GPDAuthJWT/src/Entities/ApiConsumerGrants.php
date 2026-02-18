@@ -9,12 +9,12 @@ use GPDCore\Entities\AbstractEntityModel;
 #[ORM\Table(name: "gpd_auth_client_grants")]
 #[ORM\UniqueConstraint(name: "uq_client_grant", columns: ["client_id", "grant_type"])]
 #[ORM\HasLifecycleCallbacks]
-class ApiCustomerGrants extends AbstractEntityModel
+class ApiConsumerGrants extends AbstractEntityModel
 {
 
     #[ORM\ManyToOne(targetEntity: ApiConsumer::class)]
-    #[ORM\JoinColumn(name: "customer_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE")]
-    private ApiConsumer $customer;
+    #[ORM\JoinColumn(name: "consumer_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE")]
+    private ApiConsumer $consumer;
 
     #[ORM\Column(name: "grant_type", type: "string", length: 50, nullable: false)]
     private string $grantType;
@@ -22,14 +22,14 @@ class ApiCustomerGrants extends AbstractEntityModel
     #[ORM\Column(name: "enabled", type: "boolean", nullable: false)]
     private bool $enabled = true;
 
-    public function getCustomer(): ApiConsumer
+    public function getConsumer(): ApiConsumer
     {
-        return $this->customer;
+        return $this->consumer;
     }
 
-    public function setCustomer(ApiConsumer $customer): self
+    public function setConsumer(ApiConsumer $consumer): self
     {
-        $this->customer = $customer;
+        $this->consumer = $consumer;
         return $this;
     }
 

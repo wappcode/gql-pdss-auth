@@ -32,7 +32,7 @@ class ApiConsumer extends AbstractEntityModelStringId
   #[ORM\OneToMany(mappedBy: "consumer", targetEntity: ApiConsumerPermissions::class)]
   private Collection $permissions;
 
-  #[ORM\OneToMany(mappedBy: "customer", targetEntity: ApiCustomerGrants::class)]
+  #[ORM\OneToMany(mappedBy: "consumer", targetEntity: ApiConsumerGrants::class)]
   private Collection $grants;
 
   public function __construct()

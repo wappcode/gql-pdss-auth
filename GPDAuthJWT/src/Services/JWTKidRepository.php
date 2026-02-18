@@ -3,13 +3,13 @@
 namespace GPDAuthJWT\Services;
 
 use GPDAuthJWT\Entities\JWTKey;
-use GPDCore\Library\IContextService;
+use GPDCore\Contracts\AppContextInterface;
 
 class JWTKidRepository implements \GPDAuthJWT\Models\JWTKidRepositoryInterface
 {
-    private IContextService $context;
+    private AppContextInterface $context;
 
-    public function __construct(IContextService $context)
+    public function __construct(AppContextInterface $context)
     {
         $this->context = $context;
     }

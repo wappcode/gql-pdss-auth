@@ -6,13 +6,17 @@ use Firebase\JWT\JWT;
 use GPDAuthJWT\Entities\ApiConsumer;
 use GPDAuthJWT\Entities\ApiPermission;
 use GPDAuthJWT\Entities\JWTKey;
-use GPDCore\Library\AbstractAppController;
+use GPDCore\Contracts\AppContextInterface;
+use GPDCore\Routing\AbstractAppController;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 class AuthTokenController extends AbstractAppController
 {
 
-    public function dispatch()
+    public function dispatch(ServerRequestInterface $request):ResponseInterface
     {
+        $context = $this->getAppContext($request);
         // OAuth usa application/x-www-form-urlencoded
         $grantType = $_POST['grant_type'] ?? null;
         $clientId  = $_POST['client_id'] ?? null;
@@ -29,25 +33,28 @@ class AuthTokenController extends AbstractAppController
             echo json_encode(['error' => 'invalid_client']);
             exit;
         }
-        $this->validateClient($clientId, $secret);
-        $scopes = $this->getAllowedScopes($clientId, $scopeReq);
-        $key = $this->getActiveKey();
-        $config = $this->context->getConfig()->get("idp_jwt");
+        $this->validateClient($clientId, $secret,$context);
+        $scopes = $this->getAllowedScopes($clientId, $scopeReq,$context);
+        $key = $this->getActiveKey($context);
+        $config = $context->getConfig()->get("idp_jwt");
         $iss = $config['issuer'];
         $aud = $config['audience'];
         $expiration = $config['lifetime_seconds'] ?? 3600;
         $jwt = $this->createJWT($clientId, $iss, $aud, $expiration, $scopes, $key);
-        echo json_encode([
+        $responseData = [
             'access_token' => $jwt,
             'token_type'   => 'Bearer',
             'expires_in'   => $expiration,
             'scope'        => implode(' ', $scopes),
-        ]);
+        ];
+        $response = $this->createJsonResponse($responseData);
+        return $response;
+        
     }
 
-    private function validateClient($clientId, $secret)
+    private function validateClient($clientId, $secret, AppContextInterface $context)
     {
-        $entityManager = $this->context->getEntityManager();
+        $entityManager = $context->getEntityManager();
         $client = $this->$entityManager->createQueryBuilder()->from(ApiConsumer::class, 'c')
             ->where('c.identifier = :identifier')
             ->setParameter('identifier', $clientId)
@@ -69,9 +76,9 @@ class AuthTokenController extends AbstractAppController
         }
     }
 
-    private function getAllowedScopes(ApiConsumer $client, string $scopeReq): array
+    private function getAllowedScopes(ApiConsumer $client, string $scopeReq, AppContextInterface $context): array
     {
-        $entityManager = $this->context->getEntityManager();
+        $entityManager = $context->getEntityManager();
         $requestedScopes = array_filter(explode(' ', $scopeReq));
 
         $qb = $entityManager->createQueryBuilder()->from(ApiPermission::class, 'p')
@@ -95,9 +102,9 @@ class AuthTokenController extends AbstractAppController
         return $requestedScopes;
     }
 
-    private function getActiveKey(): JWTKey
+    private function getActiveKey(AppContextInterface $context): JWTKey
     {
-        $entityManager = $this->context->getEntityManager();
+        $entityManager = $context->getEntityManager();
         $qb = $entityManager->createQueryBuilder()
             ->from(JWTKey::class, 'k')
             ->andWhere('k.active = :active')

@@ -2,24 +2,16 @@
 
 namespace GPDAuth\Services;
 
-use DateTime;
 use Exception;
-use Doctrine\ORM\EntityManager;
 use GPDAuth\Entities\PermissionAccess;
-use GPDAuth\Entities\User;
-use GPDAuth\Library\AuthServiceInterface;
-use GPDAuth\Library\TokenService;
-use GPDAuth\Library\AuthenticationType;
 use GPDAuth\Library\AuthJWTManager;
-use GPDAuth\Library\InvalidUserException;
 use GPDAuth\Models\AuthenticatedUser;
 use GPDAuth\Models\ResourcePermission;
-use GPDAuth\Models\UserRepositoryInterface;
-use GPDAuth\Models\TokenRepositoryInterface;
 use GPDAuthJWT\Entities\ApiConsumer;
 use GPDAuthJWT\Entities\TrustedIssuer;
 use GPDAuthJWT\Services\JWTTrustIssuerRepository;
-use GPDCore\Library\IContextService;
+use GPDCore\Contracts\AppContextInterface;
+
 
 @session_start();
 
@@ -35,12 +27,12 @@ class AuthService extends AbstractAuthService
 
 
     private JWTTrustIssuerRepository $issRepository;
-    private IContextService $context;
+    private AppContextInterface $context;
     private string $sessionKey;
 
 
     public function __construct(
-        IContextService $context,
+        AppContextInterface $context,
         JWTTrustIssuerRepository $issRepository,
         string $sessionKey = 'gpdauth_session_id'
     ) {
@@ -66,13 +58,6 @@ class AuthService extends AbstractAuthService
         $_SESSION[$this->sessionKey]["grant"] = $grant ?? null;
     }
 
-    private function setAuthenticatedUser(): void
-    {
-        $userId = $_SESSION[$this->sessionKey]["identifier"] ?? null;
-        if ($userId !== null) {
-            $this->authenticatedUser = $this->userRepository->findById($userId);
-        }
-    }
 
     /**
      * Inicializa los datos del usuario autenticado desde el JWT para M2M

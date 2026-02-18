@@ -8,7 +8,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use Exception;
 use GPDAuthJWT\Entities\TrustedIssuerAudience;
 use GPDAuthJWT\Models\JWTTrustIssuerRepositoryInterface;
-use GPDCore\Library\AppContextInterface;
+use GPDCore\Contracts\AppContextInterface;
 
 class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
 {

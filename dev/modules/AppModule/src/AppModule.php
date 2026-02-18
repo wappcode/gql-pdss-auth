@@ -2,10 +2,11 @@
 
 namespace AppModule;
 
+use GPDAuth\Models\AuthServiceInterface;
 use GPDAuth\Services\AuthService;
-use GPDCore\Library\AbstractModule;
-use GPDCore\Library\GQLException;
-use GPDCore\Library\IContextService;
+use GPDCore\Core\AbstractModule;
+use GPDCore\Exceptions\GQLException as ExceptionsGQLException;
+use GPDCore\Graphql\ResolverPipelineFactory;
 
 class AppModule extends AbstractModule
 {
@@ -23,13 +24,25 @@ class AppModule extends AbstractModule
     {
         return file_get_contents(__DIR__ . "/../config/app-schema.graphql");
     }
-    function getServicesAndGQLTypes(): array
+    function getServices(): array
     {
         return [
             'invokables' => [],
-            'factories' => [],
+            'factories' => [
+                AuthServiceInterface::class => function ($serviceManager) {
+                    return new AuthService($this->context);
+                },
+            ],
             'aliases' => []
         ];
+    }
+    function getMiddlewares(): array
+    {
+        return [];
+    }
+    function getTypes(): array
+    {
+        return [];
     }
     /**
      * Array con los resolvers del módulo
@@ -38,19 +51,25 @@ class AppModule extends AbstractModule
      */
     function getResolvers(): array
     {
-        return [
-            'Query::echo' => fn($root, $args) => $args["message"],
-            'Query::echoProtected' => function ($root, $args, IContextService $context, $info) {
-                /** @var AuthService */
-                $auth = $context->getServiceManager()->get(AuthService::class);
-                if (!$auth->isSigned()) {
-                    throw new GQLException("No autorizado");
-                }
-                $user = $auth->getUser();
-                $msg = $args["message"];
-                $message = sprintf("%s -> Usuario: %s - %s", $msg, $user->getFullName(), $user->getUsername());
-                return $message;
+        $echoResolve = fn($root, $args) => $args["message"];
+        $proxyEcho1 = fn($resolver) => function ($root, $args, $context, $info) use ($resolver) {
+            /** @var AuthService */
+            $auth = $context->getServiceManager()->get(AuthService::class);
+            if (!$auth->isSigned()) {
+                throw new ExceptionsGQLException("No autorizado");
             }
+            $user = $auth->getAuthenticatedUser();
+            $msg = $args["message"];
+            $message = sprintf("%s -> Usuario: %s - %s", $msg, $user->getFullName(), $user->getUsername());
+            return $message;
+            return   'Proxy 1 ' . $resolver($root, $args, $context, $info);
+        };
+        return [
+            "Query::echo" => $echoResolve,
+            'Query::echoProtected' => ResolverPipelineFactory::createPipeline($echoResolve, [
+                // pipeline va en orden inverso al de ejecución
+                ResolverPipelineFactory::createWrapper($proxyEcho1),
+            ]),
         ];
     }
 }

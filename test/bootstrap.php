@@ -9,6 +9,6 @@ $cacheDir = __DIR__ . "/../dev/data/DoctrineORMModule";
 global $entityManager;
 global $graphqlClient;
 $entityManager = EntityManagerFactory::createInstance($options, $cacheDir, true, '');
-$app_port = getenv("GQLPDSSAUTH_APP_PORT") ? getenv("GQLPDSSAUTH_APP_PORT") : "8080";
+$app_port = getenv("GQLPDSSAUTH_APP_PORT") ? getenv("GQLPDSSAUTH_APP_PORT") : "80";
 $graphqlApi = "http://localhost:{$app_port}/index.php/api";
 $graphqlClient = new GQLClient($graphqlApi);

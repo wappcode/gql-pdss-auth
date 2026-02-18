@@ -7,7 +7,7 @@ use GPDAuth\Entities\Permission;
 use GPDAuth\Entities\Role;
 use GPDAuth\Entities\User;
 use GPDAuth\Library\PasswordManager;
-use GPDAuth\Models\AuthenticatedUser;
+use GPDAuth\Models\AuthenticatedUserInterface;
 use GPDAuth\Models\ResourcePermission;
 use GPDAuth\Models\UserRepositoryInterface;
 
@@ -24,20 +24,20 @@ class UserRepository implements UserRepositoryInterface
         $this->entityManager = $entityManager;
     }
 
-    public  function findById(string $userId): ?AuthenticatedUser
+    public  function findById(string $userId): ?AuthenticatedUserInterface
     {
         $authUser = $this->userCache[$userId] ?? null;
         if ($authUser === null) {
             $repository = $this->entityManager->find(User::class, $userId);
             $user = $repository->find($userId);
             if ($user instanceof User) {
-                $authUser = $this->crateAuthenticatedUser($user);
+                $authUser = $this->crateAuthenticatedUserInterface($user);
                 $this->userCache[$userId] = $authUser;
             }
         }
         return $this->userCache[$userId];
     }
-    public function validateCredentials(string $username, string $password): ?AuthenticatedUser
+    public function validateCredentials(string $username, string $password): ?AuthenticatedUserInterface
     {
         $repository = $this->entityManager->getRepository(User::class);
         $user = $repository->findOneBy(['username' => $username]);
@@ -47,7 +47,7 @@ class UserRepository implements UserRepositoryInterface
         }
         $encodedPassword = PasswordManager::encode($password, $user->getSalt());
         if ($user->getPassword() === $encodedPassword) {
-            $authUser = $this->crateAuthenticatedUser($user);
+            $authUser = $this->crateAuthenticatedUserInterface($user);
             $this->userCache[$authUser->getId()] = $authUser;
             return $authUser;
         }
@@ -55,7 +55,7 @@ class UserRepository implements UserRepositoryInterface
         return null;
     }
 
-    public function updateLastAccess(AuthenticatedUser $user): void
+    public function updateLastAccess(AuthenticatedUserInterface $user): void
     {
 
         $qb = $this->entityManager->createQueryBuilder();
@@ -69,13 +69,13 @@ class UserRepository implements UserRepositoryInterface
 
 
     /**
-     * Crear un registro AuthenticatedUser desde un registro de usuario de la base de datos
+     * Crear un registro AuthenticatedUserInterface desde un registro de usuario de la base de datos
      * @param User $user
-     * @return AuthenticatedUser
+     * @return AuthenticatedUserInterface
      */
-    private function crateAuthenticatedUser(User $user): AuthenticatedUser
+    private function crateAuthenticatedUserInterface(User $user): AuthenticatedUserInterface
     {
-        $authUser = new AuthenticatedUser();
+        $authUser = new AuthenticatedUserInterface();
         $authUser->setId($user->getId());
         $authUser->setUsername($user->getUsername());
         $authUser->setFullName($user->getFullName());
@@ -89,7 +89,7 @@ class UserRepository implements UserRepositoryInterface
         $authUser->setPermissions($permissions);
         return $authUser;
     }
-    private function getRolesFromDB(AuthenticatedUser $user): array
+    private function getRolesFromDB(AuthenticatedUserInterface $user): array
     {
         $qb = $this->entityManager->createQueryBuilder()->from(User::class, 'u')
             ->innerJoin('u.roles', 'r')

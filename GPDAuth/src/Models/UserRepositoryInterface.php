@@ -2,7 +2,6 @@
 
 namespace GPDAuth\Models;
 
-use GPDAuth\Entities\User;
 
 /**
  * Interface para el repositorio de usuarios
@@ -16,23 +15,24 @@ interface UserRepositoryInterface
      *
      * @param string $username
      * @param string $password
-     * @return AuthenticatedUser|null
+     * @return AuthenticatedUserInterface|null
      */
-    public function validateCredentials(string $username, string $password): ?AuthenticatedUser;
+    public function validateCredentials(string $username, string $password): ?AuthenticatedUserInterface;
 
     /**
      * Actualiza el último acceso del usuario
      *
-     * @param AuthenticatedUser $user
+     * @param AuthenticatedUserInterface $user
      * @return void
      */
-    public function updateLastAccess(AuthenticatedUser $user): void;
+    public function updateLastAccess(AuthenticatedUserInterface $user): void;
+
 
     /**
      * Busca un usuario por su ID
      *
      * @param string $userId
-     * @return User|null
+     * @return AuthenticatedUserInterface|null
      */
-    public function findById(string $userId): ?AuthenticatedUser;
+    public function findById(string $userId): ?AuthenticatedUserInterface;
 }

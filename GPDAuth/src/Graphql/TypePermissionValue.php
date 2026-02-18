@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GPDAuth\Graphql;
 
-use GPDAuth\Entities\Permission;
+use GPDAuth\Entities\PermissionValue;
 use GraphQL\Type\Definition\EnumType;
 
 final class TypePermissionValue extends EnumType
@@ -14,13 +14,13 @@ final class TypePermissionValue extends EnumType
         $config = [
             'name' => 'PermissionValue',
             'values' => [
-                Permission::ALL,
-                Permission::CREATE,
-                Permission::DELETE,
-                Permission::UPDATE,
-                Permission::VIEW,
-                Permission::UPLOAD,
-                Permission::DOWNLOAD,
+                PermissionValue::ALL,
+                PermissionValue::CREATE,
+                PermissionValue::DELETE,
+                PermissionValue::UPDATE,
+                PermissionValue::VIEW,
+                PermissionValue::UPLOAD,
+                PermissionValue::DOWNLOAD,
             ],
         ];
 

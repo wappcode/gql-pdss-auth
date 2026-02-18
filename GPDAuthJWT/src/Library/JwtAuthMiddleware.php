@@ -5,6 +5,7 @@ namespace App\Middleware;
 
 
 use GPDAuth\Models\AuthenticatedUser;
+use GPDAuth\Models\AuthenticatedUserInterface;
 use GPDAuth\Models\AuthenticatedUserType;
 use GPDAuthJWT\Entities\ApiConsumer;
 use GPDAuthJWT\Entities\TrustedIssuer;
@@ -32,7 +33,7 @@ class JwtAuthMiddleware implements MiddlewareInterface
     public function __construct(
         private JWTTrustIssuerRepositoryInterface $issuerRepository,
         private ApiConsumerRepositoryInterface $apiConsumerRepository,
-        private string $identityKey = 'identity',
+        private string $identityKey = AuthenticatedUserInterface::class,
         private bool $exitUnAuthorized = true,
     ) {}
 
@@ -51,6 +52,40 @@ class JwtAuthMiddleware implements MiddlewareInterface
         }
         try {
             $decoded = $this->decodeAndValidate($jwt);
+
+            // ¿Es M2M?
+            $isM2M = ($decoded['gty'] ?? null) === 'client-credentials';
+            $permissions = JwtUtilities::convertScopesToPermissions(explode(' ', $decoded['scope'] ?? ''));
+            if ($isM2M) {
+                $consumer = $this->extractConsumerFromJwt($decoded);
+                $this->enforceM2MWhitelist($consumer);
+                $authenticatedUser = (new AuthenticatedUser())
+                    ->setFullName($consumer->getName())
+                    ->setType(AuthenticatedUserType::API_CLIENT)
+                    ->setId($consumer->getId())
+                    ->setUsername($decoded['iss'] . '|' . $decoded['azp'])
+                    ->setFullName($decoded['iss'] . '|' . $decoded['azp'])
+                    ->setRoles([])
+                    ->setPermissions($permissions);
+            } else {
+                $username = $decoded['iss'] . '|' . $decoded['sub'];
+                $authenticatedUser = (new AuthenticatedUser())
+                    ->setType(AuthenticatedUserType::EXTERN_USER)
+                    ->setId($username)
+                    ->setUsername($username)
+                    ->setFullName($decoded["name"] ?? $username)
+                    ->setEmail($decoded['email'] ?? null)
+                    ->setFirstName($decoded['given_name'] ?? null)
+                    ->setLastName($decoded['family_name'] ?? null)
+                    ->setPicture($decoded['picture'] ?? null)
+                    ->setRoles([])
+                    ->setPermissions($permissions);
+            }
+            $request = $request->withAttribute($this->identityKey, $authenticatedUser);
+            $request = $request->withAttribute('jwt_payload', $decoded);
+            return $handler->handle(
+                $request
+            );
         } catch (\Throwable $e) {
 
             if ($this->exitUnAuthorized) {
@@ -59,40 +94,6 @@ class JwtAuthMiddleware implements MiddlewareInterface
                 return $handler->handle($request);
             }
         }
-
-        // ¿Es M2M?
-        $isM2M = ($decoded['gty'] ?? null) === 'client-credentials';
-        $permissions = JwtUtilities::convertScopesToPermissions(explode(' ', $decoded['scope'] ?? ''));
-        if ($isM2M) {
-            $consumer = $this->extractConsumerFromJwt($decoded);
-            $this->enforceM2MWhitelist($consumer);
-            $authenticatedUser = (new AuthenticatedUser())
-                ->setFullName($consumer->getName())
-                ->setType(AuthenticatedUserType::API_CLIENT)
-                ->setId($consumer->getId())
-                ->setUsername($decoded['iss'] . '|' . $decoded['azp'])
-                ->setFullName($decoded['iss'] . '|' . $decoded['azp'])
-                ->setRoles([])
-                ->setPermissions($permissions);
-        } else {
-            $username = $decoded['iss'] . '|' . $decoded['sub'];
-            $authenticatedUser = (new AuthenticatedUser())
-                ->setType(AuthenticatedUserType::EXTERN_USER)
-                ->setId($username)
-                ->setUsername($username)
-                ->setFullName($decoded["name"] ?? $username)
-                ->setEmail($decoded['email'] ?? null)
-                ->setFirstName($decoded['given_name'] ?? null)
-                ->setLastName($decoded['family_name'] ?? null)
-                ->setPicture($decoded['picture'] ?? null)
-                ->setRoles([])
-                ->setPermissions($permissions);
-        }
-        $request = $request->withAttribute($this->identityKey, $authenticatedUser);
-        $request = $request->withAttribute('jwt_payload', $decoded);
-        return $handler->handle(
-            $request
-        );
     }
 
     private function decodeAndValidate(string $jwt): array

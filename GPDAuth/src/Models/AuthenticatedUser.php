@@ -2,342 +2,151 @@
 
 namespace GPDAuth\Models;
 
-class AuthenticatedUser
+use GPDAuth\Entities\PermissionAccess;
+use GPDAuth\Entities\PermissionValue;
+
+class AuthenticatedUser extends AbstractAuthenticatedUser implements AuthenticatedUserInterface
 {
 
-    /**
-     * Tipo de usuario api_client, local_user, extern_user
-     *
-     * @var AuthenticatedUserType
-     */
-    private AuthenticatedUserType $type;
-    /**
-     * User ID
-     *
-     * @var string
-     */
-    private string $id;
-
-    /**
-     * User full name
-     *
-     * @var string
-     */
-    private string $fullName;
-
-    /**
-     * User first name
-     *
-     * @var ?string
-     */
-    private ?string $firstName;
-
-    /**
-     * Username
-     *
-     * @var string
-     */
-    private string $username;
-
-    /**
-     * User last name
-     *
-     * @var ?string
-     */
-    private ?string $lastName;
-
-    /**
-     * User email
-     *
-     * @var ?string
-     */
-    private ?string $email;
-
-    /**
-     * User profile picture URL
-     *
-     * @var ?string
-     */
-    private ?string $picture;
-
-    /**
-     * User permissions
-     *
-     * @var array
-     */
-    private array $permissions = [];
-
-    /**
-     * User roles
-     *
-     * @var array
-     */
-    private array $roles = [];
-
-
-    private bool $active = true;
-
-    public function toArray(): array
+    public function hasRole(string $role): bool
     {
-        $data = get_object_vars($this);
-        // Convertir el enum a su valor string
-        if (isset($data['type']) && $data['type'] instanceof AuthenticatedUserType) {
-            $data['type'] = $data['type']->value;
+        $roles = $this->getRoles() ?? [];
+        return in_array($role, $roles);
+    }
+    public function hasSomeRoles(array $roles): bool
+    {
+        $userRoles = $this->getRoles() ?? [];
+        $intersect = array_intersect($userRoles, $roles);
+        return count($intersect) > 0;
+    }
+    public function hasAllRoles(array $roles): bool
+    {
+        $userRoles = $this->getRoles() ?? [];
+        $intersect = array_intersect($userRoles, $roles);
+        $intersectUnique = array_unique($intersect);
+        return count($intersect) == count($intersectUnique);
+        return true;
+    }
+
+    /**
+     * 
+     * Determina si el usuario tiene permiso para un determinado recurso
+     * Solo se consideran permisos con acceso autorizado
+     * Sobreescribir este método para un servicio personalizado
+     * 
+     * @param string $resource
+     * @param string $permissionValue
+     * @param string|null $scope
+     * @return boolean
+     */
+    public function hasPermission(string $resource, string $permissionValue, ?string $scope = null): bool
+    {
+        $permission = $this->findPermission($resource, $permissionValue, $scope);
+        if (!($permission instanceof ResourcePermission)) {
+            return false;
         }
-        return $data;
-    }
-
-    public function setScopes(array $scopes): self
-    {
-        // No implementation yet
-        return $this;
+        if (!empty($scope) && $scope != $permission->getScope()) {
+            return false;
+        }
+        return $permission->getAccess() === PermissionAccess::ALLOW;
     }
     /**
-     * Get user ID
+     * Determina si el usuario tiene algun permiso para alguno de los recursos
+     * Solo se consideran permisos con acceso autorizado
+     * Sobreescribir  método hasPermission para un servicio personalizado
      *
-     * @return string
+     * @param array $resources
+     * @param array $permissionsValues
+     * @param array|null $scopes
+     * @return boolean
      */
-    public function getId(): string
+    public function hasSomePermissions(array $resources, array $permissionsValues, ?array $scopes = null): bool
     {
-        return $this->id;
+        $result = false;
+        foreach ($resources as $resource) {
+            foreach ($permissionsValues as $permissionValue) {
+                if (empty($scopes)) {
+                    $flag = $this->hasPermission($resource, $permissionValue);
+                    if ($flag === true) {
+                        $result = true;
+                        break 2;
+                    }
+                    continue;
+                }
+                foreach ($scopes as $scope) {
+                    $flag = $this->hasPermission($resource, $permissionValue, $scope);
+                    if ($flag === true) {
+                        $result = true;
+                        break 3;
+                    }
+                }
+            }
+        }
+        return $result;
     }
-
     /**
-     * Set user ID
-     *
-     * @param string $id User ID
-     *
-     * @return self
+     * Determina si el usuario tiene todos los permisos para todos los recursos
+     * Solo se consideran permisos con acceso autorizado
+     * Sobreescribir  método hasPermission para un servicio personalizado
+     * @param array $resources
+     * @param array $permissionsValues
+     * @param array|null $scopes
+     * @return boolean
      */
-    public function setId(string $id): self
+    public function hasAllPermissions(array $resources, array $permissionsValues, ?array $scopes = null): bool
     {
-        $this->id = $id;
-        return $this;
-    }
-
-    /**
-     * Get user full name
-     *
-     * @return string
-     */
-    public function getFullName(): string
-    {
-        return $this->fullName;
-    }
-
-    /**
-     * Set user full name
-     *
-     * @param string $fullName User full name
-     *
-     * @return self
-     */
-    public function setFullName(string $fullName): self
-    {
-        $this->fullName = $fullName;
-        return $this;
-    }
-
-    /**
-     * Get user first name
-     *
-     * @return ?string
-     */
-    public function getFirstName(): ?string
-    {
-        return $this->firstName;
-    }
-
-    /**
-     * Set user first name
-     *
-     * @param ?string $firstName User first name
-     *
-     * @return self
-     */
-    public function setFirstName(?string $firstName): self
-    {
-        $this->firstName = $firstName;
-        return $this;
-    }
-
-    /**
-     * Get username
-     *
-     * @return string
-     */
-    public function getUsername(): string
-    {
-        return $this->username;
+        if (empty($resources) || empty($permissionsValues)) {
+            return false;
+        }
+        $result = true;
+        foreach ($resources as $resource) {
+            foreach ($permissionsValues as $permissionValue) {
+                if (empty($scopes)) {
+                    $flag = $this->hasPermission($resource, $permissionValue);
+                    if ($flag === false) {
+                        $result = false;
+                        break 2;
+                    }
+                    continue;
+                }
+                foreach ($scopes as $scope) {
+                    $flag = $this->hasPermission($resource, $permissionValue, $scope);
+                    if ($flag === false) {
+                        $result = false;
+                        break 3;
+                    }
+                }
+            }
+        }
+        return $result;
     }
 
     /**
-     * Set username
+     * Localiza un determinado permiso con acceso autorizado
+     * Los permisos con acceso denegado retornan null
      *
-     * @param string $username Username
-     *
-     * @return self
+     * @param string $resource
+     * @param string $permissionValue
+     * @return ResourcePermission|null
      */
-    public function setUsername(string $username): self
+    private function findPermission(string $resource, string $permissionValue): ?ResourcePermission
     {
-        $this->username = $username;
-        return $this;
-    }
-
-    /**
-     * Get user last name
-     *
-     * @return ?string
-     */
-    public function getLastName(): ?string
-    {
-        return $this->lastName;
-    }
-
-    /**
-     * Set user last name
-     *
-     * @param ?string $lastName User last name
-     *
-     * @return self
-     */
-    public function setLastName(?string $lastName): self
-    {
-        $this->lastName = $lastName;
-        return $this;
-    }
-
-    /**
-     * Get user email
-     *
-     * @return ?string
-     */
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    /**
-     * Set user email
-     *
-     * @param ?string $email User email
-     *
-     * @return self
-     */
-    public function setEmail(?string $email): self
-    {
-        $this->email = $email;
-        return $this;
-    }
-
-    /**
-     * Get user profile picture URL
-     *
-     * @return ?string
-     */
-    public function getPicture(): ?string
-    {
-        return $this->picture;
-    }
-
-    /**
-     * Set user profile picture URL
-     *
-     * @param ?string $picture User profile picture URL
-     *
-     * @return self
-     */
-    public function setPicture(?string $picture): self
-    {
-        $this->picture = $picture;
-        return $this;
-    }
-
-    /**
-     * Get user roles
-     *
-     * @return  array
-     */
-    public function getRoles()
-    {
-        return $this->roles;
-    }
-
-    /**
-     * Set user roles
-     *
-     * @param  array  $roles  User roles
-     *
-     * @return  self
-     */
-    public function setRoles(array $roles)
-    {
-        $this->roles = $roles;
-
-        return $this;
-    }
-
-    /**
-     * Get user permissions
-     *
-     * @return  array [ResourcePermission]
-     */
-    public function getPermissions()
-    {
-        return $this->permissions;
-    }
-
-    /**
-     * Set user permissions
-     *
-     * @param  array  $permissions  [ResourcePermission]
-     *
-     * @return  self
-     */
-    public function setPermissions(array $permissions)
-    {
-        $this->permissions = $permissions;
-
-        return $this;
-    }
-
-    /**
-     * Get the value of active
-     */
-    public function getActive()
-    {
-        return $this->active;
-    }
-
-    /**
-     * Set the value of active
-     *
-     * @return  self
-     */
-    public function setActive($active)
-    {
-        $this->active = $active;
-
-        return $this;
-    }
-
-    /**
-     * Get the value of type
-     */
-    public function getType(): AuthenticatedUserType
-    {
-        return $this->type;
-    }
-
-    /**
-     * Set the value of type
-     *
-     * @return  self
-     */
-    public function setType(AuthenticatedUserType $type): self
-    {
-        $this->type = $type;
-
-        return $this;
+        $result = null;
+        $permissions = $this->getPermissions() ?? [];
+        /** @var ResourcePermission */
+        foreach ($permissions as $permission) {
+            if (
+                $resource != $permission->getResource() ||
+                ($permissionValue != $permission->getValue() &&
+                    $permission->getValue() != PermissionValue::ALL
+                )
+            ) continue;
+            if ($permission->getAccess() == PermissionAccess::ALLOW) {
+                return $permission;
+            } else {
+                return null;
+            }
+        }
+        return $result;
     }
 }

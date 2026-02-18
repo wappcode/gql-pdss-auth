@@ -29,12 +29,12 @@ services:
       - ./xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
       - ./commands:/home/commands
     ports:
-      - "${GQLPDSSAUTH_APP_PORT:-8080}:8080"
+      - "${GQLPDSSAUTH_APP_PORT:-8080}:80"
     entrypoint: sh -c "/home/commands/run.sh"
     restart: "no"
     platform: linux/x86_64
     environment:
-      - GQLPDSSAUTH_APP_PORT=${GQLPDSSAUTH_APP_PORT:-8080}
+      - GQLPDSSAUTH_APP_PORT=${GQLPDSSAUTH_APP_PORT:-80}
       - GQLPDSSAUTH_DBUSER=${GQLPDSSAUTH_DBUSER:-root}
       - GQLPDSSAUTH_DBPASSWORD=${GQLPDSSAUTH_DBPASSWORD:-dbpassword}
       - GQLPDSSAUTH_DBNAME=${GQLPDSSAUTH_DBNAME:-gqlpdss_authdb}

@@ -3,17 +3,17 @@
 namespace GPDAuth;
 
 use GPDAuth\Graphql\FieldLogin;
-use GPDAuth\Library\AuthConfigKey;
 use GPDAuth\Services\AuthService;
 use GPDAuth\Graphql\ResolversRole;
 use GPDAuth\Graphql\ResolversUser;
-use GPDCore\Library\AbstractModule;
 use GPDAuth\Graphql\FieldSignedUser;
 use GPDAuth\Graphql\ResolversPermission;
 use Laminas\ServiceManager\ServiceManager;
 use GPDAuth\Graphql\TypeSessionDataPermission;
+use GPDAuth\Models\AuthServiceInterface;
 use GPDAuth\Models\UserRepositoryInterface;
 use GPDAuth\Services\AuthSessionService;
+use GPDCore\Core\AbstractModule;
 
 class GPDAuthModule extends AbstractModule
 {
@@ -30,7 +30,17 @@ class GPDAuthModule extends AbstractModule
     {
         return file_get_contents(__DIR__ . '/../config/schema-auth.graphql');
     }
-    function getServicesAndGQLTypes(): array
+
+    function getTypes(): array
+    {
+        return [];
+    }
+    function getMiddlewares(): array
+    {
+        return [];
+    }
+
+    function getServices(): array
     {
         $context = $this->context;
         return [
@@ -43,7 +53,7 @@ class GPDAuthModule extends AbstractModule
                     $entityManager = $context->getEntityManager();
                     return new \GPDAuth\Services\UserRepository($entityManager);
                 },
-                AuthService::class => function (ServiceManager $sm) {
+                AuthServiceInterface::class => function (ServiceManager $sm) {
                     // Crear repositorios
                     $userRepository = $sm->get(UserRepositoryInterface::class);
 

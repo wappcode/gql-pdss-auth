@@ -2,38 +2,42 @@
 
 namespace GPDAuth\Graphql;
 
-use GPDAuth\Library\AuthJWTManager;
 use GPDAuth\Library\NoSignedException;
+use GPDAuth\Models\AuthServiceInterface;
 use GPDAuth\Models\ResourcePermission;
-use GPDAuth\Services\AuthService;
-use GPDCore\Library\IContextService;
+use GPDCore\Contracts\AppContextInterface;
 
 class FieldSignedUser
 {
 
     public static function createResolve(): callable
     {
-        return function ($root, array $args, IContextService $context, $info) {
-            /** @var AuthService */
-            $auth = $context->getServiceManager()->get(AuthService::class);
-            $user = $auth->getUser()->toArray();
+        return function ($root, array $args, AppContextInterface $context) {
+            /** @var AuthServiceInterface */
+            $auth = $context->getServiceManager()->get(AuthServiceInterface::class);
+            $user = $auth->getAuthenticatedUser();
             if (empty($user)) {
                 throw new NoSignedException();
             }
-            $data = $auth->getSession();
-            \$permissions = array_map(function (ResourcePermission \$permission) {
-                return $permission->toArray();
-            }, $auth->getPermissions());
-            $token = AuthJWTManager::retriveJWT();
-            return [
-                'user' => $user,
-                'permissions' => $permissions,
-                'roles' => $data["roles"] ?? [],
-                'jwt' => $token
-            ];
+            $permissions = array_map(function (ResourcePermission $permission) {
+                if ($permission->getAccess() === 'DENY') {
+                    return null;
+                }
+                $resource = $permission->getResource();
+                $value = $permission->getValue();
+                $scope = $permission->getScope();
+                if (empty($scope)) {
+                    return sprintf("%s:%s", $resource, $value);
+                }
+                return sprintf("%s:%s:%s", $resource, $value, $scope);
+            }, $user->getPermissions());
+
+            $permissions = array_filter($permissions, fn($permission) => !empty($permission));
+            $user["permissions"] = $permissions;
+            return $user;
         };
     }
 
-    private function __construct(IContextService $context) {}
+    private function __construct() {}
     private function __clone() {}
 }

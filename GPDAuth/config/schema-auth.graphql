@@ -1,15 +1,8 @@
 type Query {
-login(username: String!, password: String!): SessionData
-getSessionData: SessionData
+login(username: String!, password: String!): AuthenticatedUser
+getSessionData: AuthenticatedUser
 }
 
-type SessionData{
-
-user: AuthenticatedUser!
-roles: [String]
-permissions: [SessionDataPermission]!
-jwt: String
-}
 type AuthenticatedUser{
 fullName: String!
 firstName: String!
@@ -19,10 +12,4 @@ email: String
 picture: String
 roles: [String!]!
 permissions: [String!]!
-}
-type SessionDataPermission{
-resource: String!
-access: String!
-value: String!
-scope: String
 }

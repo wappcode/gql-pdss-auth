@@ -3,7 +3,7 @@
 namespace GPDAuth\Services;
 
 use GPDAuth\Library\InvalidUserException;
-use GPDAuth\Models\AuthenticatedUser;
+use GPDAuth\Models\AuthenticatedUserInterface;
 use GPDAuth\Models\UserRepositoryInterface;
 
 @session_start();
@@ -19,13 +19,12 @@ class AuthSessionService extends AbstractAuthService
     ) {
         $this->userRepository = $userRepository;
         $this->sessionKey = $sessionKey;
-        $this->setAuthenticatedUser();
     }
 
     public function login(string $username, string $password, string $grantType): void
     {
         $this->authenticatedUser = $this->userRepository->validateCredentials($username, $password);
-        if (!($this->authenticatedUser instanceof AuthenticatedUser)) {
+        if (!($this->authenticatedUser instanceof AuthenticatedUserInterface)) {
             throw new InvalidUserException('Invalid username and password or inactive user');
         }
         $this->setSession($this->authenticatedUser->getId(), $grantType);
@@ -43,11 +42,14 @@ class AuthSessionService extends AbstractAuthService
         $_SESSION[$this->sessionKey]["grant"] = $grant ?? null;
     }
 
-    private function setAuthenticatedUser(): void
+    public function getAuthenticatedUser(): ?AuthenticatedUserInterface
     {
-        $userId = $_SESSION[$this->sessionKey]["identifier"] ?? null;
-        if ($userId !== null) {
-            $this->authenticatedUser = $this->userRepository->findById($userId);
+        if (!($this->authenticatedUser instanceof AuthenticatedUserInterface)) {
+            $userId = $_SESSION[$this->sessionKey]["identifier"] ?? null;
+            if ($userId !== null) {
+                $this->authenticatedUser = $this->userRepository->findById($userId);
+            }
         }
+        return $this->authenticatedUser ?? null;
     }
 }

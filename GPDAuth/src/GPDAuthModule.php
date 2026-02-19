@@ -2,6 +2,7 @@
 
 namespace GPDAuth;
 
+use App\Middleware\AuthMiddleware;
 use GPDAuth\Graphql\FieldLogin;
 use GPDAuth\Services\AuthService;
 use GPDAuth\Graphql\ResolversRole;
@@ -10,9 +11,11 @@ use GPDAuth\Graphql\FieldSignedUser;
 use GPDAuth\Graphql\ResolversPermission;
 use Laminas\ServiceManager\ServiceManager;
 use GPDAuth\Graphql\TypeSessionDataPermission;
+use GPDAuth\Models\AuthenticatedUserInterface;
 use GPDAuth\Models\AuthServiceInterface;
 use GPDAuth\Models\UserRepositoryInterface;
 use GPDAuth\Services\AuthSessionService;
+use GPDAuth\Services\UserRepository;
 use GPDCore\Core\AbstractModule;
 
 class GPDAuthModule extends AbstractModule
@@ -31,18 +34,12 @@ class GPDAuthModule extends AbstractModule
         return file_get_contents(__DIR__ . '/../config/schema-auth.graphql');
     }
 
-    function getTypes(): array
-    {
-        return [];
-    }
-    function getMiddlewares(): array
-    {
-        return [];
-    }
+
+
 
     function getServices(): array
     {
-        $context = $this->context;
+        $context = $this->getAppContext();
         return [
             'invokables' => [
                 TypeSessionDataPermission::NAME => TypeSessionDataPermission::class
@@ -51,9 +48,9 @@ class GPDAuthModule extends AbstractModule
 
                 UserRepositoryInterface::class => function (ServiceManager $sm) use ($context) {
                     $entityManager = $context->getEntityManager();
-                    return new \GPDAuth\Services\UserRepository($entityManager);
+                    return new UserRepository($entityManager);
                 },
-                AuthServiceInterface::class => function (ServiceManager $sm) {
+                AuthServiceInterface::class => function (ServiceManager $sm) use ($context) {
                     // Crear repositorios
                     $userRepository = $sm->get(UserRepositoryInterface::class);
 
@@ -70,6 +67,16 @@ class GPDAuthModule extends AbstractModule
             ],
             'aliases' => []
         ];
+    }
+    function getMiddlewares(): array
+    {
+        return [];
+        $authService = $this->getAppContext()->getServiceManager()->get(AuthServiceInterface::class);
+        return [new AuthMiddleware($authService, identityKey: AuthenticatedUserInterface::class, exitUnauthenticated: false)];
+    }
+    function getTypes(): array
+    {
+        return [];
     }
     /**
      * Array con los resolvers del módulo

@@ -2,11 +2,12 @@
 
 namespace AppModule;
 
-use GPDAuth\Models\AuthServiceInterface;
-use GPDAuth\Services\AuthService;
+use GPDAuth\Models\AuthenticatedUserInterface;
+use GPDCore\Contracts\AppContextInterface;
 use GPDCore\Core\AbstractModule;
 use GPDCore\Exceptions\GQLException as ExceptionsGQLException;
 use GPDCore\Graphql\ResolverPipelineFactory;
+use Psr\Http\Message\ServerRequestInterface;
 
 class AppModule extends AbstractModule
 {
@@ -28,11 +29,7 @@ class AppModule extends AbstractModule
     {
         return [
             'invokables' => [],
-            'factories' => [
-                AuthServiceInterface::class => function ($serviceManager) {
-                    return new AuthService($this->context);
-                },
-            ],
+            'factories' => [],
             'aliases' => []
         ];
     }
@@ -52,13 +49,12 @@ class AppModule extends AbstractModule
     function getResolvers(): array
     {
         $echoResolve = fn($root, $args) => $args["message"];
-        $proxyEcho1 = fn($resolver) => function ($root, $args, $context, $info) use ($resolver) {
-            /** @var AuthService */
-            $auth = $context->getServiceManager()->get(AuthService::class);
-            if (!$auth->isSigned()) {
+        $proxyEcho1 = fn($resolver) => function ($root, $args, AppContextInterface $context, $info) use ($resolver) {
+            $request = $context->getContextAttribute(ServerRequestInterface::class);
+            $user = $request->getAttribute(AuthenticatedUserInterface::class);
+            if (!$user) {
                 throw new ExceptionsGQLException("No autorizado");
             }
-            $user = $auth->getAuthenticatedUser();
             $msg = $args["message"];
             $message = sprintf("%s -> Usuario: %s - %s", $msg, $user->getFullName(), $user->getUsername());
             return $message;

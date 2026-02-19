@@ -7,7 +7,7 @@ use GPDCore\Entities\AbstractEntityModel;
 
 #[ORM\Entity]
 #[ORM\Table(name: "gpd_auth_client_grants")]
-#[ORM\UniqueConstraint(name: "uq_client_grant", columns: ["client_id", "grant_type"])]
+#[ORM\UniqueConstraint(name: "uq_client_grant", columns: ["consumer_id", "grant_type"])]
 #[ORM\HasLifecycleCallbacks]
 class ApiConsumerGrants extends AbstractEntityModel
 {

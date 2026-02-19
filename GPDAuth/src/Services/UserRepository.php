@@ -7,6 +7,7 @@ use GPDAuth\Entities\Permission;
 use GPDAuth\Entities\Role;
 use GPDAuth\Entities\User;
 use GPDAuth\Library\PasswordManager;
+use GPDAuth\Models\AuthenticatedUser;
 use GPDAuth\Models\AuthenticatedUserInterface;
 use GPDAuth\Models\ResourcePermission;
 use GPDAuth\Models\UserRepositoryInterface;
@@ -45,7 +46,7 @@ class UserRepository implements UserRepositoryInterface
         if (!($user instanceof User) || !$user->getActive()) {
             return null;
         }
-        $encodedPassword = PasswordManager::encode($password, $user->getSalt());
+        $encodedPassword = PasswordManager::encode($password, $user->getSalt(), $user->getAlgorithm());
         if ($user->getPassword() === $encodedPassword) {
             $authUser = $this->crateAuthenticatedUserInterface($user);
             $this->userCache[$authUser->getId()] = $authUser;
@@ -75,7 +76,7 @@ class UserRepository implements UserRepositoryInterface
      */
     private function crateAuthenticatedUserInterface(User $user): AuthenticatedUserInterface
     {
-        $authUser = new AuthenticatedUserInterface();
+        $authUser = new AuthenticatedUser();
         $authUser->setId($user->getId());
         $authUser->setUsername($user->getUsername());
         $authUser->setFullName($user->getFullName());

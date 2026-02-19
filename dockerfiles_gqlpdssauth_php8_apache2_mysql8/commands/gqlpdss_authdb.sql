@@ -1,7 +1,7 @@
 INSERT INTO gpd_auth_users
 (id,  firstname, lastname, email, username, `algorithm`, salt, user_password, password_expiration, picture, active, last_login,created, updated)
 VALUES 
-(1,'Pancho','López','p.lopez@demo.local.lan','p.lopez','sha256',NULL,'3eff2ffd7f82c57cfd6401e912742a0e3481c2149cf21c7ed859f0296d4fd636',NULL,NULL,1,NULL,'2023-12-06 01:05:59','2023-12-06 01:05:59');
+(1,'Pancho','López','p.lopez@demo.local.lan','p.lopez','sha256',NULL,sha2("demo###",256) ,NULL,NULL,1,NULL,'2023-12-06 01:05:59','2023-12-06 01:05:59');
 
 INSERT INTO `gpd_auth_resources` 
 (id,  code, title, description, scopes,created, updated)

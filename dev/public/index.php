@@ -1,6 +1,7 @@
 <?php
 
 use AppModule\AppModule;
+use GPDAuth\GPDAuthModule;
 use GPDCore\Contracts\AppContextInterface;
 use GPDCore\Core\AppConfig;
 use GPDCore\Core\Application;
@@ -25,6 +26,7 @@ $entityManager = EntityManagerFactory::createInstance($options, $cacheDir, $isEn
 $request = ServerRequestFactory::fromGlobals();
 $app = new Application($config, $entityManager, $enviroment);
 $app->addModule(
+    GPDAuthModule::class,
     AppModule::class
 );
 $response = $app->run($request);

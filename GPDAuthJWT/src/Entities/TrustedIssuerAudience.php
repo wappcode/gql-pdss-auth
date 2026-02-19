@@ -4,32 +4,30 @@ declare(strict_types=1);
 
 namespace GPDAuthJWT\Entities;
 
-use DateTime;
 use Doctrine\ORM\Mapping as ORM;
+use GPDCore\Entities\AbstractEntityModelStringId;
 
 #[ORM\Entity()]
-#[ORM\Table(name: "gpd_auth_trusted_issuers_audiences")]
+#[ORM\Table(name: "gpd_auth_trusted_issuer_audiences")]
 #[ORM\Index(name: "trusted_issuer_idx", columns: ["trusted_issuer_id"])]
 #[ORM\Index(name: "status_idx", columns: ["status"])]
 #[ORM\UniqueConstraint(name: "uq_issuer_audience", columns: ["trusted_issuer_id", "audience"])]
 #[ORM\HasLifecycleCallbacks]
+
 /**
  * Entidad para gestionar audiencias permitidas por cada Issuer de confianza
  * Define qué valores de 'aud' (audience) son válidos para cada Identity Provider
  */
-class TrustedIssuerAudience
+class TrustedIssuerAudience extends AbstractEntityModelStringId
 {
-    #[ORM\Id]
-    #[ORM\Column(type: "guid")]
-    #[ORM\GeneratedValue(strategy: "UUID")]
-    protected string $id;
+
 
     /**
      * Relación con el Issuer de confianza
      */
-    #[ORM\ManyToOne(targetEntity: TrustedIssuers::class)]
+    #[ORM\ManyToOne(targetEntity: TrustedIssuer::class)]
     #[ORM\JoinColumn(name: "trusted_issuer_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE")]
-    protected TrustedIssuers $trustedIssuer;
+    protected TrustedIssuer $trustedIssuer;
 
     /**
      * Audience claim (aud) - Identifica a quién está dirigido el JWT
@@ -43,27 +41,13 @@ class TrustedIssuerAudience
     #[ORM\Column(type: "string", length: 20, nullable: false, options: ["default" => "active"])]
     protected string $status = 'active';
 
-    #[ORM\Column(type: "datetime", name: "created_at", nullable: false)]
-    protected DateTime $createdAt;
 
-    public function __construct()
-    {
-        $this->createdAt = new DateTime();
-    }
-
-    // Getters y Setters
-
-    public function getId(): string
-    {
-        return $this->id;
-    }
-
-    public function getTrustedIssuer(): TrustedIssuers
+    public function getTrustedIssuer(): TrustedIssuer
     {
         return $this->trustedIssuer;
     }
 
-    public function setTrustedIssuer(TrustedIssuers $trustedIssuer): self
+    public function setTrustedIssuer(TrustedIssuer $trustedIssuer): self
     {
         $this->trustedIssuer = $trustedIssuer;
         return $this;
@@ -91,10 +75,6 @@ class TrustedIssuerAudience
         return $this;
     }
 
-    public function getCreatedAt(): DateTime
-    {
-        return $this->createdAt;
-    }
 
     /**
      * Verifica si la audiencia está activa

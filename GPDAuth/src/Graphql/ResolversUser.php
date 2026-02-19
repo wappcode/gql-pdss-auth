@@ -4,7 +4,7 @@ namespace GPDAuth\Graphql;
 
 use GPDAuth\Entities\Role;
 use GPDAuth\Entities\User;
-use GPDCore\Library\ResolverFactory;
+use GPDCore\Graphql\ResolverFactory;
 
 class ResolversUser
 {
@@ -24,7 +24,7 @@ class ResolversUser
     public static function getRolesResolve(?callable $proxy): callable
     {
 
-        $resolve = ResolverFactory::createCollectionResolver(User::class, 'roles', null, Role::class);
+        $resolve = ResolverFactory::forCollection(User::class, 'roles', null, Role::class);
         return is_callable($proxy) ? $proxy($resolve) : $resolve;
     }
 }

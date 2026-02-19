@@ -9,15 +9,14 @@ use GPDCore\Entities\AbstractEntityModel;
 /** Usado para IdP local para Machine to Machine M2M */
 #[ORM\Entity]
 #[ORM\Table(name: "gpd_auth_api_consumer_permissions")]
-#[ORM\HasLifecycleCallbacks]
 class ApiConsumerPermissions extends AbstractEntityModel
 {
-    #[ORM\Id]
+
     #[ORM\ManyToOne(targetEntity: ApiConsumer::class, inversedBy: "consumerPermissions")]
     #[ORM\JoinColumn(name: "consumer_id", referencedColumnName: "id", nullable: false)]
     private ApiConsumer $consumer;
 
-    #[ORM\Id]
+
     #[ORM\ManyToOne(targetEntity: ApiPermission::class, inversedBy: "consumerPermissions")]
     #[ORM\JoinColumn(name: "permission_id", referencedColumnName: "id", nullable: false)]
     private ApiPermission $permission;

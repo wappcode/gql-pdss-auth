@@ -45,9 +45,7 @@ class AuthMiddleware implements MiddlewareInterface
             }
         }
         $request = $request->withAttribute($this->identityKey, $authenticatedUser);
-        return $handler->handle(
-            $request
-        );
+        return $handler->handle($request);
     }
     private function unauthorized(string $message): ResponseInterface
     {

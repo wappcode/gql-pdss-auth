@@ -13,7 +13,7 @@ class AuthenticatedUser extends AbstractAuthenticatedUser implements Authenticat
         $roles = $this->getRoles() ?? [];
         return in_array($role, $roles);
     }
-    public function hasSomeRoles(array $roles): bool
+    public function hasAnyRole(array $roles): bool
     {
         $userRoles = $this->getRoles() ?? [];
         $intersect = array_intersect($userRoles, $roles);
@@ -60,7 +60,7 @@ class AuthenticatedUser extends AbstractAuthenticatedUser implements Authenticat
      * @param array|null $scopes
      * @return boolean
      */
-    public function hasSomePermissions(array $resources, array $permissionsValues, ?array $scopes = null): bool
+    public function hasAnyPermission(array $resources, array $permissionsValues, ?array $scopes = null): bool
     {
         $result = false;
         foreach ($resources as $resource) {

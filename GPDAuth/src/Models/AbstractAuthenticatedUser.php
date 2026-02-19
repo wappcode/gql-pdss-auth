@@ -344,9 +344,9 @@ abstract class AbstractAuthenticatedUser implements AuthenticatedUserInterface
     }
 
     abstract public function hasRole(string $role): bool;
-    abstract public function hasSomeRoles(array $roles): bool;
+    abstract public function hasAnyRole(array $roles): bool;
     abstract public function hasAllRoles(array $roles): bool;
     abstract public function hasPermission(string $resource, string $permission, ?string $scope = null): bool;
-    abstract public function hasSomePermissions(array $resources, array $permission, ?array $scopes = null): bool;
+    abstract public function hasAnyPermission(array $resources, array $permission, ?array $scopes = null): bool;
     abstract public function hasAllPermissions(array $resources, array $permission, ?array $scopes = null): bool;
 }

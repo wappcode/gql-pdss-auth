@@ -2,6 +2,7 @@
 
 namespace AppModule;
 
+use GPDAuth\Graphql\AuthResolverGuardFactory;
 use GPDAuth\Models\AuthServiceInterface;
 use GPDCore\Contracts\AppContextInterface;
 use GPDCore\Core\AbstractModule;
@@ -49,25 +50,23 @@ class AppModule extends AbstractModule
     {
         $echoResolve = fn($root, $args) => $args["message"];
         $proxyEcho1 = fn($resolver) => function ($root, $args, AppContextInterface $context, $info) use ($resolver) {
-            // $request = $context->getContextAttribute(ServerRequestInterface::class);
-            // $user = $request->getAttribute(AuthenticatedUserInterface::class);
 
             /** @var AuthServiceInterface */
             $authService = $context->getServiceManager()->get(AuthServiceInterface::class);
             $user = $authService->getAuthenticatedUser();
             if (!$user) {
-                throw new GQLException("Unauthenticated", "UNAUTHENTICATED");
+                return $resolver($root, $args, $context, $info);
             }
-            $msg = $args["message"];
+            $msg = $resolver($root, $args, $context, $info);
             $message = sprintf("%s -> Usuario: %s", $msg, $user->getUsername(), $user->getUsername());
             return $message;
-            return   'Proxy 1 ' . $resolver($root, $args, $context, $info);
         };
         return [
             "Query::echo" => $echoResolve,
             'Query::echoProtected' => ResolverPipelineFactory::createPipeline($echoResolve, [
                 // pipeline va en orden inverso al de ejecución
                 ResolverPipelineFactory::createWrapper($proxyEcho1),
+                AuthResolverGuardFactory::requireAuthenticated(),
             ]),
         ];
     }

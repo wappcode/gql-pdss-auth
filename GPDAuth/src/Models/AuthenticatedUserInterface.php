@@ -28,9 +28,9 @@ interface AuthenticatedUserInterface
     public function getType(): AuthenticatedUserType;
     public function setType(AuthenticatedUserType $type): self;
     public function hasRole(string $role): bool;
-    public function hasSomeRoles(array $roles): bool;
+    public function hasAnyRole(array $roles): bool;
     public function hasAllRoles(array $roles): bool;
     public function hasPermission(string $resource, string $permission, ?string $scope = null): bool;
-    public function hasSomePermissions(array $resources, array $permission, ?array $scopes = null): bool;
+    public function hasAnyPermission(array $resources, array $permission, ?array $scopes = null): bool;
     public function hasAllPermissions(array $resources, array $permission, ?array $scopes = null): bool;
 }

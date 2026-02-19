@@ -4,6 +4,20 @@ Libreria para agregar autentificación a un proyecto php.
 
 Compatible con la librería wappcode/gqlpdss
 
+## Estructura recomendada de módulos
+
+Para mantener consistencia con PSR-4, cada módulo debe ubicar sus clases dentro de `src/` y separar por tipo:
+
+- `src/Controllers`: controladores HTTP
+- `src/Services`: servicios de negocio
+- `src/Models`: modelos e interfaces
+- `src/Entities`: entidades Doctrine
+- `src/Middleware`: middlewares
+- `src/Graphql`: resolvers y tipos GraphQL
+- `src/Library`: utilidades compartidas
+
+Nota: en este repositorio, `GPDAuthJWT` ya fue alineado para que `Controllers` y `Models` vivan dentro de `GPDAuthJWT/src/`.
+
 ## Instalar con GQLPDSS
 
 En un proyecto wappcode/gqlpdss ejecutar el siguiente comando

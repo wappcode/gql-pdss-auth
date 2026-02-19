@@ -14,7 +14,7 @@ use Psr\Http\Message\ServerRequestInterface;
 class AuthTokenController extends AbstractAppController
 {
 
-    public function dispatch(ServerRequestInterface $request):ResponseInterface
+    public function dispatch(ServerRequestInterface $request): ResponseInterface
     {
         $context = $this->getAppContext($request);
         // OAuth usa application/x-www-form-urlencoded
@@ -33,8 +33,8 @@ class AuthTokenController extends AbstractAppController
             echo json_encode(['error' => 'invalid_client']);
             exit;
         }
-        $this->validateClient($clientId, $secret,$context);
-        $scopes = $this->getAllowedScopes($clientId, $scopeReq,$context);
+        $this->validateClient($clientId, $secret, $context);
+        $scopes = $this->getAllowedScopes($clientId, $scopeReq, $context);
         $key = $this->getActiveKey($context);
         $config = $context->getConfig()->get("idp_jwt");
         $iss = $config['issuer'];
@@ -49,7 +49,6 @@ class AuthTokenController extends AbstractAppController
         ];
         $response = $this->createJsonResponse($responseData);
         return $response;
-        
     }
 
     private function validateClient($clientId, $secret, AppContextInterface $context)

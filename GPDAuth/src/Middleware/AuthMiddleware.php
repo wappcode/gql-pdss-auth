@@ -1,7 +1,6 @@
 <?php
-// src/Middleware/JwtAuthMiddleware.php
 
-namespace App\Middleware;
+namespace GPDAuth\Middleware;
 
 
 use GPDAuth\Models\AuthenticatedUserInterface;
@@ -29,6 +28,7 @@ class AuthMiddleware implements MiddlewareInterface
         private AuthServiceInterface $authService,
         private string $identityKey = AuthenticatedUserInterface::class,
         private bool $exitUnauthenticated = true,
+        private array $publicRoutes = [], // Array de rutas públicas, ejemplo: ['/login', '/register']
     ) {}
 
     public function process(
@@ -36,6 +36,12 @@ class AuthMiddleware implements MiddlewareInterface
         RequestHandlerInterface $handler
     ): ResponseInterface {
 
+
+        $path = rtrim($request->getUri()->getPath(), '/');
+
+        if ($this->isPublicRoute($path)) {
+            return $handler->handle($request);
+        }
         $authenticatedUser = $this->authService->getAuthenticatedUser();
         if (!($authenticatedUser instanceof AuthenticatedUserInterface)) {
             if ($this->exitUnauthenticated) {
@@ -53,5 +59,15 @@ class AuthMiddleware implements MiddlewareInterface
             'error' => 'unauthorized',
             'message' => $message,
         ], 401);
+    }
+    private function isPublicRoute(string $path): bool
+    {
+        foreach ($this->publicRoutes as $route) {
+            if ($path === $route) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

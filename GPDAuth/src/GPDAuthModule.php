@@ -2,15 +2,13 @@
 
 namespace GPDAuth;
 
-use App\Middleware\AuthMiddleware;
 use GPDAuth\Graphql\FieldLogin;
-use GPDAuth\Services\AuthService;
 use GPDAuth\Graphql\ResolversRole;
 use GPDAuth\Graphql\ResolversUser;
 use GPDAuth\Graphql\FieldSignedUser;
 use GPDAuth\Graphql\ResolversPermission;
 use Laminas\ServiceManager\ServiceManager;
-use GPDAuth\Graphql\TypeSessionDataPermission;
+use GPDAuth\Middleware\AuthMiddleware;
 use GPDAuth\Models\AuthenticatedUserInterface;
 use GPDAuth\Models\AuthServiceInterface;
 use GPDAuth\Models\UserRepositoryInterface;
@@ -18,8 +16,24 @@ use GPDAuth\Services\AuthSessionService;
 use GPDAuth\Services\UserRepository;
 use GPDCore\Core\AbstractModule;
 
+/**
+ * Este módulo se  para importar los resolvers principales
+ */
 class GPDAuthModule extends AbstractModule
 {
+
+
+    /**
+     * Para graphql se recomienda configurar exitUnauthenticated en false,
+     * Si exitUnauthenticated es true, el middleware de autenticación responderá con 401 si la autenticación falla, lo que es adecuado para rutas protegidas.
+     * Si exitUnauthenticated es false, el middleware de autenticación permitirá que la solicitud continúe incluso si la autenticación falla, 
+     * Por lo que la validación de autenticación y autorización se tiene que hacer en los resolvers o en los controllers, 
+     * utilizando los datos del usuario autenticado que se encuentran en el atributo identity de request o en el servicio AuthServiceInterface.
+     * @param boolean $exitUnauthenticated
+     * @param array<string>  $publicRoutes Array de rutas públicas, ejemplo: ['/login', '/register']
+     */
+    public function __construct(private bool $exitUnauthenticated = false, private array $publicRoutes = []) {}
+
     /**
      * Array con la configuración del módulo
      *
@@ -41,9 +55,7 @@ class GPDAuthModule extends AbstractModule
     {
         $context = $this->getAppContext();
         return [
-            'invokables' => [
-                TypeSessionDataPermission::NAME => TypeSessionDataPermission::class
-            ],
+            'invokables' => [],
             'factories' => [
 
                 UserRepositoryInterface::class => function (ServiceManager $sm) use ($context) {
@@ -70,9 +82,13 @@ class GPDAuthModule extends AbstractModule
     }
     function getMiddlewares(): array
     {
-        return [];
         $authService = $this->getAppContext()->getServiceManager()->get(AuthServiceInterface::class);
-        return [new AuthMiddleware($authService, identityKey: AuthenticatedUserInterface::class, exitUnauthenticated: false)];
+        return [new AuthMiddleware(
+            $authService,
+            identityKey: AuthenticatedUserInterface::class,
+            exitUnauthenticated: $this->exitUnauthenticated,
+            publicRoutes: $this->publicRoutes
+        )];
     }
     function getTypes(): array
     {

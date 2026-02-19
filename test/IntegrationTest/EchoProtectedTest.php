@@ -1,5 +1,6 @@
 <?php
 
+use GQLBasicClient\GQLClientException;
 use PHPUnit\Framework\TestCase;
 
 class EchoProtectedTest extends TestCase
@@ -27,24 +28,32 @@ class EchoProtectedTest extends TestCase
     $this->gqlClient = $graphqlClient;
   }
 
-  public function testInvalidToken()
+  public function testUnauthenticated()
   {
     $message = "Hola";
-    // Token con firma corrupta (no dependen de la fecha de expiración)
-    // El payload es válido pero la firma ha sido alterada
-    $jwt = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsb2NhbGhvc3QiLCJzdWIiOiJwLmxvcGV6IiwiZXhwIjoxNzAxODg4MjkyLCJpYXQiOjE3MDE4ODcwOTIsImp0aSI6ImxvY2FsaG9zdDo6cC5sb3BleiIsIm5hbWUiOiJQYW5jaG8gTFx1MDBmM3BleiIsImdpdmVuX25hbWUiOiJQYW5jaG8iLCJmYW1pbHlfbmFtZSI6IkxcdTAwZjNwZXoiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJwLmxvcGV6IiwiZW1haWwiOiJwLmxvcGV6QGRlbW8ubG9jYWwubGFuIiwiYXV0aF90aW1lIjoxNzAxODg3MDkyLCJleGkiOjEyMDAsImJpcnRoX2ZhbWlseV9uYW1lIjoiTFx1MDBmM3BleiIsImJpcnRoX2dpdmVuX25hbWUiOiJQYW5jaG8ifQ.XTs126usQ_vls3nWU8XdV1EaIjdEB7tbFXtL6NqE3CM";
-    $data = $this->echo($message, $jwt);
-    $this->assertNotEmpty($data["errors"], "Check error with invalid jwt");
+
+    try {
+      $data = $this->echo($message);
+    } catch (GQLClientException $ex) {
+      $data = $ex->getContext();
+    }
+    $this->assertNotEmpty($data["errors"], "Check error unauthenticated session");
   }
-  public function testValidToken()
+  public function testAuthenticated()
   {
     $message = "Hola";
-    $jwt = $this->getValidJWT();
-    $data = $this->echo($message, $jwt);
-    $this->assertNotEmpty($data["data"], "Check data with valid jwt");
-    $this->assertStringContainsString($message, $data["data"]["msg"], "Check echo message with valid jwt");
+    $username = 'p.lopez';
+    $password = 'demo###';
+
+    try {
+      $data = $this->echoPlusLogin($message, $username, $password);
+    } catch (GQLClientException $ex) {
+      $data = $ex->getContext();
+    }
+    $this->assertEquals($data["data"]["msg"], "{$message} -> Usuario: {$username}", "Check authenticated session");
   }
-  private function  echo(string $message, string $jwt)
+
+  private function  echo(string $message)
   {
     $query = '
       query QueryEcho($message: String!){
@@ -55,33 +64,26 @@ class EchoProtectedTest extends TestCase
     $variables = [
       "message" => $message,
     ];
-    $headers = [
-      "Authorization: Bearer " . $jwt
-    ];
-    $result = $this->gqlClient->execute($query, $variables, $headers);
+
+    $result = $this->gqlClient->execute($query, $variables);
     return $result;
   }
-  private function  getValidJWT(): string
+  private function  echoPlusLogin(string $message, string $username, string $password)
   {
     $query = '
-    query QueryLogin($username: String!, $password: String!){
-      login(username: $username,password:$password){
-        jwt
-        permissions {
-          resource
-          access
-          value
-          scope
+      query QueryEcho($message: String!){
+        login(username: "' . $username . '", password: "' . $password . '"){
+          fullName
         }
+        msg: echoProtected(message:$message)
       }
-    }
-    
-    ';
+      
+      ';
     $variables = [
-      "username" => "p.lopez",
-      "password" => "demo###"
+      "message" => $message,
     ];
+
     $result = $this->gqlClient->execute($query, $variables);
-    return $result["data"]["login"]["jwt"];
+    return $result;
   }
 }

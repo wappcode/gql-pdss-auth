@@ -25,10 +25,8 @@ $isEntityManagerDevMode = $enviroment !== AppContextInterface::ENV_PRODUCTION;
 $entityManager = EntityManagerFactory::createInstance($options, $cacheDir, $isEntityManagerDevMode);
 $request = ServerRequestFactory::fromGlobals();
 $app = new Application($config, $entityManager, $enviroment);
-$app->addModule(
-    GPDAuthModule::class,
-    AppModule::class
-);
+$app->addModule(new GPDAuthModule(exitUnauthenticated: false, publicRoutes: ['/login']));
+$app->addModule(AppModule::class);
 $response = $app->run($request);
 $emitter = new SapiEmitter();
 $emitter->emit($response);

@@ -2,12 +2,11 @@
 
 namespace AppModule;
 
-use GPDAuth\Models\AuthenticatedUserInterface;
+use GPDAuth\Models\AuthServiceInterface;
 use GPDCore\Contracts\AppContextInterface;
 use GPDCore\Core\AbstractModule;
-use GPDCore\Exceptions\GQLException as ExceptionsGQLException;
+use GPDCore\Exceptions\GQLException;
 use GPDCore\Graphql\ResolverPipelineFactory;
-use Psr\Http\Message\ServerRequestInterface;
 
 class AppModule extends AbstractModule
 {
@@ -50,13 +49,17 @@ class AppModule extends AbstractModule
     {
         $echoResolve = fn($root, $args) => $args["message"];
         $proxyEcho1 = fn($resolver) => function ($root, $args, AppContextInterface $context, $info) use ($resolver) {
-            $request = $context->getContextAttribute(ServerRequestInterface::class);
-            $user = $request->getAttribute(AuthenticatedUserInterface::class);
+            // $request = $context->getContextAttribute(ServerRequestInterface::class);
+            // $user = $request->getAttribute(AuthenticatedUserInterface::class);
+
+            /** @var AuthServiceInterface */
+            $authService = $context->getServiceManager()->get(AuthServiceInterface::class);
+            $user = $authService->getAuthenticatedUser();
             if (!$user) {
-                throw new ExceptionsGQLException("No autorizado");
+                throw new GQLException("Unauthenticated", "UNAUTHENTICATED");
             }
             $msg = $args["message"];
-            $message = sprintf("%s -> Usuario: %s - %s", $msg, $user->getFullName(), $user->getUsername());
+            $message = sprintf("%s -> Usuario: %s", $msg, $user->getUsername(), $user->getUsername());
             return $message;
             return   'Proxy 1 ' . $resolver($root, $args, $context, $info);
         };

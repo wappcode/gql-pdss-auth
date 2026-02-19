@@ -29,8 +29,7 @@ class UserRepository implements UserRepositoryInterface
     {
         $authUser = $this->userCache[$userId] ?? null;
         if ($authUser === null) {
-            $repository = $this->entityManager->find(User::class, $userId);
-            $user = $repository->find($userId);
+            $user = $this->entityManager->find(User::class, $userId);
             if ($user instanceof User) {
                 $authUser = $this->crateAuthenticatedUserInterface($user);
                 $this->userCache[$userId] = $authUser;

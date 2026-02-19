@@ -1,7 +1,7 @@
 <?php
 // src/Middleware/JwtAuthMiddleware.php
 
-namespace App\Middleware;
+namespace GPDAuthJWT\Middleware;
 
 
 use GPDAuth\Models\AuthenticatedUser;

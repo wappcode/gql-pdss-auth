@@ -4840,12 +4840,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/wappcode/gql-pdss-lib.git",
-                "reference": "e231ee5a13aecf38dae943e3c2848fb890d63406"
+                "reference": "acdfbbc89003668456840bae0e04ff15f4f6554f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wappcode/gql-pdss-lib/zipball/e231ee5a13aecf38dae943e3c2848fb890d63406",
-                "reference": "e231ee5a13aecf38dae943e3c2848fb890d63406",
+                "url": "https://api.github.com/repos/wappcode/gql-pdss-lib/zipball/acdfbbc89003668456840bae0e04ff15f4f6554f",
+                "reference": "acdfbbc89003668456840bae0e04ff15f4f6554f",
                 "shasum": ""
             },
             "require": {
@@ -4873,6 +4873,13 @@
             },
             "default-branch": true,
             "type": "library",
+            "extra": {
+                "archive": {
+                    "include": [
+                        "GraphqlModule/config/"
+                    ]
+                }
+            },
             "autoload": {
                 "files": [
                     "GPDCore/src/Functions/PaginationUtilities.php",
@@ -4880,7 +4887,7 @@
                 ],
                 "psr-4": {
                     "GPDCore\\": "GPDCore/src/",
-                    "AppModule\\": "dev/modules/AppModule/src/"
+                    "GraphqlModule\\": "GraphqlModule/src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -4892,7 +4899,7 @@
                 "issues": "https://github.com/wappcode/gql-pdss-lib/issues",
                 "source": "https://github.com/wappcode/gql-pdss-lib/tree/master"
             },
-            "time": "2026-02-19T04:10:15+00:00"
+            "time": "2026-02-20T00:53:30+00:00"
         },
         {
             "name": "wappcode/graphql-basic-client",

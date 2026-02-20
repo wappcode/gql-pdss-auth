@@ -48,7 +48,10 @@ class GPDAuthModule extends AbstractModule
         return file_get_contents(__DIR__ . '/../config/schema-auth.graphql');
     }
 
-
+    function getRoutes(): array
+    {
+        return [];
+    }
 
 
     function getServices(): array

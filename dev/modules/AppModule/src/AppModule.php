@@ -41,6 +41,10 @@ class AppModule extends AbstractModule
     {
         return [];
     }
+    function getRoutes(): array
+    {
+        return [];
+    }
     /**
      * Array con los resolvers del módulo
      *

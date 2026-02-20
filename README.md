@@ -1,309 +1,623 @@
-# GPDAuth wappcode/gql-pdss-auth
+# GPDAuth - Sistema de Autenticación y Autorización
 
-Libreria para agregar autentificación a un proyecto php.
+Librería completa de autenticación y autorización para aplicaciones con WAppCore (GQLPDSS). Provee servicios de autenticación mediante sesión PHP y JWT con un sistema robusto de roles y permisos.
 
-Compatible con la librería wappcode/gqlpdss
+## 📋 Tabla de Contenidos
 
-## Estructura recomendada de módulos
+- [Instalación](#-instalación)
+- [Configuración Básica](#-configuración-básica)
+- [Uso Rápido](#-uso-rápido)
+- [AuthService](#-authservice)
+- [Sistema de Roles y Permisos](#-sistema-de-roles-y-permisos)
+- [Protección de Resolvers GraphQL](#-protección-de-resolvers-graphql)
+- [Middleware de Autenticación](#-middleware-de-autenticación)
+- [JWT Authentication](#-jwt-authentication)
+- [API Reference](#-api-reference)
 
-Para mantener consistencia con PSR-4, cada módulo debe ubicar sus clases dentro de `src/` y separar por tipo:
+## 🚀 Instalación
 
-- `src/Controllers`: controladores HTTP
-- `src/Services`: servicios de negocio
-- `src/Models`: modelos de dominio
-- `src/Contracts`: interfaces/contratos
-- `src/Entities`: entidades Doctrine
-- `src/Middleware`: middlewares
-- `src/Graphql`: resolvers y tipos GraphQL
-- `src/Library`: utilidades compartidas
+### 1. Instalación via Composer
 
-Nota: en este repositorio, `GPDAuthJWT` ya fue alineado para que `Controllers` y `Models` vivan dentro de `GPDAuthJWT/src/`.
-
-## Instalar con GQLPDSS
-
-En un proyecto wappcode/gqlpdss ejecutar el siguiente comando
-
-```
+```bash
 composer require wappcode/gql-pdss-auth
 ```
 
-Agregar las entidades doctrine
+### 2. Configuración de Entidades Doctrine
 
-```
-    // archivo config/doctrine.entities.php
+Agregue las entidades del paquete a la configuración de Doctrine en `config/local.config.php`:
 
-    <?php
-
-    return  [
-        // ...
-        "GPDAuth\Entities" => __DIR__ . "/../vendor/wappcode/gql-pdss-auth/GPDAuth/src/Entities"
-        // ...
-    ];
-
-```
-
-Ejecutar comando para actualizar la base de datos
-
-```
-    vendor/bin/doctrine orm:schema-tool:update --force
-```
-
-Establecer configuración por archivo
-
-```
-// config/local.config.php
-
+```php
 <?php
-
-use GPDAuth\Library\AuthConfigKey;
-use GPDAuth\Library\AuthMethod;
-use GPDAuth\Library\JwtAlgorithm;
-
 return [
-    // configuración de otros módulos
-    // .....
-    AuthConfigKey::JwtSecureKey->value => "secret_key",
-    AuthConfigKey::AuthSessionKey->value => "gpd_auth_session_key", // key o indice asociativo del array $_SESSION para authentificación
-    AuthConfigKey::JwtExpirationTime->value => 1200, // Tiempo en segundos
-    AuthConfigKey::JwtAlgorithm->value => JwtAlgorithm::HS256->value,
-    AuthConfigKey::AuthMethodKey->value => AuthMethod::SessionOrJwt,
-    AuthConfigKey::AuthIssKey->value => $_SERVER["SERVER_NAME"] ?? "localhost",
-    AuthConfigKey::JwtIssConfig->value => [
-        // se agregan los datos de los iss usando el nombre como clave
-        "https://issurl" => [  //  url o id del iss
-            AuthConfigKey::JwtSecureKey->value => "secure_key_to_iss",// opcional si no esta definido utiliza la clave de la configuración local
-            AuthConfigKey::JwtAlgorithm->value => JwtAlgorithm::HS256->value, // opcional si no esta definido utiliza el algoritmo de la configuración local
-            AuthConfigKey::AuthIssAllowedRoles->value => [ // array con los roles permitidos para el iss  se permite el mapeo de un rol del iss a uno del sistema
-                "iss_admin_role" => "admin",
-                "custom_role" => "custom_role"
-            ]
+    'database' => [
+        'connection' => [
+            'driver' => 'pdo_mysql',
+            'user' => 'usuario',
+            'password' => 'password',
+            'host' => 'localhost',
+            'port' => 3306,
+            'dbname' => 'app',
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci'
+        ],
+        "entity_paths" => [
+            realpath(__DIR__ . "/../../dev/modules/AppModule/Entities"),
+            realpath(__DIR__ . "/../../vendor/wappcode/gql-pdss-auth/GPDAuth/src/Entities"),
         ]
     ]
-    // .....
 ];
 ```
 
-Establecer configuración por variable de entorno (alternativa)
+### 3. Crear Esquema de Base de Datos
 
-Variables:
-
-```
-GPDAUTH_CONFIG__JWT_SECURE_KEY
-GPDAUTH_CONFIG__GPDAUTH_CONFIG__AUTH_SESSION_KEY
-GPDAUTH_CONFIG__GJWT_EXPIRATION_TIME_KEY
-GPDAUTH_CONFIG__JWT_ALGORITHM_KEY
-GPDAUTH_CONFIG__AUTH_METHOD_KEY
-GPDAUTH_CONFIG__AUTH_ISS_KEY
+**Opción A: CLI de Doctrine**
+```bash
+vendor/bin/doctrine orm:schema-tool:create
 ```
 
-Agregar el módulo
+**Opción B: Script SQL**
+Ejecute el archivo SQL incluido: `sql/gpd_auth.sql`
 
-```
-// public/index.php
+## ⚙️ Configuración Básica
 
+### Integración con GQLPDSS
+
+Configure el módulo en su aplicación (normalmente en `dev/public/index.php`):
+
+```php
 <?php
-//...
 use GPDAuth\GPDAuthModule;
-//...
+
+// Configuración básica (recomendada para GraphQL)
 $app->addModules([
-    GPDAuthModule::class, // se agrega módulo de autentificación
-    // Otros módulos
-    //...
+    new GPDAuthModule(
+        exitUnauthenticated: false,  // Para GraphQL, permite validación granular por resolver
+        publicRoutes: ['/login', '/register']  // Rutas que no requieren autenticación
+    ),
+    // Otros módulos...
     AppModule::class,
 ]);
-//...
-
 ```
 
-Para agregar seguridad a un resolver o ruta utilizar el servicio AuthService
+### Configuración de Módulos
 
-```
+```php
 <?php
-//...
+// Para aplicaciones REST API tradicionales
+new GPDAuthModule(
+    exitUnauthenticated: true,   // Responde 401 si no está autenticado
+    publicRoutes: ['/login', '/register', '/forgot-password']
+);
 
-$auth = $this->context->getServiceManager()->get(AuthService::class);
-// Revisa si el usuario esta firmado
-$auth->isSigned();
-
+// Para aplicaciones GraphQL (recomendado)
+new GPDAuthModule(
+    exitUnauthenticated: false,  // Permite validación a nivel de resolver
+    publicRoutes: ['/login']
+);
 ```
 
-## Métodos AuthService
+## 🏃‍♂️ Uso Rápido
 
-El servicio AuthService cuenta con métodos utiles para determinar si un usuario tiene authorización a un recurso
+### Autenticación Básica
 
-### isSigned
+```php
+<?php
+use GPDAuth\Contracts\AuthServiceInterface;
 
-Retorna true si el usuario esta firmado
+// En un resolver o controlador
+$authService = $context->getServiceManager()->get(AuthServiceInterface::class);
 
-### login
+// Login
+try {
+    $authService->login('username', 'password', 'local_user');
+    echo "Login exitoso";
+} catch (Exception $e) {
+    echo "Error: " . $e->getMessage();
+}
 
-Hace el login de un usuario
+// Verificar si está autenticado
+$user = $authService->getAuthenticatedUser();
+if ($user) {
+    echo "Usuario: " . $user->getUsername();
+}
 
-```
-$auth->login("username","passwoerd");
-```
-
-### logout
-
-Hace el logout de un usuario
-
-Si se utiliza JWT se limpia la sesión pero el JWT sigue siendo válido hasta que expira
-
-```
-$auth->login("username","passwoerd");
-```
-
-### hasRole
-
-Retorna true si el usuario tiene un determinado rol
-
-```
-// Revisa si el usuario tiene el rol de admin
-$auth->hasRole("admin");
+// Logout
+$authService->logout();
 ```
 
-### hasSomeRoles
+### GraphQL Integration
 
-Retorna true si el usuario tiene alguno de los roles
+```php
+<?php
+// En un módulo GraphQL
+use GPDAuth\Graphql\AuthResolverGuardFactory;
+use GPDCore\Graphql\ResolverPipelineFactory;
 
-```
-// Revisa si el usuario tiene alguno de los roles (staff, publisher)
-
-$auth->hasSomeRoles(["staff", "publisher"]);
-```
-
-### hasAllRoles
-
-Retorna true si el usuario tiene asignados todos los roles
-
-```
-// Revisa si el usuario tiene todos los roles (staff, publisher)
-
-$auth->hasAllRoles(["staff", "publisher"]);
-```
-
-### hasPermission
-
-Retorna true si el usuario tiene el permiso
-
-Los permisos pueden ser específicos por usuario por rol o globales. La prioridad se aplica en ese orden (permisos usuario, permisos rol, permisos globales).
-
-El scope se puede utilizar para identificar si un usuario tiene permisos para un recurso pero con restricciones por ejemplo que tenga permisos para el recurso POST pero solo pueda editar los que le pertenecen a él
-
-```
-$auth->hasPermission("resource_post","VIEW"); // retorna true si el usuario tiene permiso para ver post sin importar el scope
-
-$auth->hasPermission("resource_post","VIEW","OWNER"); // retorna true si el usuario tiene permiso para ver post pero con scope OWNER
-
-$auth->hasPermission("resource_post","VIEW","ALL"); // retorna true si el usuario tiene permiso para ver post pero con scope ALL
+class AppModule extends AbstractModule
+{
+    function getResolvers(): array
+    {
+        $echoResolve = fn($root, $args) => $args["message"];
+        
+        return [
+            // Resolver público
+            "Query::echo" => $echoResolve,
+            
+            // Resolver protegido que requiere autenticación
+            'Query::echoProtected' => ResolverPipelineFactory::createPipeline($echoResolve, [
+                AuthResolverGuardFactory::requireAuthenticated(),
+            ]),
+            
+            // Resolver que requiere rol específico
+            'Query::adminOnly' => ResolverPipelineFactory::createPipeline($someResolver, [
+                AuthResolverGuardFactory::requireRole('admin'),
+            ]),
+        ];
+    }
+}
 ```
 
-### hasSomePermissions
+## 🔐 AuthService
 
-Retorna true si el usuario tiene uno o más de los permisos.
+El `AuthServiceInterface` es el corazón del sistema de autenticación:
 
-Se pueden pasar multiples recursos, permisos y scopes, se realizan la combinación de todos para determinar si tiene alguno
+### Métodos Principales
 
-```
-$auth->hasSomePermissions(["resource_post"],["CREATE","UPDATE"],["ALL"]);
+```php
+<?php
+use GPDAuth\Contracts\AuthServiceInterface;
 
-```
+$auth = $context->getServiceManager()->get(AuthServiceInterface::class);
 
-### hasAllPermissions
-
-Retorna true si el usuario tiene todos los permisos.
-
-Se pueden pasar multiples recursos, permisos y scopes, se realizan las combinaciones para determinar si los tiene todos
-
-```
-$auth->hasSomePermissions(["resource_post"],["VIEW",CREATE","UPDATE","DELETE"],["ALL"]);
-
+// Autenticación
+$auth->login(string $username, string $password, string $grantType): void;
+$auth->logout(): void;
+$user = $auth->getAuthenticatedUser(): ?AuthenticatedUserInterface;
 ```
 
-## USAR SIN GQLPDSS
+### Ejemplo Práctico en GraphQL
 
-Intalar
-
+```php
+<?php
+// Resolver de login
+public static function createLoginResolve(): callable
+{
+    return function ($root, array $args, AppContextInterface $context, $info) {
+        $username = $args["username"] ?? '';
+        $password = $args["password"] ?? '';
+        
+        /** @var AuthServiceInterface */
+        $auth = $context->getServiceManager()->get(AuthServiceInterface::class);
+        
+        try {
+            $auth->login($username, $password, AuthenticatedUserType::LOCAL_USER->value);
+            $user = $auth->getAuthenticatedUser();
+            
+            return [
+                'success' => true,
+                'user' => $user->toArray(),
+                'message' => 'Login exitoso'
+            ];
+        } catch (Throwable $e) {
+            throw new GQLException('Credenciales inválidas', 'INVALID_CREDENTIALS');
+        }
+    };
+}
 ```
-composer require wappcode/gql-pdss-auth
+
+## 👥 Sistema de Roles y Permisos
+
+### Interfaz AuthenticatedUserInterface
+
+```php
+<?php
+// Verificación de roles
+$user->hasRole(string $role): bool;
+$user->hasAnyRole(array $roles): bool;
+$user->hasAllRoles(array $roles): bool;
+
+// Verificación de permisos
+$user->hasPermission(string $resource, string $permission, ?string $scope = null): bool;
+$user->hasAnyPermission(array $resources, array $permissions, ?array $scopes = null): bool;
+$user->hasAllPermissions(array $resources, array $permissions, ?array $scopes = null): bool;
 ```
 
-Agregar a las rutas de doctrine las entidades del módulo
+### Ejemplos de Uso
 
+```php
+<?php
+$user = $auth->getAuthenticatedUser();
+
+// Verificar roles
+if ($user->hasRole('admin')) {
+    echo "Usuario es administrador";
+}
+
+if ($user->hasAnyRole(['editor', 'publisher'])) {
+    echo "Usuario puede editar contenido";
+}
+
+// Verificar permisos específicos
+if ($user->hasPermission('posts', 'CREATE')) {
+    echo "Usuario puede crear posts";
+}
+
+// Permisos con scope
+if ($user->hasPermission('posts', 'EDIT', 'OWNER')) {
+    echo "Usuario puede editar sus propios posts";
+}
+
+if ($user->hasPermission('posts', 'EDIT', 'ALL')) {
+    echo "Usuario puede editar cualquier post";
+}
+
+// Permisos múltiples
+if ($user->hasAllPermissions(['posts', 'comments'], ['CREATE', 'EDIT'], ['ALL'])) {
+    echo "Usuario tiene control completo sobre posts y comentarios";
+}
 ```
-__DIR__ . "/../vendor/wappcode/gql-pdss-auth/GPDAuth/src/Entities"
+
+## 🛡️ Protección de Resolvers GraphQL
+
+### AuthResolverGuardFactory
+
+Protege resolvers GraphQL con diferentes niveles de autorización:
+
+```php
+<?php
+use GPDAuth\Graphql\AuthResolverGuardFactory;
+
+// Requiere autenticación (cualquier usuario logueado)
+AuthResolverGuardFactory::requireAuthenticated();
+
+// Requiere rol específico
+AuthResolverGuardFactory::requireRole('admin');
+
+// Requiere cualquiera de los roles
+AuthResolverGuardFactory::requireAnyRole(['editor', 'publisher']);
+
+// Requiere todos los roles
+AuthResolverGuardFactory::requireAllRoles(['staff', 'verified']);
+
+// Requiere permiso específico
+AuthResolverGuardFactory::requirePermission('posts', 'CREATE');
+
+// Requiere permiso con scope
+AuthResolverGuardFactory::requirePermission('posts', 'EDIT', 'OWNER');
+
+// Requiere cualquier permiso de la lista
+AuthResolverGuardFactory::requireAnyPermission(
+    ['posts', 'pages'], 
+    ['CREATE', 'EDIT'], 
+    ['ALL', 'OWNER']
+);
+
+// Requiere todos los permisos
+AuthResolverGuardFactory::requireAllPermissions(
+    ['posts'], 
+    ['CREATE', 'EDIT', 'DELETE'], 
+    ['ALL']
+);
 ```
 
-Actualizar base de datos
+### Ejemplo Completo de Protección
 
+```php
+<?php
+class AppModule extends AbstractModule
+{
+    function getResolvers(): array
+    {
+        return [
+            // Público
+            'Query::login' => FieldLogin::createResolve(),
+            
+            // Solo usuarios autenticados
+            'Query::profile' => ResolverPipelineFactory::createPipeline(
+                $profileResolver,
+                [AuthResolverGuardFactory::requireAuthenticated()]
+            ),
+            
+            // Solo administradores
+            'Mutation::deleteUser' => ResolverPipelineFactory::createPipeline(
+                $deleteUserResolver,
+                [AuthResolverGuardFactory::requireRole('admin')]
+            ),
+            
+            // Editores o publicadores
+            'Mutation::publishPost' => ResolverPipelineFactory::createPipeline(
+                $publishResolver,
+                [AuthResolverGuardFactory::requireAnyRole(['editor', 'publisher'])]
+            ),
+            
+            // Permiso específico con scope
+            'Mutation::editPost' => ResolverPipelineFactory::createPipeline(
+                $editPostResolver,
+                [AuthResolverGuardFactory::requirePermission('posts', 'EDIT', 'OWNER')]
+            ),
+        ];
+    }
+}
 ```
-vendor/bin/doctrine orm:schema-tool:update --force
+
+## 🔒 Middleware de Autenticación
+
+### AuthMiddleware
+
+El middleware valida automáticamente las solicitudes:
+
+```php
+<?php
+// Configuración en GPDAuthModule
+new GPDAuthModule(
+    exitUnauthenticated: true,   // true: responde 401 si no autenticado
+                                // false: continúa y permite validación granular
+    publicRoutes: ['/login', '/register', '/forgot-password']
+);
 ```
 
-## Configuración de Apache
+### Comportamiento del Middleware
 
-Para que la autenticación JWT funcione correctamente con Apache, es necesario configurar el servidor para que pase el header `Authorization` a PHP. Por defecto, Apache no transfiere este header por razones de seguridad.
+- **exitUnauthenticated: true** - Ideal para APIs REST
+  - Responde inmediatamente con 401 si no está autenticado
+  - Protege todas las rutas excepto las públicas
+  
+- **exitUnauthenticated: false** - Ideal para GraphQL
+  - Permite que las solicitudes continúen
+  - AuthResolverGuardFactory maneja la validación por resolver
 
-### Opción 1: Usando SetEnvIf (Recomendado)
+### Acceso al Usuario en Request
 
-Agregar en el archivo de configuración de VirtualHost o en `.htaccess`:
+```php
+<?php
+// El middleware inyecta el usuario autenticado en el request
+$request = $context->getContextAttribute(ServerRequestInterface::class);
+$user = $request->getAttribute(AuthenticatedUserInterface::class);
+
+if ($user instanceof AuthenticatedUserInterface) {
+    echo "Usuario autenticado: " . $user->getUsername();
+}
+```
+
+## 🎫 JWT Authentication
+
+### Módulo GPDAuthJWT
+
+Para autenticación JWT, use el módulo adicional:
+
+```php
+<?php
+use GPDAuthJWT\GPDAuthJWTModule;
+
+// Configurar junto con el módulo base
+$app->addModules([
+    new GPDAuthModule(exitUnauthenticated: false),
+    new GPDAuthJWTModule(),
+    AppModule::class,
+]);
+```
+
+### JWT vs Session
+
+- **Session Auth**: Usa sesiones PHP, ideal para aplicaciones web tradicionales
+- **JWT Auth**: Tokens sin estado, ideal para APIs y aplicaciones SPA/móviles
+
+### OAuth 2.0 Client Credentials
+
+```php
+<?php
+// Endpoint para obtener tokens JWT
+// POST /oauth/token
+$response = [
+    'grant_type' => 'client_credentials',
+    'client_id' => 'your_client_id',  
+    'client_secret' => 'your_client_secret',
+    'scope' => 'read write'
+];
+```
+
+### Configuración Apache para JWT
+
+Para que la autenticación JWT funcione correctamente con Apache, es necesario configurar el servidor para que pase el header `Authorization`:
 
 ```apache
+# En VirtualHost o .htaccess
 SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
-```
 
-### Opción 2: Usando RewriteRule
-
-Alternativamente, si ya tienes `RewriteEngine On` configurado:
-
-```apache
+# O usando RewriteRule
 RewriteEngine On
 RewriteCond %{HTTP:Authorization} ^(.*)
 RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
 ```
 
-### Ejemplo completo en VirtualHost
+## 📚 API Reference
 
-```apache
-<VirtualHost *:80>
-    ServerName example.com
-    DocumentRoot /var/www/html/public
+### Interfaces Principales
+
+#### AuthServiceInterface
+```php
+interface AuthServiceInterface
+{
+    public function login(string $username, string $password, string $grantType);
+    public function logout(): void;
+    public function getAuthenticatedUser(): ?AuthenticatedUserInterface;
+}
+```
+
+#### AuthenticatedUserInterface
+```php
+interface AuthenticatedUserInterface
+{
+    // Información del usuario
+    public function getId(): string;
+    public function getUsername(): string;
+    public function getFullName(): string;
+    public function getEmail(): ?string;
+    public function toArray(): array;
     
-    # Pasar header Authorization a PHP
-    SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+    // Roles
+    public function hasRole(string $role): bool;
+    public function hasAnyRole(array $roles): bool;
+    public function hasAllRoles(array $roles): bool;
     
-    # Otras configuraciones...
-    RewriteEngine On
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)$ /index.php?path=$1 [NC,L,QSA]
-</VirtualHost>
+    // Permisos
+    public function hasPermission(string $resource, string $permission, ?string $scope = null): bool;
+    public function hasAnyPermission(array $resources, array $permission, ?array $scopes = null): bool;
+    public function hasAllPermissions(array $resources, array $permission, ?array $scopes = null): bool;
+}
 ```
 
-**Nota:** Después de modificar la configuración de Apache, recuerda reiniciar el servicio:
-```bash
-sudo service apache2 restart
-# o en Docker
-docker-compose restart
+### GraphQL Schema
+
+El módulo proporciona los siguientes tipos y queries GraphQL:
+
+```graphql
+type Query {
+    login(username: String!, password: String!): AuthenticatedUser
+    getSessionData: AuthenticatedUser
+}
+
+type AuthenticatedUser {
+    fullName: String!
+    firstName: String!
+    lastName: String
+    username: String!
+    email: String
+    picture: String
+    roles: [String!]!
+    permissions: [String!]!
+}
 ```
 
-Crear una instancia de la clase AuthService y utilizar sus métodos para login, revisar roles y revisar permisos
+### Enums y Tipos
 
-```
+```php
 <?php
+// Tipos de usuario
+enum AuthenticatedUserType: string
+{
+    case API_CLIENT = 'api_client';
+    case LOCAL_USER = 'local_user';
+    case EXTERN_USER = 'extern_user';
+}
 
-//...
-$auth = new AuthService(
-                        $entityManager,
-                        $_SERVER["SERVER_NAME"] ?? "localhost",
-                        "JWT", // o SESSION
-                    );
-
-$auth->setJwtAlgoritm("HS256");
-$auth->setjwtExpirationTimeInSeconds(1200);// En segundos
-$auth->setJwtSecureKey("secret_key");
-$auth->initSession();
-
-//...
-
+// Métodos de autenticación
+enum AuthMethod: string
+{
+    case Session = 'SESSION';
+    case Jwt = 'JWT';
+    case JwtOrSession = 'JWT_OR_SESSION';
+    case SessionOrJwt = 'SESSION_OR_JWT';
+}
 ```
+
+### Entidades de Base de Datos
+
+La librería incluye las siguientes entidades Doctrine:
+
+- **User**: usuarios del sistema
+- **Role**: roles asignables a usuarios
+- **Resource**: recursos protegidos
+- **Permission**: permisos específicos sobre recursos
+- **ApiConsumer**: clientes API para JWT
+- **TrustedIssuer**: emisores JWT confiables
+
+---
+
+## 💡 Ejemplos Adicionales
+
+### Personalización de Resolvers con Usuario
+
+```php
+<?php
+$proxyEcho = fn($resolver) => function ($root, $args, AppContextInterface $context, $info) use ($resolver) {
+    /** @var AuthServiceInterface */
+    $authService = $context->getServiceManager()->get(AuthServiceInterface::class);
+    $user = $authService->getAuthenticatedUser();
+    
+    if (!$user) {
+        return $resolver($root, $args, $context, $info);
+    }
+    
+    $msg = $resolver($root, $args, $context, $info);
+    return sprintf("%s -> Usuario: %s", $msg, $user->getUsername());
+};
+
+return [
+    'Query::echoWithUser' => ResolverPipelineFactory::createPipeline($echoResolve, [
+        ResolverPipelineFactory::createWrapper($proxyEcho),
+        AuthResolverGuardFactory::requireAuthenticated(),
+    ]),
+];
+```
+
+### Manejo de Errores
+
+```php
+<?php
+use GPDAuth\Library\NoSignedException;
+use GPDAuth\Library\NoAuthorizedException;
+
+try {
+    $user = static::getAuthenticatedUser($context);
+    if (!$user) {
+        throw new NoSignedException();
+    }
+    
+    if (!$user->hasRole('admin')) {
+        throw new NoAuthorizedException("Acceso denegado", "FORBIDDEN", 403);
+    }
+    
+    // Lógica del resolver...
+    
+} catch (NoSignedException $e) {
+    throw new GQLException('Debe iniciar sesión', 'UNAUTHENTICATED', 401);
+} catch (NoAuthorizedException $e) {
+    throw new GQLException('Permisos insuficientes', 'FORBIDDEN', 403);
+}
+```
+
+### Uso sin GQLPDSS
+
+Para usar la librería en proyectos sin GQLPDSS:
+
+```bash
+composer require wappcode/gql-pdss-auth
+```
+
+Agregue las entidades a la configuración de Doctrine:
+```php
+$entityPaths = [
+    __DIR__ . "/../vendor/wappcode/gql-pdss-auth/GPDAuth/src/Entities"
+];
+```
+
+Cree una instancia del servicio:
+```php
+<?php
+use GPDAuth\Services\AuthSessionService;
+use GPDAuth\Services\UserRepository;
+
+$userRepository = new UserRepository($entityManager);
+$authService = new AuthSessionService($userRepository);
+
+// Uso del servicio
+$authService->login('username', 'password', 'local_user');
+$user = $authService->getAuthenticatedUser();
+```
+
+Este sistema de autenticación proporciona una base sólida y flexible para manejar la seguridad en aplicaciones PHP modernas con GraphQL y REST APIs.
+
+## 🤝 Contribución
+
+Para contribuir al proyecto:
+
+1. Fork el repositorio
+2. Crea una rama para tu feature (`git checkout -b feature/amazing-feature`)
+3. Commit tus cambios (`git commit -m 'Add some amazing feature'`)
+4. Push a la rama (`git push origin feature/amazing-feature`)
+5. Abre un Pull Request
+
+## 📄 Licencia
+
+Este proyecto está licenciado bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.

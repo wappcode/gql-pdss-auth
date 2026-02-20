@@ -1,7 +1,7 @@
 <?php
 
 
-namespace GPDAuthJWT\Models;
+namespace GPDAuthJWT\Contracts;
 
 use GPDAuthJWT\Entities\ApiConsumer;
 

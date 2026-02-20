@@ -2,7 +2,7 @@
 
 namespace GPDAuth\Library;
 
-use GPDAuth\Models\AuthenticatedUserInterface;
+use GPDAuth\Contracts\AuthenticatedUserInterface;
 use GPDAuth\Models\ResourcePermission;
 
 class PermissionStringBuilder

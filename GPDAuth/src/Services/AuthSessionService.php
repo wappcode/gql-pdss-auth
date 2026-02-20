@@ -3,8 +3,8 @@
 namespace GPDAuth\Services;
 
 use GPDAuth\Library\InvalidUserException;
-use GPDAuth\Models\AuthenticatedUserInterface;
-use GPDAuth\Models\UserRepositoryInterface;
+use GPDAuth\Contracts\AuthenticatedUserInterface;
+use GPDAuth\Contracts\UserRepositoryInterface;
 
 @session_start();
 class AuthSessionService extends AbstractAuthService

@@ -4,7 +4,7 @@ namespace GPDAuthJWT\Services;
 
 use Doctrine\ORM\EntityManager;
 use GPDAuthJWT\Models\AuthToken;
-use GPDAuthJWT\Models\TokenRepositoryInterface;
+use GPDAuthJWT\Contracts\TokenRepositoryInterface;
 
 /**
  * Implementación concreta del repositorio de tokens usando Doctrine

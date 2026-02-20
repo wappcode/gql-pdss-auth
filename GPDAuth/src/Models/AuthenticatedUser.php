@@ -2,6 +2,8 @@
 
 namespace GPDAuth\Models;
 
+use GPDAuth\Contracts\AuthenticatedUserInterface;
+
 use GPDAuth\Entities\PermissionAccess;
 use GPDAuth\Entities\PermissionValue;
 

@@ -10,7 +10,8 @@ Para mantener consistencia con PSR-4, cada módulo debe ubicar sus clases dentro
 
 - `src/Controllers`: controladores HTTP
 - `src/Services`: servicios de negocio
-- `src/Models`: modelos e interfaces
+- `src/Models`: modelos de dominio
+- `src/Contracts`: interfaces/contratos
 - `src/Entities`: entidades Doctrine
 - `src/Middleware`: middlewares
 - `src/Graphql`: resolvers y tipos GraphQL

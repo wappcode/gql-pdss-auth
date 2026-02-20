@@ -5,13 +5,13 @@ namespace GPDAuthJWT\Middleware;
 
 
 use GPDAuth\Models\AuthenticatedUser;
-use GPDAuth\Models\AuthenticatedUserInterface;
+use GPDAuth\Contracts\AuthenticatedUserInterface;
 use GPDAuth\Models\AuthenticatedUserType;
 use GPDAuthJWT\Entities\ApiConsumer;
 use GPDAuthJWT\Entities\TrustedIssuer;
 use GPDAuthJWT\Library\JwtUtilities;
-use GPDAuthJWT\Models\ApiConsumerRepositoryInterface;
-use GPDAuthJWT\Models\JWTTrustIssuerRepositoryInterface;
+use GPDAuthJWT\Contracts\ApiConsumerRepositoryInterface;
+use GPDAuthJWT\Contracts\JWTTrustIssuerRepositoryInterface;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;

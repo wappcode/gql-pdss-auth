@@ -1,6 +1,8 @@
 <?php
 
-namespace GPDAuth\Models;
+namespace GPDAuth\Contracts;
+
+use GPDAuth\Models\AuthenticatedUserType;
 
 interface AuthenticatedUserInterface
 {

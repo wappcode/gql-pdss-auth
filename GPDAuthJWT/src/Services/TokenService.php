@@ -5,7 +5,8 @@ namespace GPDAuthJWT\Services;
 use DateTime;
 use Exception;
 use GPDAuth\Library\AuthJWTManager;
-use GPDAuthJWT\Models\TokenRepositoryInterface;
+use GPDAuthJWT\Contracts\TokenRepositoryInterface;
+use GPDAuthJWT\Models\AuthToken;
 
 /**
  * Servicio para la gestión de tokens de autenticación (access y refresh)
@@ -14,7 +15,6 @@ class TokenService
 {
     private TokenRepositoryInterface $tokenRepository;
     private string $jwtSecret;
-    private AuthJWTManager $jwtManager;
     private int $accessTokenExpiration;
     private int $refreshTokenExpiration;
 
@@ -26,7 +26,6 @@ class TokenService
     ) {
         $this->tokenRepository = $tokenRepository;
         $this->jwtSecret = $jwtSecret;
-        $this->jwtManager = new AuthJWTManager();
         $this->accessTokenExpiration = $accessTokenExpiration;
         $this->refreshTokenExpiration = $refreshTokenExpiration;
     }
@@ -137,7 +136,7 @@ class TokenService
                 return null;
             }
 
-            $payload = AuthJWTManager::getJWTData($token, $this->jwtSecret);
+            $payload = (array) AuthJWTManager::decode($token, $this->jwtSecret);
 
             // Verificar que sea un access token
             if (!isset($payload['type']) || $payload['type'] !== 'access') {
@@ -177,7 +176,7 @@ class TokenService
     public function blacklistToken(string $token): bool
     {
         try {
-            $payload = AuthJWTManager::getJWTData($token, $this->jwtSecret);
+            $payload = (array) AuthJWTManager::decode($token, $this->jwtSecret);
             $expiresAt = new DateTime();
 
             if (isset($payload['exp'])) {
@@ -215,7 +214,7 @@ class TokenService
     public function getTokenInfo(string $token): ?array
     {
         try {
-            return AuthJWTManager::getJWTData($token, $this->jwtSecret);
+            return (array) AuthJWTManager::decode($token, $this->jwtSecret);
         } catch (Exception $e) {
             return null;
         }

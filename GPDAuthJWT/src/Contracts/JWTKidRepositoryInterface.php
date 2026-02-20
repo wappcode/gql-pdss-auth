@@ -1,6 +1,6 @@
 <?php
 
-namespace GPDAuthJWT\Models;
+namespace GPDAuthJWT\Contracts;
 
 interface JWTKidRepositoryInterface
 {

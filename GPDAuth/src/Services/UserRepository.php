@@ -8,9 +8,9 @@ use GPDAuth\Entities\Role;
 use GPDAuth\Entities\User;
 use GPDAuth\Library\PasswordManager;
 use GPDAuth\Models\AuthenticatedUser;
-use GPDAuth\Models\AuthenticatedUserInterface;
+use GPDAuth\Contracts\AuthenticatedUserInterface;
 use GPDAuth\Models\ResourcePermission;
-use GPDAuth\Models\UserRepositoryInterface;
+use GPDAuth\Contracts\UserRepositoryInterface;
 
 /**
  * Implementación concreta del repositorio de usuarios usando Doctrine

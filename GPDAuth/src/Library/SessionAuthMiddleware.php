@@ -5,7 +5,7 @@ namespace App\Middleware;
 
 
 use GPDAuth\Library\NoSignedException;
-use GPDAuth\Models\UserRepositoryInterface;
+use GPDAuth\Contracts\UserRepositoryInterface;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;

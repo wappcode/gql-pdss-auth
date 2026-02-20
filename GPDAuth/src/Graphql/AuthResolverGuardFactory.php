@@ -4,8 +4,8 @@ namespace GPDAuth\Graphql;
 
 use GPDAuth\Library\NoAuthorizedException;
 use GPDAuth\Library\NoSignedException;
-use GPDAuth\Models\AuthenticatedUserInterface;
-use GPDAuth\Models\AuthServiceInterface;
+use GPDAuth\Contracts\AuthenticatedUserInterface;
+use GPDAuth\Contracts\AuthServiceInterface;
 use GPDCore\Contracts\AppContextInterface;
 use GPDCore\Graphql\ResolverWrapperMiddleware;
 use Psr\Http\Message\ServerRequestInterface;

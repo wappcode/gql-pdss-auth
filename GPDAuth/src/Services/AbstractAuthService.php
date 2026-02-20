@@ -4,8 +4,8 @@ namespace GPDAuth\Services;
 
 use Exception;
 
-use GPDAuth\Models\AuthenticatedUserInterface;
-use GPDAuth\Models\AuthServiceInterface;
+use GPDAuth\Contracts\AuthenticatedUserInterface;
+use GPDAuth\Contracts\AuthServiceInterface;
 
 @session_start();
 abstract class AbstractAuthService implements AuthServiceInterface

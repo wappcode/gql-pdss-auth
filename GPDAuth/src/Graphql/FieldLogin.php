@@ -4,7 +4,7 @@ namespace GPDAuth\Graphql;
 
 use GPDAuth\Library\PermissionStringBuilder;
 use GPDAuth\Models\AuthenticatedUserType;
-use GPDAuth\Models\AuthServiceInterface;
+use GPDAuth\Contracts\AuthServiceInterface;
 use GPDCore\Contracts\AppContextInterface;
 use GPDCore\Exceptions\GQLException;
 use Throwable;

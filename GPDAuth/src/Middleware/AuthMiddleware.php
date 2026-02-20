@@ -3,9 +3,9 @@
 namespace GPDAuth\Middleware;
 
 
-use GPDAuth\Models\AuthenticatedUserInterface;
-use GPDAuth\Models\AuthServiceInterface;
-use GPDAuthJWT\Models\ApiConsumerRepositoryInterface;
+use GPDAuth\Contracts\AuthenticatedUserInterface;
+use GPDAuth\Contracts\AuthServiceInterface;
+use GPDAuthJWT\Contracts\ApiConsumerRepositoryInterface;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;

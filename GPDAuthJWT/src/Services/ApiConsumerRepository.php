@@ -5,7 +5,7 @@ namespace GPDAuthJWT\Services;
 
 use Doctrine\ORM\EntityManager;
 use GPDAuthJWT\Entities\ApiConsumer;
-use GPDAuthJWT\Models\ApiConsumerRepositoryInterface;
+use GPDAuthJWT\Contracts\ApiConsumerRepositoryInterface;
 
 class ApiConsumerRepository implements ApiConsumerRepositoryInterface
 {

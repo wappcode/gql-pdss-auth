@@ -2,6 +2,8 @@
 
 namespace GPDAuth\Models;
 
+use GPDAuth\Contracts\AuthenticatedUserInterface;
+
 
 
 abstract class AbstractAuthenticatedUser implements AuthenticatedUserInterface

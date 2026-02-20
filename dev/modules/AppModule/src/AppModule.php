@@ -3,7 +3,7 @@
 namespace AppModule;
 
 use GPDAuth\Graphql\AuthResolverGuardFactory;
-use GPDAuth\Models\AuthServiceInterface;
+use GPDAuth\Contracts\AuthServiceInterface;
 use GPDCore\Contracts\AppContextInterface;
 use GPDCore\Core\AbstractModule;
 use GPDCore\Exceptions\GQLException;

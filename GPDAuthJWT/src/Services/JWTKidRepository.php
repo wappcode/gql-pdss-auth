@@ -5,7 +5,7 @@ namespace GPDAuthJWT\Services;
 use GPDAuthJWT\Entities\JWTKey;
 use GPDCore\Contracts\AppContextInterface;
 
-class JWTKidRepository implements \GPDAuthJWT\Models\JWTKidRepositoryInterface
+class JWTKidRepository implements \GPDAuthJWT\Contracts\JWTKidRepositoryInterface
 {
     private AppContextInterface $context;
 

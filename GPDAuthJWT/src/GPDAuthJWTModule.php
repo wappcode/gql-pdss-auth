@@ -2,14 +2,17 @@
 
 namespace GPDAuthJWT;
 
-use App\Middleware\JwtAuthMiddleware;
-use GPDAuth\Models\AuthenticatedUserInterface;
+use GPDAuth\Contracts\AuthenticatedUserInterface;
+use GPDAuthJWT\Middleware\JwtAuthMiddleware;
 use GPDAuthJWT\Services\ApiConsumerRepository;
 use GPDAuthJWT\Services\JWTTrustIssuerRepository;
 use GPDCore\Core\AbstractModule;
 
 class GPDAuthJWTModule extends AbstractModule
 {
+
+
+    public function __construct(private bool $exitUnAuthorized = false) {}
     public function getConfig(): array
     {
         return include __DIR__ . '/../config/module.config.php';
@@ -36,7 +39,7 @@ class GPDAuthJWTModule extends AbstractModule
                 new JWTTrustIssuerRepository($context),
                 new ApiConsumerRepository($entityManager),
                 identityKey: AuthenticatedUserInterface::class,
-                exitUnAuthorized: false
+                exitUnAuthorized: $this->exitUnAuthorized
             )
         ];
     }

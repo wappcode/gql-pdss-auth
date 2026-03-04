@@ -2,6 +2,7 @@
 
 use AppModule\AppModule;
 use GPDAuth\GPDAuthModule;
+use GPDAuthJWT\GPDAuthJWTModule;
 use GPDCore\Contracts\AppContextInterface;
 use GPDCore\Core\AppConfig;
 use GPDCore\Core\Application;
@@ -28,6 +29,7 @@ $request = ServerRequestFactory::fromGlobals();
 $app = new Application($config, $entityManager, $enviroment);
 $app->addModule(new GraphqlModule('/api'));
 $app->addModule(new GPDAuthModule(exitUnauthenticated: false, publicRoutes: ['/login']));
+$app->addModule(GPDAuthJWTModule::class);
 $app->addModule(AppModule::class);
 $response = $app->run($request);
 $emitter = new SapiEmitter();

@@ -13,3 +13,10 @@ INSERT INTO gpd_auth_permissions
 VALUES
 (1,1,1,NULL,'ALLOW','ALL',NULL,'2023-12-06 17:58:30','2023-12-06 17:58:30');
 
+INSERT INTO gqlpdss_authdb.gpd_auth_trusted_issuers
+(id, created, updated, issuer, jwks_url, alg, status, name, description)
+VALUES('bro4dd40617b0cae5b7587c0a89d4086ab2', now(), now(), 'http://localhost:8081/', 'http://localhost:8081/realms/Qualem', 'RS256', 'active', 'KeycloakQualem', 'KeycloakQualem Id Provider');
+
+INSERT INTO gqlpdss_authdb.gpd_auth_trusted_issuer_audiences
+(id, created, updated, audience, status, trusted_issuer_id)
+VALUES('qdh73b7a19d30568c595dfce2e83a884786', now(), now(), 'http://localhost:4200/', 'active', 'bro4dd40617b0cae5b7587c0a89d4086ab2');

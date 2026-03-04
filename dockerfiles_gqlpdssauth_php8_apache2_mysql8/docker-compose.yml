@@ -45,3 +45,14 @@ services:
       - GPDAUTH_CONFIG__JWT_ALGORITHM_KEY=${GPDAUTH_CONFIG__JWT_ALGORITHM_KEY:-HS256}
       - GPDAUTH_CONFIG__AUTH_METHOD_KEY=${GPDAUTH_CONFIG__AUTH_METHOD_KEY:-SESSION_OR_JWT}
       - GPDAUTH_CONFIG__AUTH_ISS_KEY=${GPDAUTH_CONFIG__AUTH_ISS_KEY:-gqlpdssauth-php}
+  keycloak:
+    container_name: gqlpdss_auth_keycloak
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin123
+    ports:
+      - "8081:8080"
+    command: start-dev
+    profiles: 
+      - keycloak

@@ -8,7 +8,6 @@ use GPDAuth\Models\AuthenticatedUser;
 use GPDAuth\Contracts\AuthenticatedUserInterface;
 use GPDAuth\Models\AuthenticatedUserType;
 use GPDAuthJWT\Entities\ApiConsumer;
-use GPDAuthJWT\Entities\TrustedIssuer;
 use GPDAuthJWT\Library\JwtUtilities;
 use GPDAuthJWT\Contracts\ApiConsumerRepositoryInterface;
 use GPDAuthJWT\Contracts\JWTTrustIssuerRepositoryInterface;
@@ -57,11 +56,11 @@ class JwtAuthMiddleware implements MiddlewareInterface
             $unverified = JwtUtilities::decodeUnverified($jwt);
             $header = (array) $unverified->getHeader();
             $payload = (array) $unverified->getPayload();
+            $issuer = $payload['iss'] ?? null;
 
-            // Buscar el issuer en la base de datos
-            $trustedIssuer = $this->getValidIssuer($payload);
+            $this->validateIssuer($payload);
 
-            $decoded = $this->decodeAndValidate($jwt, $header, $payload, $trustedIssuer);
+            $decoded = $this->decodeAndValidate($jwt, $header, $payload);
 
             // ¿Es M2M?
             $isM2M =
@@ -84,7 +83,7 @@ class JwtAuthMiddleware implements MiddlewareInterface
             } else {
                 $username = $decoded['iss'] . '|' . $decoded['sub'];
                 $roles = JwtUtilities::extractRoles($decoded);
-                $allowedRoles = $this->issuerRepository->filterAllowedRolesForIssuer($trustedIssuer, $roles);
+                $allowedRoles = $this->issuerRepository->getAllowedRolesForIssuer($issuer, $roles);
                 // Para usuarios humanos, se pueden mapear roles y permisos adicionales desde la base de datos si es necesario, usando el sub o el azp como identificador
                 $authenticatedUser = (new AuthenticatedUser())
                     ->setType(AuthenticatedUserType::EXTERN_USER)
@@ -113,21 +112,22 @@ class JwtAuthMiddleware implements MiddlewareInterface
         }
     }
 
-    private function getValidIssuer(array $payload): TrustedIssuer
+    private function validateIssuer(array $payload): void
     {
         $iss = $payload['iss'] ?? null;
         if (!$iss) {
             throw new \RuntimeException('Missing issuer');
         }
-        $trustedIssuer = $this->issuerRepository->findIssuer($iss);
-        if (!($trustedIssuer instanceof TrustedIssuer) || !$trustedIssuer->isActive()) {
+        $isValidIssuer = $this->issuerRepository->isTrustedIssuer($iss);
+        if (!$isValidIssuer) {
             throw new \RuntimeException('Untrusted issuer');
         }
-        return $trustedIssuer;
     }
 
-    private function decodeAndValidate(string $jwt, array $header, array $payload, TrustedIssuer $trustedIssuer): array
+    private function decodeAndValidate(string $jwt, array $header, array $payload): array
     {
+
+
 
         $iss = $payload['iss'] ?? null;
         $kid = $header['kid'] ?? null;
@@ -136,7 +136,7 @@ class JwtAuthMiddleware implements MiddlewareInterface
             throw new \RuntimeException('Missing key ID');
         }
 
-        $jwk = $this->issuerRepository->fetchJWKByKid($trustedIssuer, $kid);
+        $jwk = $this->issuerRepository->fetchJsonWebKeyByKeyId($iss, $kid);
         if (empty($jwk)) {
             throw new \RuntimeException('Invalid kid');
         }
@@ -151,7 +151,7 @@ class JwtAuthMiddleware implements MiddlewareInterface
             throw new \RuntimeException('Could not extract public key');
         }
         $algorithm = $header->alg ?? 'RS256';
-        $validAlgorithm = $trustedIssuer->getAlg();
+        $validAlgorithm = $this->issuerRepository->getIssuerAlgorithm($iss);
         if ($algorithm !== $validAlgorithm) {
             throw new \RuntimeException('Invalid algorithm');
         }
@@ -161,7 +161,7 @@ class JwtAuthMiddleware implements MiddlewareInterface
         // Validar audience
         $audience = is_array($decoded['aud']) ? $decoded['aud'][0] : $decoded['aud'];
 
-        if (!$this->issuerRepository->isValidAudience($trustedIssuer, $audience)) {
+        if (!$this->issuerRepository->isValidAudience($iss, $audience)) {
             throw new \RuntimeException('Invalid audience');
         }
 

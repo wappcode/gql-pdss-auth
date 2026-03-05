@@ -2,14 +2,13 @@
 
 namespace GPDAuthJWT\Contracts;
 
-use GPDAuthJWT\Entities\TrustedIssuer;
 
 interface JWTTrustIssuerRepositoryInterface
 {
-    public function findIssuer(string $issuer): ?TrustedIssuer;
+    public function isTrustedIssuer(string $issuer): bool;
 
-    public function fetchJWKByKid(TrustedIssuer $issuer, string $keyId): ?array;
-
-    public function isValidAudience(TrustedIssuer $issuer, string $audience): bool;
-    public function filterAllowedRolesForIssuer(TrustedIssuer $issuer, array $roles): array;
+    public function fetchJsonWebKeyByKeyId(string $issuer, string $keyId): ?array;
+    public function getIssuerAlgorithm(string $issuer): ?string;
+    public function isValidAudience(string $issuer, string $audience): bool;
+    public function getAllowedRolesForIssuer(string $issuer, array $roles): array;
 }

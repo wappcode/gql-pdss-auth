@@ -15,13 +15,21 @@ class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
 {
 
 
+    private array $issuerCache = [];
+    private array $audienceCache = [];
+
+
     public function __construct(private AppContextInterface $context) {}
 
 
-    public function findIssuer(string $issuer): ?TrustedIssuer
+    protected function getIssuer(string $issuer): ?TrustedIssuer
     {
+        if ($this->issuerCache !== null && isset($this->issuerCache[$issuer])) {
+            return $this->issuerCache[$issuer];
+        }
+
         $entityManager = $this->context->getEntityManager();
-        $issuer = $entityManager->createQueryBuilder()->from(TrustedIssuer::class, 'ti')
+        $this->issuerCache[$issuer] = $entityManager->createQueryBuilder()->from(TrustedIssuer::class, 'ti')
             ->leftJoin('ti.allowedRoles', 'r')
             ->select(['ti', 'r'])
             ->where('ti.issuer = :issuer')
@@ -31,12 +39,19 @@ class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
-        return $issuer;
+        return $this->issuerCache[$issuer];
+    }
+
+    public function isTrustedIssuer(string $iss): bool
+    {
+        $issuer = $this->getIssuer($iss);
+        return ($issuer instanceof TrustedIssuer);
     }
 
     /** TODO: Agregar cache */
-    public function fetchJWKByKid(TrustedIssuer $issuer, string $keyId): ?array
+    public function fetchJsonWebKeyByKeyId(string $iss, string $keyId): ?array
     {
+        $issuer = $this->getIssuer($iss);
         if (!$issuer || $issuer->getStatus() !== 'active') {
             return null;
         }
@@ -92,8 +107,22 @@ class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
         }
     }
 
-    public function isValidAudience(TrustedIssuer $issuer, string $audience): bool
+    public function getIssuerAlgorithm(string $iss): ?string
     {
+        $issuer = $this->getIssuer($iss);
+        if (!$issuer) {
+            return null;
+        }
+        return $issuer->getAlg();
+    }
+
+    public function isValidAudience(string $iss, string $audience): bool
+    {
+
+        if (isset($this->audienceCache[$iss][$audience])) {
+            return $this->audienceCache[$iss][$audience];
+        }
+        $issuer = $this->getIssuer($iss);
         $entityManager = $this->context->getEntityManager();
         $qb = $entityManager->createQueryBuilder()->from(TrustedIssuerAudience::class, 'tia')
             ->select('tia')
@@ -105,12 +134,18 @@ class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
             ->setParameter('status', 'active')
             ->setMaxResults(1);
         $result = $qb->getQuery()->getOneOrNullResult();
-        return ($result instanceof TrustedIssuerAudience);
+        $isValid = ($result instanceof TrustedIssuerAudience);
+        $this->audienceCache[$iss][$audience] = $isValid;
+        return $this->audienceCache[$iss][$audience];
     }
 
-    public function filterAllowedRolesForIssuer(TrustedIssuer $issuer, array $roles): array
+    public function getAllowedRolesForIssuer(string $iss, array $roles): array
     {
         $allowedRoles = [];
+        $issuer = $this->getIssuer($iss);
+        if (!$issuer) {
+            return $allowedRoles;
+        }
         /** @var Role $role */
         foreach ($issuer->getAllowedRoles() as $role) {
             if (in_array($role->getCode(), $roles)) {

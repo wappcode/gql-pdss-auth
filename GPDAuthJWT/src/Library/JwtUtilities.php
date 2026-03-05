@@ -79,9 +79,9 @@ class JwtUtilities
      * @param string $token
      * @param Key $secureKey
      * @param string $algorithm
-     * @return object|null
+     * @return object|array|null
      */
-    public static function decodeAndVerify(string $token, Key $secureKey,  ?stdClass &$headers = null): ?object
+    public static function decodeAndVerify(string $token, Key $secureKey,  ?stdClass &$headers = null, bool $asArray = false): object|array|null
     {
         if (empty($secureKey)) {
             throw new Exception("Empty jwt secure key");
@@ -90,6 +90,9 @@ class JwtUtilities
             return null;
         }
         $data = JWT::decode($token, $secureKey, $headers);
+        if ($asArray) {
+            $data = json_decode(json_encode($data), true);
+        }
         return $data;
     }
 
@@ -112,22 +115,27 @@ class JwtUtilities
 
         // formato simple
         if (isset($claims['roles'])) {
-            $roles = array_merge($roles, $claims['roles']);
+            $roles = array_merge($roles, (array) $claims['roles']);
         }
 
         // keycloak realm roles
         if (isset($claims['realm_access']['roles'])) {
-            $roles = array_merge($roles, $claims['realm_access']['roles']);
+            $roles = array_merge($roles, (array) $claims['realm_access']['roles']);
         }
 
         // keycloak resource roles
         if (isset($claims['resource_access'])) {
-            foreach ($claims['resource_access'] as $resource) {
+            foreach ((array)  $claims['resource_access'] as $resource) {
                 if (isset($resource['roles'])) {
-                    $roles = array_merge($roles, $resource['roles']);
+                    $roles = array_merge($roles, (array) $resource['roles']);
                 }
             }
         }
         return array_unique($roles);
+    }
+
+    public static function stdObjectToArray(stdClass $object): array
+    {
+        return json_decode(json_encode($object), true);
     }
 }

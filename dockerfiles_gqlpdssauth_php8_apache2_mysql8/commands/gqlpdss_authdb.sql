@@ -8,10 +8,9 @@ INSERT INTO `gpd_auth_resources`
 VALUES
 (1,'test_resource','Test Resource','','[\"ALL\"]','2023-12-06 17:56:52','2023-12-06 17:56:52');
 
-INSERT INTO gpd_auth_permissions
-(id,  permission_access, resource_id, user_id, role_id,created, updated,)
-VALUES
-(1,1,1,NULL,'ALLOW','ALL',NULL,'2023-12-06 17:58:30','2023-12-06 17:58:30');
+INSERT INTO gqlpdss_authdb.gpd_auth_permissions
+(id, created, updated, permission_access, permision_value, `scope`, resource_id, user_id, role_id)
+VALUES(1, now(), now(), 'ALLOW', 'ALL', 'ALL', 1, 1, null);
 
 INSERT INTO gqlpdss_authdb.gpd_auth_trusted_issuers
 (id, created, updated, issuer, jwks_url, alg, status, name, description)

@@ -159,7 +159,7 @@ class JwtAuthMiddleware implements MiddlewareInterface
             throw new \RuntimeException('Invalid algorithm');
         }
         // Decodificar y verificar el JWT
-        $decoded = (array) JwtUtilities::decodeAndVerify($jwt, $publicKey);
+        $decoded =  JwtUtilities::decodeAndVerify($jwt, $publicKey, asArray: true);
 
         // Validar audience
         $audience = is_array($decoded['aud']) ? $decoded['aud'][0] : $decoded['aud'];

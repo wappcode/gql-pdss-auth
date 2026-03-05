@@ -22,4 +22,12 @@ class UnverifiedJWT
     {
         return $this->header;
     }
+
+    public function toArray(): array
+    {
+        return [
+            'header' => json_decode(json_encode($this->header), true),
+            'payload' => json_decode(json_encode($this->payload), true)
+        ];
+    }
 }

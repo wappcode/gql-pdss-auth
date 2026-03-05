@@ -7,7 +7,6 @@ namespace GPDAuthJWT\Middleware;
 use GPDAuth\Models\AuthenticatedUser;
 use GPDAuth\Contracts\AuthenticatedUserInterface;
 use GPDAuth\Models\AuthenticatedUserType;
-use GPDAuthJWT\Entities\ApiConsumer;
 use GPDAuthJWT\Library\JwtUtilities;
 use GPDAuthJWT\Contracts\ApiConsumerRepositoryInterface;
 use GPDAuthJWT\Contracts\JWTTrustIssuerRepositoryInterface;
@@ -69,13 +68,17 @@ class JwtAuthMiddleware implements MiddlewareInterface
                 || (isset($decoded['azp']) && $decoded['sub'] === $decoded['azp']);
             if ($isM2M) {
                 // M2M solo tiene permisos de recurso basados en scopes, no roles ni datos de usuario
-                $consumer = $this->extractConsumerFromJwt($decoded);
-                $this->enforceM2MWhitelist($consumer);
-                $permissions = $this->apiConsumerRepository->getAllowedPermissions($consumer, $decoded);
+                $consumerId = $this->apiConsumerRepository->getConsumerIdFromJwtPayload($decoded);
+                $consumerName = $this->apiConsumerRepository->getConsumerName($consumerId);
+                if (!$consumerId || !$consumerName) {
+                    throw new \RuntimeException('Invalid client credentials');
+                }
+                $this->apiConsumerRepository->isTrustedConsumer($consumerId);
+                $permissions = $this->apiConsumerRepository->getValidPermissionsForConsumer($consumerId, $decoded);
                 $authenticatedUser = (new AuthenticatedUser())
-                    ->setFullName($consumer->getName())
+                    ->setFullName($consumerName)
                     ->setType(AuthenticatedUserType::API_CLIENT)
-                    ->setId($consumer->getId())
+                    ->setId($consumerId)
                     ->setUsername($decoded['iss'] . '|' . $decoded['azp'])
                     ->setFullName($decoded['iss'] . '|' . $decoded['azp'])
                     ->setRoles([])
@@ -179,27 +182,8 @@ class JwtAuthMiddleware implements MiddlewareInterface
     }
 
 
-    private function extractConsumerFromJwt(array $jwt): ?ApiConsumer
-    {
 
-        $clientId = $jwt['azp'] ?? $jwt['client_id'] ?? null;
 
-        if ($clientId) {
-            $apiConsumer = $this->apiConsumerRepository->findByIdentifier($clientId);
-            if ($apiConsumer && $apiConsumer->isActive()) {
-                return $apiConsumer;
-            }
-        }
-
-        return null;
-    }
-    private function enforceM2MWhitelist(?ApiConsumer $apiConsumer): void
-    {
-
-        if (!$apiConsumer || !$apiConsumer->isActive()) {
-            throw new \RuntimeException('Client not allowed');
-        }
-    }
 
     private function unauthorized(string $message): ResponseInterface
     {

@@ -3,10 +3,11 @@
 
 namespace GPDAuthJWT\Contracts;
 
-use GPDAuthJWT\Entities\ApiConsumer;
 
 interface ApiConsumerRepositoryInterface
 {
-    public function findByIdentifier(string $consumerId): ?ApiConsumer;
-    public function getAllowedPermissions(ApiConsumer $consumer, array $permissions): array;
+    public function isTrustedConsumer(string $consumerId): bool;
+    public function getValidPermissionsForConsumer(string $consumerId, array $permissions): array;
+    public function getConsumerName(string $consumerId): string;
+    public function getConsumerIdFromJwtPayload(array $payload): ?string;
 }

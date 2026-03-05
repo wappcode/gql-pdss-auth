@@ -15,20 +15,42 @@ class ApiConsumerRepository implements ApiConsumerRepositoryInterface
 {
 
     private EntityManager $entityManager;
+    private array $trustedConsumersCache = [];
 
     public function __construct(EntityManager $entityManager)
     {
         $this->entityManager = $entityManager;
     }
 
-    public function findByIdentifier(string $identifier): ?ApiConsumer
+
+    public function isTrustedConsumer(string $consumerId): bool
     {
+        if (!isset($this->trustedConsumersCache[$consumerId])) {
+            $consumer = $this->getConsumer($consumerId);
+            $this->trustedConsumersCache[$consumerId] = $consumer;
+        }
+        return ($this->trustedConsumersCache[$consumerId] instanceof ApiConsumer);
+    }
+
+
+    public function getConsumer(string $identifier): ?ApiConsumer
+    {
+        if (isset($this->trustedConsumersCache[$identifier])) {
+            return $this->trustedConsumersCache[$identifier];
+        }
         /** @var ApiConsumer | null */
         $consumer = $this->entityManager->getRepository(ApiConsumer::class)->findOneBy(['identifier' => $identifier]);
+        if ($consumer && $consumer->isActive()) {
+            $this->trustedConsumersCache[$identifier] = $consumer;
+        }
         return $consumer;
     }
-    public function getAllowedPermissions(ApiConsumer $consumer, array $decoded): array
+    public function getValidPermissionsForConsumer(string $consumerId, array $decoded): array
     {
+        $consumer = $this->getConsumer($consumerId);
+        if (!$consumer) {
+            return [];
+        }
 
         $permissions = JwtUtilities::convertScopesToPermissions($decoded);
         $validPermissions = [];
@@ -55,5 +77,16 @@ class ApiConsumerRepository implements ApiConsumerRepositoryInterface
             }
         }
         return $validPermissions;
+    }
+
+    public function getConsumerName(string $consumerId): string
+    {
+        $consumer = $this->getConsumer($consumerId);
+        return $consumer ? $consumer->getName() : '';
+    }
+    public function getConsumerIdFromJwtPayload(array $payload): ?string
+    {
+        $clientId = $payload['azp'] ?? $payload['client_id'] ?? null;
+        return $clientId;
     }
 }

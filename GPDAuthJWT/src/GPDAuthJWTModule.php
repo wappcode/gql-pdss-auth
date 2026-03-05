@@ -12,7 +12,7 @@ class GPDAuthJWTModule extends AbstractModule
 {
 
 
-    public function __construct(private bool $exitUnAuthorized = false) {}
+    public function __construct(private bool $exitUnAuthorized = false, private int $maxTokenLifetime = 3600) {}
     public function getConfig(): array
     {
         return include __DIR__ . '/../config/module.config.php';
@@ -39,7 +39,8 @@ class GPDAuthJWTModule extends AbstractModule
                 new JWTTrustIssuerRepository($context),
                 new ApiConsumerRepository($entityManager),
                 identityKey: AuthenticatedUserInterface::class,
-                exitUnAuthorized: $this->exitUnAuthorized
+                exitUnAuthorized: $this->exitUnAuthorized,
+                maxTokenLifetime: $this->maxTokenLifetime
             )
         ];
     }

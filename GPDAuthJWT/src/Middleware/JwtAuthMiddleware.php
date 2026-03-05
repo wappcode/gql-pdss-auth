@@ -35,6 +35,7 @@ class JwtAuthMiddleware implements MiddlewareInterface
         private ApiConsumerRepositoryInterface $apiConsumerRepository,
         private string $identityKey = AuthenticatedUserInterface::class,
         private bool $exitUnAuthorized = true,
+        private int $maxTokenLifetime = 3600
     ) {}
 
     public function process(
@@ -55,8 +56,8 @@ class JwtAuthMiddleware implements MiddlewareInterface
 
             // ¿Es M2M?
             $isM2M = ($decoded['gty'] ?? null) === 'client-credentials';
-            $permissions = JwtUtilities::convertScopesToPermissions(explode(' ', $decoded['scope'] ?? ''));
             if ($isM2M) {
+                $permissions = JwtUtilities::convertScopesToPermissions(explode(' ', $decoded['scope'] ?? ''));
                 $consumer = $this->extractConsumerFromJwt($decoded);
                 $this->enforceM2MWhitelist($consumer);
                 $authenticatedUser = (new AuthenticatedUser())
@@ -79,7 +80,7 @@ class JwtAuthMiddleware implements MiddlewareInterface
                     ->setLastName($decoded['family_name'] ?? null)
                     ->setPicture($decoded['picture'] ?? null)
                     ->setRoles([])
-                    ->setPermissions($permissions);
+                    ->setPermissions([]);
             }
             $request = $request->withAttribute($this->identityKey, $authenticatedUser);
             $request = $request->withAttribute('jwt_payload', $decoded);
@@ -149,9 +150,14 @@ class JwtAuthMiddleware implements MiddlewareInterface
         if (!$this->issuerRepository->isValidAudience($trustedIssuer, $audience)) {
             throw new \RuntimeException('Invalid audience');
         }
+
         //Expiración (firebase lo valida, pero mejor explícito)
-        if ($decoded['exp'] < time()) {
+        if ($decoded['exp'] < time() || $decoded["exp"] > time() + $this->maxTokenLifetime || $decoded["exp"] > $decoded["iat"] + $this->maxTokenLifetime) {
             throw new \RuntimeException('Token expired');
+        }
+        // Validar que el token no tenga una fecha de expiración demasiado lejana para evitar tokens eternos
+        if ($decoded["exp"] > time() + $this->maxTokenLifetime || $decoded["exp"] > $decoded["iat"] + $this->maxTokenLifetime) {
+            throw new \RuntimeException('Token expiration too far in the future');
         }
 
 

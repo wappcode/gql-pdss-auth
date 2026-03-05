@@ -29,7 +29,7 @@ $request = ServerRequestFactory::fromGlobals();
 $app = new Application($config, $entityManager, $enviroment);
 $app->addModule(new GraphqlModule('/api'));
 $app->addModule(new GPDAuthModule(exitUnauthenticated: false, publicRoutes: ['/login']));
-$app->addModule(new GPDAuthJWTModule(exitUnAuthorized: false));
+$app->addModule(new GPDAuthJWTModule(exitUnAuthorized: false, maxTokenLifetime: 3600));
 $app->addModule(AppModule::class);
 $response = $app->run($request);
 $emitter = new SapiEmitter();

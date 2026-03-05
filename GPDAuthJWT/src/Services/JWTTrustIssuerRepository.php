@@ -21,6 +21,7 @@ class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
     {
         $entityManager = $this->context->getEntityManager();
         $issuer = $entityManager->createQueryBuilder()->from(TrustedIssuer::class, 'ti')
+            ->select('ti')
             ->where('ti.issuer = :issuer')
             ->andWhere('ti.status = :status')
             ->setParameter('issuer', $issuer)
@@ -93,6 +94,7 @@ class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
     {
         $entityManager = $this->context->getEntityManager();
         $qb = $entityManager->createQueryBuilder()->from(TrustedIssuerAudience::class, 'tia')
+            ->select('tia')
             ->where('tia.trustedIssuer = :issuer')
             ->andWhere('tia.audience like :audience')
             ->andWhere('tia.status = :status')

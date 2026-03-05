@@ -15,7 +15,7 @@ VALUES
 
 INSERT INTO gqlpdss_authdb.gpd_auth_trusted_issuers
 (id, created, updated, issuer, jwks_url, alg, status, name, description)
-VALUES('bro4dd40617b0cae5b7587c0a89d4086ab2', now(), now(), 'http://localhost:8081/', 'http://localhost:8081/realms/Qualem', 'RS256', 'active', 'KeycloakQualem', 'KeycloakQualem Id Provider');
+VALUES('bro4dd40617b0cae5b7587c0a89d4086ab2', now(), now(), 'http://localhost:8081/realms/miempresa', 'http://keycloak:8080/realms/miempresa/protocol/openid-connect/certs', 'RS256', 'active', 'Keycloakmiempresa', 'Keycloakmiempresa Id Provider');
 
 INSERT INTO gqlpdss_authdb.gpd_auth_trusted_issuer_audiences
 (id, created, updated, audience, status, trusted_issuer_id)

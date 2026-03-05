@@ -73,11 +73,11 @@ class JwtUtilities
      * Decodificar y verificar un JWT
      *
      * @param string $token
-     * @param Key|ArrayAccess<string, Key>|array<string, Key> $keyOrKeyArray
+     * @param Key $secureKey
      * @param string $algorithm
      * @return object|null
      */
-    public static function decodeAndVerify(string $token,  $secureKey, string $algorithm = 'RS256', ?stdClass &$headers = null): ?object
+    public static function decodeAndVerify(string $token, Key $secureKey,  ?stdClass &$headers = null): ?object
     {
         if (empty($secureKey)) {
             throw new Exception("Empty jwt secure key");
@@ -85,7 +85,19 @@ class JwtUtilities
         if (empty($token)) {
             return null;
         }
-        $data = JWT::decode($token, new Key($secureKey, $algorithm), $headers);
+        $data = JWT::decode($token, $secureKey, $headers);
         return $data;
+    }
+
+    /**
+     * Crea un key para usar en la decodificación y verificación de un JWT
+     *
+     * @param string $secure
+     * @param string $alg
+     * @return Key
+     */
+    public static function createKey(string $secure, string $alg): Key
+    {
+        return new Key($secure, $alg);
     }
 }

@@ -2,12 +2,13 @@
 
 namespace AppModule;
 
+use GPDAuth\Contracts\AuthenticatedUserInterface;
 use GPDAuth\Graphql\AuthResolverGuardFactory;
 use GPDAuth\Contracts\AuthServiceInterface;
 use GPDCore\Contracts\AppContextInterface;
 use GPDCore\Core\AbstractModule;
-use GPDCore\Exceptions\GQLException;
 use GPDCore\Graphql\ResolverPipelineFactory;
+use Psr\Http\Message\ServerRequestInterface;
 
 class AppModule extends AbstractModule
 {
@@ -55,9 +56,13 @@ class AppModule extends AbstractModule
         $echoResolve = fn($root, $args) => $args["message"];
         $proxyEcho1 = fn($resolver) => function ($root, $args, AppContextInterface $context, $info) use ($resolver) {
 
+            $request = $context->getContextAttribute(ServerRequestInterface::class);
+            $user = $request->getAttribute(AuthenticatedUserInterface::class);
             /** @var AuthServiceInterface */
             $authService = $context->getServiceManager()->get(AuthServiceInterface::class);
-            $user = $authService->getAuthenticatedUser();
+            if (!$user) {
+                $user = $authService->getAuthenticatedUser();
+            }
             if (!$user) {
                 return $resolver($root, $args, $context, $info);
             }

@@ -113,7 +113,7 @@ class JwtAuthMiddleware implements MiddlewareInterface
         // Buscar el issuer en la base de datos
         $trustedIssuer = $this->issuerRepository->findIssuer($iss);
 
-        if (!($trustedIssuer instanceof TrustedIssuer) || $trustedIssuer->isActive()) {
+        if (!($trustedIssuer instanceof TrustedIssuer) || !$trustedIssuer->isActive()) {
             throw new \RuntimeException('Untrusted issuer');
         }
 
@@ -141,7 +141,7 @@ class JwtAuthMiddleware implements MiddlewareInterface
             throw new \RuntimeException('Invalid algorithm');
         }
         // Decodificar y verificar el JWT
-        $decoded = (array) JwtUtilities::decodeAndVerify($jwt, $publicKey, $algorithm);
+        $decoded = (array) JwtUtilities::decodeAndVerify($jwt, $publicKey);
 
         // Validar audience
         $audience = is_array($decoded['aud']) ? $decoded['aud'][0] : $decoded['aud'];
@@ -154,7 +154,6 @@ class JwtAuthMiddleware implements MiddlewareInterface
             throw new \RuntimeException('Token expired');
         }
 
-        // TODO:: Validar los scopes o grants permitidos para el issuer
 
         return $decoded;
     }

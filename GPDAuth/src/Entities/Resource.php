@@ -6,7 +6,6 @@ namespace GPDAuth\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
 use GPDCore\Entities\AbstractEntityModel;
-use GraphQL\Doctrine\Annotation as API;
 
 
 

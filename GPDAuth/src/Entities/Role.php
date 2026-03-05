@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace GPDAuth\Entities;
 
-use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use GPDCore\Entities\AbstractEntityModel;
-use GraphQL\Doctrine\Annotation as API;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
 

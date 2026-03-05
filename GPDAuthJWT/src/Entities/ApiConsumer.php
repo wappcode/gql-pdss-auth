@@ -29,17 +29,13 @@ class ApiConsumer extends AbstractEntityModelStringId
   #[ORM\Column(name: "revoked_at", type: "datetime", nullable: true)]
   private ?DateTime $revokedAt = null;
 
-  #[ORM\OneToMany(mappedBy: "consumer", targetEntity: ApiConsumerPermissions::class)]
+  #[ORM\OneToMany(mappedBy: "consumer", targetEntity: ApiPermission::class)]
   private Collection $permissions;
-
-  #[ORM\OneToMany(mappedBy: "consumer", targetEntity: ApiConsumerGrants::class)]
-  private Collection $grants;
 
   public function __construct()
   {
     parent::__construct();
     $this->permissions = new ArrayCollection();
-    $this->grants = new ArrayCollection();
   }
 
   public function getIdentifier(): string
@@ -184,18 +180,6 @@ class ApiConsumer extends AbstractEntityModelStringId
   }
 
 
-  public function getGrants()
-  {
-    return $this->grants;
-  }
-
-
-  public function setGrants($grants)
-  {
-    $this->grants = $grants;
-
-    return $this;
-  }
 
   /**
    * Get the value of name

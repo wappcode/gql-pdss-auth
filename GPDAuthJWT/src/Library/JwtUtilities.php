@@ -32,12 +32,16 @@ class JwtUtilities
     /**
      * Convierte los scopes del JWT en permisos de recurso
      *
-     * @param array $jwtScopes
+     * @param array $claims
      * @return array array<ResourcePermission>
      */
-    public static function convertScopesToPermissions(array $jwtScopes): array
+    public static function convertScopesToPermissions(array $claims): array
     {
-        $jwtScopes = isset($jwt->scope) ? explode(' ', $jwt->scope) : [];
+        $scopes = $claims['scope'] ?? $claims['scp'] ?? '';
+        if (empty($scopes) || !is_string($scopes)) {
+            return [];
+        }
+        $jwtScopes = explode(' ', $scopes);
 
         $permissions = array_map(function (string $scope) {
             $scopeFormated = str_replace('.', ':', strtolower($scope));
@@ -99,5 +103,31 @@ class JwtUtilities
     public static function createKey(string $secure, string $alg): Key
     {
         return new Key($secure, $alg);
+    }
+
+
+    public static function extractRoles(array $claims): array
+    {
+        $roles = [];
+
+        // formato simple
+        if (isset($claims['roles'])) {
+            $roles = array_merge($roles, $claims['roles']);
+        }
+
+        // keycloak realm roles
+        if (isset($claims['realm_access']['roles'])) {
+            $roles = array_merge($roles, $claims['realm_access']['roles']);
+        }
+
+        // keycloak resource roles
+        if (isset($claims['resource_access'])) {
+            foreach ($claims['resource_access'] as $resource) {
+                if (isset($resource['roles'])) {
+                    $roles = array_merge($roles, $resource['roles']);
+                }
+            }
+        }
+        return array_unique($roles);
     }
 }

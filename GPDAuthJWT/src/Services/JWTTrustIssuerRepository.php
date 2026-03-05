@@ -6,6 +6,7 @@ use GPDAuthJWT\Entities\TrustedIssuer;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Exception;
+use GPDAuth\Entities\Role;
 use GPDAuthJWT\Entities\TrustedIssuerAudience;
 use GPDAuthJWT\Contracts\JWTTrustIssuerRepositoryInterface;
 use GPDCore\Contracts\AppContextInterface;
@@ -21,7 +22,8 @@ class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
     {
         $entityManager = $this->context->getEntityManager();
         $issuer = $entityManager->createQueryBuilder()->from(TrustedIssuer::class, 'ti')
-            ->select('ti')
+            ->leftJoin('ti.allowedRoles', 'r')
+            ->select(['ti', 'r'])
             ->where('ti.issuer = :issuer')
             ->andWhere('ti.status = :status')
             ->setParameter('issuer', $issuer)
@@ -104,5 +106,17 @@ class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
             ->setMaxResults(1);
         $result = $qb->getQuery()->getOneOrNullResult();
         return ($result instanceof TrustedIssuerAudience);
+    }
+
+    public function filterAllowedRolesForIssuer(TrustedIssuer $issuer, array $roles): array
+    {
+        $allowedRoles = [];
+        /** @var Role $role */
+        foreach ($issuer->getAllowedRoles() as $role) {
+            if (in_array($role->getCode(), $roles)) {
+                $allowedRoles[] = $role->getCode();
+            }
+        }
+        return $allowedRoles;
     }
 }

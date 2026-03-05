@@ -3,8 +3,6 @@
 namespace GPDAuthJWT\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use GPDAuth\Entities\Resource;
 use GPDCore\Entities\AbstractEntityModel;
 
@@ -21,7 +19,7 @@ class ApiPermission extends AbstractEntityModel
     private Resource $resource;
 
     /**
-     * view,create,updated,delete
+     * view,create,updated,delete,all
      *
      * @var string
      */
@@ -31,13 +29,25 @@ class ApiPermission extends AbstractEntityModel
     #[ORM\Column(name: "description", type: "text", nullable: true)]
     private ?string $description = null;
 
-    #[ORM\ManyToMany(targetEntity: ApiConsumer::class, mappedBy: "permissions")]
-    private Collection $consumers;
+    /**
+     *
+     * @var \DateTime
+     */
+    #[ORM\Column(name: "granted_at", type: "datetime", nullable: false)]
+    private \DateTime $grantedAt;
+
+    /**
+     *
+     * @var ApiConsumer
+     */
+    #[ORM\OneToMany(targetEntity: ApiConsumer::class, mappedBy: "permissions")]
+    #[ORM\JoinColumn(name: "consumer_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE")]
+    private ApiConsumer $consumer;
 
     public function __construct()
     {
         parent::__construct();
-        $this->consumers = new ArrayCollection();
+        $this->grantedAt = new \DateTime();
     }
 
     public function getName(): string
@@ -62,35 +72,13 @@ class ApiPermission extends AbstractEntityModel
         return $this;
     }
 
-    /**
-     * @return Collection<int, ApiConsumer>
-     */
-    public function getConsumers(): Collection
-    {
-        return $this->consumers;
-    }
 
-    public function addConsumer(ApiConsumer $consumer): self
-    {
-        if (!$this->consumers->contains($consumer)) {
-            $this->consumers->add($consumer);
-            $consumer->addPermission($this);
-        }
-        return $this;
-    }
 
-    public function removeConsumer(ApiConsumer $consumer): self
-    {
-        if ($this->consumers->removeElement($consumer)) {
-            $consumer->removePermission($this);
-        }
-        return $this;
-    }
 
     /**
      * Get the value of value
      */
-    public function getValue()
+    public function getValue(): string
     {
         return $this->value;
     }
@@ -100,7 +88,7 @@ class ApiPermission extends AbstractEntityModel
      *
      * @return  self
      */
-    public function setValue($value)
+    public function setValue(string $value): self
     {
         $this->value = $value;
 
@@ -110,7 +98,7 @@ class ApiPermission extends AbstractEntityModel
     /**
      * Get the value of resource
      */
-    public function getResource()
+    public function getResource(): Resource
     {
         return $this->resource;
     }
@@ -120,10 +108,28 @@ class ApiPermission extends AbstractEntityModel
      *
      * @return  self
      */
-    public function setResource($resource)
+    public function setResource(Resource $resource): self
     {
         $this->resource = $resource;
 
+        return $this;
+    }
+    public function getConsumer(): ApiConsumer
+    {
+        return $this->consumer;
+    }
+    public function setConsumer(ApiConsumer $consumer): self
+    {
+        $this->consumer = $consumer;
+        return $this;
+    }
+    public function getGrantedAt(): \DateTime
+    {
+        return $this->grantedAt;
+    }
+    public function setGrantedAt(\DateTime $grantedAt): self
+    {
+        $this->grantedAt = $grantedAt;
         return $this;
     }
 }

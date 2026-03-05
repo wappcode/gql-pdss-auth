@@ -8,7 +8,6 @@ namespace GPDAuth\Entities;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
-use GraphQL\Doctrine\Annotation as API;
 use Doctrine\Common\Collections\Collection;
 use GPDCore\Entities\AbstractEntityModel;
 

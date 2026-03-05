@@ -6,6 +6,6 @@ namespace GPDAuth\Entities;
 
 enum PermissionAccess: string
 {
-    case ALLOW = 'ALLOW';
-    case DENY = 'DENY';
+    case ALLOW = 'allow';
+    case DENY = 'deny';
 }

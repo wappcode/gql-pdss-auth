@@ -52,14 +52,27 @@ class JwtAuthMiddleware implements MiddlewareInterface
             }
         }
         try {
-            $decoded = $this->decodeAndValidate($jwt);
+
+            // Decodificar sin verificar para obtener header y payload
+            $unverified = JwtUtilities::decodeUnverified($jwt);
+            $header = (array) $unverified->getHeader();
+            $payload = (array) $unverified->getPayload();
+
+            // Buscar el issuer en la base de datos
+            $trustedIssuer = $this->getValidIssuer($payload);
+
+            $decoded = $this->decodeAndValidate($jwt, $header, $payload, $trustedIssuer);
 
             // ¿Es M2M?
-            $isM2M = ($decoded['gty'] ?? null) === 'client-credentials';
+            $isM2M =
+                ($decoded['gty'] ?? null) === 'client-credentials'
+                || isset($decoded['client_id'])
+                || (isset($decoded['azp']) && $decoded['sub'] === $decoded['azp']);
             if ($isM2M) {
-                $permissions = JwtUtilities::convertScopesToPermissions(explode(' ', $decoded['scope'] ?? ''));
+                // M2M solo tiene permisos de recurso basados en scopes, no roles ni datos de usuario
                 $consumer = $this->extractConsumerFromJwt($decoded);
                 $this->enforceM2MWhitelist($consumer);
+                $permissions = $this->apiConsumerRepository->getAllowedPermissions($consumer, $decoded);
                 $authenticatedUser = (new AuthenticatedUser())
                     ->setFullName($consumer->getName())
                     ->setType(AuthenticatedUserType::API_CLIENT)
@@ -70,6 +83,9 @@ class JwtAuthMiddleware implements MiddlewareInterface
                     ->setPermissions($permissions);
             } else {
                 $username = $decoded['iss'] . '|' . $decoded['sub'];
+                $roles = JwtUtilities::extractRoles($decoded);
+                $allowedRoles = $this->issuerRepository->filterAllowedRolesForIssuer($trustedIssuer, $roles);
+                // Para usuarios humanos, se pueden mapear roles y permisos adicionales desde la base de datos si es necesario, usando el sub o el azp como identificador
                 $authenticatedUser = (new AuthenticatedUser())
                     ->setType(AuthenticatedUserType::EXTERN_USER)
                     ->setId($username)
@@ -79,7 +95,7 @@ class JwtAuthMiddleware implements MiddlewareInterface
                     ->setFirstName($decoded['given_name'] ?? null)
                     ->setLastName($decoded['family_name'] ?? null)
                     ->setPicture($decoded['picture'] ?? null)
-                    ->setRoles([])
+                    ->setRoles($allowedRoles)
                     ->setPermissions([]);
             }
             $request = $request->withAttribute($this->identityKey, $authenticatedUser);
@@ -97,26 +113,24 @@ class JwtAuthMiddleware implements MiddlewareInterface
         }
     }
 
-    private function decodeAndValidate(string $jwt): array
+    private function getValidIssuer(array $payload): TrustedIssuer
     {
-        // Decodificar sin verificar para obtener header y payload
-        $unverified = JwtUtilities::decodeUnverified($jwt);
-        $header = (array) $unverified->getHeader();
-        $payload = (array) $unverified->getPayload();
-
         $iss = $payload['iss'] ?? null;
-        $kid = $header['kid'] ?? null;
-
         if (!$iss) {
             throw new \RuntimeException('Missing issuer');
         }
-
-        // Buscar el issuer en la base de datos
         $trustedIssuer = $this->issuerRepository->findIssuer($iss);
-
         if (!($trustedIssuer instanceof TrustedIssuer) || !$trustedIssuer->isActive()) {
             throw new \RuntimeException('Untrusted issuer');
         }
+        return $trustedIssuer;
+    }
+
+    private function decodeAndValidate(string $jwt, array $header, array $payload, TrustedIssuer $trustedIssuer): array
+    {
+
+        $iss = $payload['iss'] ?? null;
+        $kid = $header['kid'] ?? null;
 
         if (!$kid) {
             throw new \RuntimeException('Missing key ID');
@@ -179,7 +193,7 @@ class JwtAuthMiddleware implements MiddlewareInterface
 
         return null;
     }
-    private function enforceM2MWhitelist(ApiConsumer $apiConsumer): void
+    private function enforceM2MWhitelist(?ApiConsumer $apiConsumer): void
     {
 
         if (!$apiConsumer || !$apiConsumer->isActive()) {

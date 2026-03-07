@@ -3758,16 +3758,16 @@
         },
         {
             "name": "symfony/cache",
-            "version": "v7.4.6",
+            "version": "v7.4.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/cache.git",
-                "reference": "1d06192e8f164e2729b0031e6807d72a6195b8bb"
+                "reference": "665522ec357540e66c294c08583b40ee576574f0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/cache/zipball/1d06192e8f164e2729b0031e6807d72a6195b8bb",
-                "reference": "1d06192e8f164e2729b0031e6807d72a6195b8bb",
+                "url": "https://api.github.com/repos/symfony/cache/zipball/665522ec357540e66c294c08583b40ee576574f0",
+                "reference": "665522ec357540e66c294c08583b40ee576574f0",
                 "shasum": ""
             },
             "require": {
@@ -3838,7 +3838,7 @@
                 "psr6"
             ],
             "support": {
-                "source": "https://github.com/symfony/cache/tree/v7.4.6"
+                "source": "https://github.com/symfony/cache/tree/v7.4.7"
             },
             "funding": [
                 {
@@ -3858,7 +3858,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-02-21T23:29:27+00:00"
+            "time": "2026-03-06T08:14:57+00:00"
         },
         {
             "name": "symfony/cache-contracts",
@@ -3938,16 +3938,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v7.4.6",
+            "version": "v7.4.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "6d643a93b47398599124022eb24d97c153c12f27"
+                "reference": "e1e6770440fb9c9b0cf725f81d1361ad1835329d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/6d643a93b47398599124022eb24d97c153c12f27",
-                "reference": "6d643a93b47398599124022eb24d97c153c12f27",
+                "url": "https://api.github.com/repos/symfony/console/zipball/e1e6770440fb9c9b0cf725f81d1361ad1835329d",
+                "reference": "e1e6770440fb9c9b0cf725f81d1361ad1835329d",
                 "shasum": ""
             },
             "require": {
@@ -4012,7 +4012,7 @@
                 "terminal"
             ],
             "support": {
-                "source": "https://github.com/symfony/console/tree/v7.4.6"
+                "source": "https://github.com/symfony/console/tree/v7.4.7"
             },
             "funding": [
                 {
@@ -4032,7 +4032,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-02-25T17:02:47+00:00"
+            "time": "2026-03-06T14:06:20+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -4840,12 +4840,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/wappcode/gql-pdss-lib.git",
-                "reference": "acdfbbc89003668456840bae0e04ff15f4f6554f"
+                "reference": "8b09882557b54bf0ece32ed25d65d4d70b1ab1f0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wappcode/gql-pdss-lib/zipball/acdfbbc89003668456840bae0e04ff15f4f6554f",
-                "reference": "acdfbbc89003668456840bae0e04ff15f4f6554f",
+                "url": "https://api.github.com/repos/wappcode/gql-pdss-lib/zipball/8b09882557b54bf0ece32ed25d65d4d70b1ab1f0",
+                "reference": "8b09882557b54bf0ece32ed25d65d4d70b1ab1f0",
                 "shasum": ""
             },
             "require": {
@@ -4869,7 +4869,7 @@
                 "friendsofphp/php-cs-fixer": "^3.0",
                 "phpoffice/phpspreadsheet": "^5.4",
                 "phpunit/phpunit": "^9.5",
-                "wappcode/graphql-basic-client": "^1"
+                "wappcode/graphql-basic-client": "dev-master"
             },
             "default-branch": true,
             "type": "library",
@@ -4899,7 +4899,7 @@
                 "issues": "https://github.com/wappcode/gql-pdss-lib/issues",
                 "source": "https://github.com/wappcode/gql-pdss-lib/tree/master"
             },
-            "time": "2026-02-20T00:53:30+00:00"
+            "time": "2026-03-06T22:05:36+00:00"
         },
         {
             "name": "wappcode/graphql-basic-client",
@@ -4937,12 +4937,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/wappcode/pdss-utilities.git",
-                "reference": "ced33bd47783eb6cdee51cd5620c88011d94e79f"
+                "reference": "01ddf33b531dbe9752e890c05d09e2926cf68cfd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wappcode/pdss-utilities/zipball/ced33bd47783eb6cdee51cd5620c88011d94e79f",
-                "reference": "ced33bd47783eb6cdee51cd5620c88011d94e79f",
+                "url": "https://api.github.com/repos/wappcode/pdss-utilities/zipball/01ddf33b531dbe9752e890c05d09e2926cf68cfd",
+                "reference": "01ddf33b531dbe9752e890c05d09e2926cf68cfd",
                 "shasum": ""
             },
             "require": {
@@ -4971,7 +4971,7 @@
                 "issues": "https://github.com/wappcode/pdss-utilities/issues",
                 "source": "https://github.com/wappcode/pdss-utilities/tree/master"
             },
-            "time": "2026-01-22T22:30:33+00:00"
+            "time": "2026-03-06T20:45:27+00:00"
         },
         {
             "name": "webonyx/graphql-php",

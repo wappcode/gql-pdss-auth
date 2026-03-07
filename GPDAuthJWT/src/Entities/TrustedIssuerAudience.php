@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GPDAuthJWT\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
-use GPDCore\Entities\AbstractEntityModelStringId;
+use GPDCore\Entities\AbstractEntityModelUlid;
 
 #[ORM\Entity()]
 #[ORM\Table(name: "gpd_auth_trusted_issuer_audiences")]
@@ -18,7 +18,7 @@ use GPDCore\Entities\AbstractEntityModelStringId;
  * Entidad para gestionar audiencias permitidas por cada Issuer de confianza
  * Define qué valores de 'aud' (audience) son válidos para cada Identity Provider
  */
-class TrustedIssuerAudience extends AbstractEntityModelStringId
+class TrustedIssuerAudience extends AbstractEntityModelUlid
 {
 
 

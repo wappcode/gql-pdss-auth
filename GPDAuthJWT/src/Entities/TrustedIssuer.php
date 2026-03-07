@@ -8,7 +8,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use GPDAuth\Entities\Role;
-use GPDCore\Entities\AbstractEntityModelStringId;
+use GPDCore\Entities\AbstractEntityModelUlid;
 
 #[ORM\Entity()]
 #[ORM\Table(name: "gpd_auth_trusted_issuers")]
@@ -19,7 +19,7 @@ use GPDCore\Entities\AbstractEntityModelStringId;
  * Entidad para gestionar Issuers de confianza (Identity Providers)
  * Permite validar JWTs de múltiples proveedores externos
  */
-class TrustedIssuer extends AbstractEntityModelStringId
+class TrustedIssuer extends AbstractEntityModelUlid
 {
 
 

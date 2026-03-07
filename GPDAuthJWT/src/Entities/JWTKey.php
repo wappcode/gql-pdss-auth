@@ -2,13 +2,13 @@
 
 namespace GPDAuthJWT\Entities;
 
-use GPDCore\Entities\AbstractEntityModelStringId;
 use Doctrine\ORM\Mapping as ORM;
 use DateTime;
+use GPDCore\Entities\AbstractEntityModelUlid;
 
 #[ORM\Entity]
 #[ORM\Table(name: "gpd_auth_jwt_keys")]
-class JWTKey extends AbstractEntityModelStringId
+class JWTKey extends AbstractEntityModelUlid
 {
     #[ORM\Column(name: "kid", type: "string", unique: true, nullable: false)]
     private string $kid;

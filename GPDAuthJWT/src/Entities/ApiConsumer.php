@@ -2,17 +2,17 @@
 
 namespace GPDAuthJWT\Entities;
 
-use GPDCore\Entities\AbstractEntityModelStringId;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use DateTime;
 use GPDAuthJWT\Models\ApiConsumerStatus;
+use GPDCore\Entities\AbstractEntityModelUlid;
 
 /** Usado para IdP local para Machine to Machine M2M */
 #[ORM\Entity]
 #[ORM\Table(name: "gpd_auth_api_consumers")]
-class ApiConsumer extends AbstractEntityModelStringId
+class ApiConsumer extends AbstractEntityModelUlid
 {
   #[ORM\Column(name: "identifier", type: "string", length: 100, unique: true, nullable: false)]
   private string $identifier;

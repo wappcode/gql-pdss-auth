@@ -4,12 +4,11 @@
 namespace GPDAuthJWT\Middleware;
 
 
-use GPDAuth\Models\AuthenticatedUser;
 use GPDAuth\Contracts\AuthenticatedUserInterface;
-use GPDAuth\Models\AuthenticatedUserType;
 use GPDAuthJWT\Library\JwtUtilities;
 use GPDAuthJWT\Contracts\ApiConsumerRepositoryInterface;
 use GPDAuthJWT\Contracts\JWTTrustIssuerRepositoryInterface;
+use GPDAuthJWT\Contracts\JWTUserRepositoryInterfaces;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -31,6 +30,7 @@ class JwtAuthMiddleware implements MiddlewareInterface
     public function __construct(
         private JWTTrustIssuerRepositoryInterface $issuerRepository,
         private ApiConsumerRepositoryInterface $apiConsumerRepository,
+        private JWTUserRepositoryInterfaces $userRepository,
         private string $identityKey = AuthenticatedUserInterface::class,
         private bool $exitUnAuthorized = true,
         private int $maxTokenLifetime = 3600
@@ -62,10 +62,7 @@ class JwtAuthMiddleware implements MiddlewareInterface
             $decoded = $this->decodeAndValidate($jwt, $header, $payload);
 
             // ¿Es M2M?
-            $isM2M =
-                ($decoded['gty'] ?? null) === 'client-credentials'
-                || isset($decoded['client_id'])
-                || (isset($decoded['azp']) && $decoded['sub'] === $decoded['azp']);
+            $isM2M = $this->apiConsumerRepository->isM2mToken($decoded);
             if ($isM2M) {
                 // M2M solo tiene permisos de recurso basados en scopes, no roles ni datos de usuario
                 $consumerId = $this->apiConsumerRepository->getConsumerIdFromJwtPayload($decoded);
@@ -73,32 +70,17 @@ class JwtAuthMiddleware implements MiddlewareInterface
                 if (!$consumerId || !$consumerName) {
                     throw new \RuntimeException('Invalid client credentials');
                 }
-                $this->apiConsumerRepository->isTrustedConsumer($consumerId);
+                $isTruestedConsumer = $this->apiConsumerRepository->isTrustedConsumer($consumerId);
+                if (!$isTruestedConsumer) {
+                    throw new \RuntimeException('Untrusted consumer');
+                }
                 $permissions = $this->apiConsumerRepository->getValidPermissionsForConsumer($consumerId, $decoded);
-                $authenticatedUser = (new AuthenticatedUser())
-                    ->setFullName($consumerName)
-                    ->setType(AuthenticatedUserType::API_CLIENT)
-                    ->setId($consumerId)
-                    ->setUsername($decoded['iss'] . '|' . $decoded['azp'])
-                    ->setFullName($decoded['iss'] . '|' . $decoded['azp'])
-                    ->setRoles([])
-                    ->setPermissions($permissions);
+                $authenticatedUser = $this->userRepository->getM2MUserFromPayload($decoded, $permissions);
             } else {
-                $username = $decoded['iss'] . '|' . $decoded['sub'];
                 $roles = JwtUtilities::extractRoles($decoded);
                 $allowedRoles = $this->issuerRepository->getAllowedRolesForIssuer($issuer, $roles);
+                $authenticatedUser = $this->userRepository->getUserFromPayload($decoded, $allowedRoles);
                 // Para usuarios humanos, se pueden mapear roles y permisos adicionales desde la base de datos si es necesario, usando el sub o el azp como identificador
-                $authenticatedUser = (new AuthenticatedUser())
-                    ->setType(AuthenticatedUserType::EXTERN_USER)
-                    ->setId($username)
-                    ->setUsername($username)
-                    ->setFullName($decoded["name"] ?? $username)
-                    ->setEmail($decoded['email'] ?? null)
-                    ->setFirstName($decoded['given_name'] ?? null)
-                    ->setLastName($decoded['family_name'] ?? null)
-                    ->setPicture($decoded['picture'] ?? null)
-                    ->setRoles($allowedRoles)
-                    ->setPermissions([]);
             }
             $request = $request->withAttribute($this->identityKey, $authenticatedUser);
             $request = $request->withAttribute('jwt_payload', $decoded);

@@ -6,6 +6,7 @@ use GPDAuth\Contracts\AuthenticatedUserInterface;
 use GPDAuthJWT\Middleware\JwtAuthMiddleware;
 use GPDAuthJWT\Services\ApiConsumerRepository;
 use GPDAuthJWT\Services\JWTTrustIssuerRepository;
+use GPDAuthJWT\Services\JWTUserRepository;
 use GPDCore\Core\AbstractModule;
 
 class GPDAuthJWTModule extends AbstractModule
@@ -34,10 +35,13 @@ class GPDAuthJWTModule extends AbstractModule
     {
         $context = $this->application->getContext();
         $entityManager = $context->getEntityManager();
+        $apiConsumerRepository = new ApiConsumerRepository($entityManager);
+        $userRepository = new JWTUserRepository($apiConsumerRepository);
         return [
             new JwtAuthMiddleware(
                 new JWTTrustIssuerRepository($context),
-                new ApiConsumerRepository($entityManager),
+                $apiConsumerRepository,
+                $userRepository,
                 identityKey: AuthenticatedUserInterface::class,
                 exitUnAuthorized: $this->exitUnAuthorized,
                 maxTokenLifetime: $this->maxTokenLifetime

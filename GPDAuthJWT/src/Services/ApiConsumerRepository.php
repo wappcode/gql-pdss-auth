@@ -89,4 +89,12 @@ class ApiConsumerRepository implements ApiConsumerRepositoryInterface
         $clientId = $payload['azp'] ?? $payload['client_id'] ?? null;
         return $clientId;
     }
+    public function isM2mToken(array $payload): bool
+    {
+        $isM2M =
+            ($payload['gty'] ?? null) === 'client-credentials'
+            || isset($payload['client_id'])
+            || (isset($payload['azp']) && $payload['sub'] === $payload['azp']);
+        return $isM2M;
+    }
 }

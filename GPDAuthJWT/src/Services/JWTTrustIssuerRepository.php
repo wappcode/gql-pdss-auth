@@ -2,15 +2,14 @@
 
 namespace GPDAuthJWT\Services;
 
+use Doctrine\ORM\EntityManager;
 use GPDAuthJWT\Entities\TrustedIssuer;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Exception;
-use GPDAuth\Entities\Role;
 use GPDAuthJWT\Entities\TrustedIssuerAudience;
 use GPDAuthJWT\Contracts\JWTTrustIssuerRepositoryInterface;
 use GPDAuthJWT\Entities\TrustedIssuerRoleMapping;
-use GPDCore\Contracts\AppContextInterface;
 
 class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
 {
@@ -20,7 +19,7 @@ class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
     private array $audienceCache = [];
 
 
-    public function __construct(private AppContextInterface $context) {}
+    public function __construct(private EntityManager $entityManager) {}
 
 
     protected function getIssuer(string $issuer): ?TrustedIssuer
@@ -29,7 +28,7 @@ class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
             return $this->issuerCache[$issuer];
         }
 
-        $entityManager = $this->context->getEntityManager();
+        $entityManager = $this->entityManager;
         $this->issuerCache[$issuer] = $entityManager->createQueryBuilder()->from(TrustedIssuer::class, 'ti')
             ->leftJoin('ti.roleMappings', 'r')
             ->select(['ti', 'r'])
@@ -124,7 +123,7 @@ class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
             return $this->audienceCache[$iss][$audience];
         }
         $issuer = $this->getIssuer($iss);
-        $entityManager = $this->context->getEntityManager();
+        $entityManager = $this->entityManager;
         $qb = $entityManager->createQueryBuilder()->from(TrustedIssuerAudience::class, 'tia')
             ->select('tia')
             ->where('tia.trustedIssuer = :issuer')

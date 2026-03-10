@@ -9,6 +9,7 @@ use Exception;
 use GPDAuth\Entities\Role;
 use GPDAuthJWT\Entities\TrustedIssuerAudience;
 use GPDAuthJWT\Contracts\JWTTrustIssuerRepositoryInterface;
+use GPDAuthJWT\Entities\TrustedIssuerRoleMapping;
 use GPDCore\Contracts\AppContextInterface;
 
 class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
@@ -30,7 +31,7 @@ class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
 
         $entityManager = $this->context->getEntityManager();
         $this->issuerCache[$issuer] = $entityManager->createQueryBuilder()->from(TrustedIssuer::class, 'ti')
-            ->leftJoin('ti.allowedRoles', 'r')
+            ->leftJoin('ti.roleMappings', 'r')
             ->select(['ti', 'r'])
             ->where('ti.issuer = :issuer')
             ->andWhere('ti.status = :status')
@@ -146,10 +147,10 @@ class JWTTrustIssuerRepository implements JWTTrustIssuerRepositoryInterface
         if (!$issuer) {
             return $allowedRoles;
         }
-        /** @var Role $role */
-        foreach ($issuer->getAllowedRoles() as $role) {
-            if (in_array($role->getCode(), $roles)) {
-                $allowedRoles[] = $role->getCode();
+        /** @var TrustedIssuerRoleMapping $role */
+        foreach ($issuer->getRoleMappings() as $role) {
+            if (in_array($role->getExternalRoleCode(), $roles)) {
+                $allowedRoles[] = $role->getInternalRoleCode();
             }
         }
         return $allowedRoles;

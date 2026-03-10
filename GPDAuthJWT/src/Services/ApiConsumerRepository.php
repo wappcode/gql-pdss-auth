@@ -8,7 +8,7 @@ use GPDAuth\Entities\PermissionAccess;
 use GPDAuth\Entities\PermissionValue;
 use GPDAuthJWT\Entities\ApiConsumer;
 use GPDAuthJWT\Contracts\ApiConsumerRepositoryInterface;
-use GPDAuthJWT\Entities\ApiPermission;
+use GPDAuthJWT\Entities\ApiConsumerPermission;
 use GPDAuthJWT\Library\JwtUtilities;
 
 class ApiConsumerRepository implements ApiConsumerRepositoryInterface
@@ -64,10 +64,10 @@ class ApiConsumerRepository implements ApiConsumerRepositoryInterface
             $resource = $permission->getResource();
 
             $consumerPermission = $consumerPermissions->filter(function ($perm) use ($resource) {
-                return $perm->getResource()->getCode() === $resource;
+                return $perm->getResourceCode() === $resource;
             });
 
-            if (!($consumerPermission instanceof ApiPermission)) {
+            if (!($consumerPermission instanceof ApiConsumerPermission)) {
                 continue; // No tiene permiso para este recurso
             }
             $consumerPermission = strtolower($permission->getValue());

@@ -29,7 +29,7 @@ class ApiConsumer extends AbstractEntityModelUlid
   #[ORM\Column(name: "revoked_at", type: "datetime", nullable: true)]
   private ?DateTime $revokedAt = null;
 
-  #[ORM\OneToMany(mappedBy: "consumer", targetEntity: ApiPermission::class)]
+  #[ORM\OneToMany(mappedBy: "consumer", targetEntity: ApiConsumerPermission::class)]
   private Collection $permissions;
 
   public function __construct()
@@ -136,14 +136,14 @@ class ApiConsumer extends AbstractEntityModelUlid
   }
 
   /**
-   * @return Collection<int, ApiPermission>
+   * @return Collection<int, ApiConsumerPermission>
    */
   public function getPermissions(): Collection
   {
     return $this->permissions;
   }
 
-  public function addPermission(ApiPermission $permission): self
+  public function addPermission(ApiConsumerPermission $permission): self
   {
     if (!$this->permissions->contains($permission)) {
       $this->permissions->add($permission);
@@ -151,7 +151,7 @@ class ApiConsumer extends AbstractEntityModelUlid
     return $this;
   }
 
-  public function removePermission(ApiPermission $permission): self
+  public function removePermission(ApiConsumerPermission $permission): self
   {
     $this->permissions->removeElement($permission);
     return $this;
@@ -161,7 +161,7 @@ class ApiConsumer extends AbstractEntityModelUlid
   /**
    * Check if consumer has a specific permission
    */
-  public function hasPermission(ApiPermission $permission): bool
+  public function hasPermission(ApiConsumerPermission $permission): bool
   {
     return $this->permissions->contains($permission);
   }

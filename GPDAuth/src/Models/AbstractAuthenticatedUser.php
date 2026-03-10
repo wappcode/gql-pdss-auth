@@ -260,9 +260,9 @@ abstract class AbstractAuthenticatedUser implements AuthenticatedUserInterface
     /**
      * Get user roles
      *
-     * @return  array
+     * @return  array<string>
      */
-    public function getRoles()
+    public function getRoles(): array
     {
         return $this->roles;
     }
@@ -270,11 +270,11 @@ abstract class AbstractAuthenticatedUser implements AuthenticatedUserInterface
     /**
      * Set user roles
      *
-     * @param  array  $roles  User roles
+     * @param  array<string>  $roles  User roles
      *
      * @return  self
      */
-    public function setRoles(array $roles)
+    public function setRoles(array $roles): self
     {
         $this->roles = $roles;
 
@@ -284,9 +284,9 @@ abstract class AbstractAuthenticatedUser implements AuthenticatedUserInterface
     /**
      * Get user permissions
      *
-     * @return  array [ResourcePermission]
+     * @return  array<\GPDAuth\Models\ResourcePermission>
      */
-    public function getPermissions()
+    public function getPermissions(): array
     {
         return $this->permissions;
     }
@@ -294,11 +294,11 @@ abstract class AbstractAuthenticatedUser implements AuthenticatedUserInterface
     /**
      * Set user permissions
      *
-     * @param  array  $permissions  [ResourcePermission]
+     * @param  array<\GPDAuth\Models\ResourcePermission>  $permissions  User permissions
      *
      * @return  self
      */
-    public function setPermissions(array $permissions)
+    public function setPermissions(array $permissions): self
     {
         $this->permissions = $permissions;
 
@@ -308,7 +308,7 @@ abstract class AbstractAuthenticatedUser implements AuthenticatedUserInterface
     /**
      * Get the value of active
      */
-    public function getActive()
+    public function getActive(): bool
     {
         return $this->active;
     }
@@ -318,7 +318,7 @@ abstract class AbstractAuthenticatedUser implements AuthenticatedUserInterface
      *
      * @return  self
      */
-    public function setActive($active)
+    public function setActive(bool $active): self
     {
         $this->active = $active;
 

@@ -3,7 +3,7 @@
 namespace GPDAuthJWT\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
-use GPDCore\Entities\AbstractEntityModel;
+use PDSSUtilities\AbstractEntityModel;
 
 #[ORM\Entity()]
 #[ORM\Table(name: "gpd_auth_trusted_issuer_roles")]

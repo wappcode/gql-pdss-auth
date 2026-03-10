@@ -39,7 +39,7 @@ class GPDAuthJWTModule extends AbstractModule
         $userRepository = new JWTUserRepository($apiConsumerRepository);
         return [
             new JwtAuthMiddleware(
-                new JWTTrustIssuerRepository($context),
+                new JWTTrustIssuerRepository($entityManager),
                 $apiConsumerRepository,
                 $userRepository,
                 identityKey: AuthenticatedUserInterface::class,

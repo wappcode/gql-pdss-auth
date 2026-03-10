@@ -3,7 +3,7 @@
 namespace GPDAuthJWT\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
-use GPDCore\Entities\AbstractEntityModel;
+use PDSSUtilities\AbstractEntityModel;
 
 /** Usado para IdP local para Machine to Machine M2M */
 #[ORM\Entity]

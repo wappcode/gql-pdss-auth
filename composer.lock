@@ -4841,12 +4841,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/wappcode/gql-pdss-lib.git",
-                "reference": "8b09882557b54bf0ece32ed25d65d4d70b1ab1f0"
+                "reference": "9566be5b07ad18d8456be30a6f4868da8558722c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wappcode/gql-pdss-lib/zipball/8b09882557b54bf0ece32ed25d65d4d70b1ab1f0",
-                "reference": "8b09882557b54bf0ece32ed25d65d4d70b1ab1f0",
+                "url": "https://api.github.com/repos/wappcode/gql-pdss-lib/zipball/9566be5b07ad18d8456be30a6f4868da8558722c",
+                "reference": "9566be5b07ad18d8456be30a6f4868da8558722c",
                 "shasum": ""
             },
             "require": {
@@ -4900,7 +4900,7 @@
                 "issues": "https://github.com/wappcode/gql-pdss-lib/issues",
                 "source": "https://github.com/wappcode/gql-pdss-lib/tree/master"
             },
-            "time": "2026-03-06T22:05:36+00:00"
+            "time": "2026-03-10T21:25:39+00:00"
         },
         {
             "name": "wappcode/graphql-basic-client",
@@ -4938,12 +4938,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/wappcode/pdss-utilities.git",
-                "reference": "01ddf33b531dbe9752e890c05d09e2926cf68cfd"
+                "reference": "6b4fca60afb32a53b3cd02f29ab6534f6f93bafc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wappcode/pdss-utilities/zipball/01ddf33b531dbe9752e890c05d09e2926cf68cfd",
-                "reference": "01ddf33b531dbe9752e890c05d09e2926cf68cfd",
+                "url": "https://api.github.com/repos/wappcode/pdss-utilities/zipball/6b4fca60afb32a53b3cd02f29ab6534f6f93bafc",
+                "reference": "6b4fca60afb32a53b3cd02f29ab6534f6f93bafc",
                 "shasum": ""
             },
             "require": {
@@ -4972,7 +4972,7 @@
                 "issues": "https://github.com/wappcode/pdss-utilities/issues",
                 "source": "https://github.com/wappcode/pdss-utilities/tree/master"
             },
-            "time": "2026-03-06T20:45:27+00:00"
+            "time": "2026-03-10T21:18:24+00:00"
         },
         {
             "name": "webonyx/graphql-php",

@@ -9,9 +9,7 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\Collection;
-use GPDCore\Entities\AbstractEntityModel;
-
-
+use PDSSUtilities\AbstractEntityModel;
 
 #[ORM\Entity()]
 #[ORM\Table(name: "gpd_auth_users")]

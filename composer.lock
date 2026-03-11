@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2c336c8c95c66ecb726fdecdabb225e3",
+    "content-hash": "b396392b665034b55579e8dc21ab4df8",
     "packages": [
         {
             "name": "firebase/php-jwt",
@@ -778,6 +778,48 @@
                 }
             ],
             "time": "2024-09-25T14:21:43+00:00"
+        },
+        {
+            "name": "wappcode/pdss-utilities",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/wappcode/pdss-utilities.git",
+                "reference": "6b4fca60afb32a53b3cd02f29ab6534f6f93bafc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/wappcode/pdss-utilities/zipball/6b4fca60afb32a53b3cd02f29ab6534f6f93bafc",
+                "reference": "6b4fca60afb32a53b3cd02f29ab6534f6f93bafc",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "doctrine/dbal": "^4",
+                "doctrine/orm": ">=3.0",
+                "phpunit/phpunit": "^9",
+                "symfony/cache": "^7",
+                "symfony/yaml": "^7"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "PDSSUtilities\\": "PDSSUtilities/src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Utilidades para PHP Doctrine Server Side",
+            "support": {
+                "issues": "https://github.com/wappcode/pdss-utilities/issues",
+                "source": "https://github.com/wappcode/pdss-utilities/tree/master"
+            },
+            "time": "2026-03-10T21:18:24+00:00"
         }
     ],
     "packages-dev": [
@@ -4931,48 +4973,6 @@
                 "source": "https://github.com/wappcode/graphql-basic-client/tree/1.0.5"
             },
             "time": "2026-01-30T05:19:29+00:00"
-        },
-        {
-            "name": "wappcode/pdss-utilities",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/wappcode/pdss-utilities.git",
-                "reference": "6b4fca60afb32a53b3cd02f29ab6534f6f93bafc"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/wappcode/pdss-utilities/zipball/6b4fca60afb32a53b3cd02f29ab6534f6f93bafc",
-                "reference": "6b4fca60afb32a53b3cd02f29ab6534f6f93bafc",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0"
-            },
-            "require-dev": {
-                "doctrine/dbal": "^4",
-                "doctrine/orm": ">=3.0",
-                "phpunit/phpunit": "^9",
-                "symfony/cache": "^7",
-                "symfony/yaml": "^7"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "PDSSUtilities\\": "PDSSUtilities/src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Utilidades para PHP Doctrine Server Side",
-            "support": {
-                "issues": "https://github.com/wappcode/pdss-utilities/issues",
-                "source": "https://github.com/wappcode/pdss-utilities/tree/master"
-            },
-            "time": "2026-03-10T21:18:24+00:00"
         },
         {
             "name": "webonyx/graphql-php",

@@ -42,7 +42,7 @@ class JWTUserRepository implements \GPDAuthJWT\Contracts\JWTUserRepositoryInterf
      * @param array $payload El payload decodificado del JWT
      * @return AuthenticatedUserInterface|null El usuario autenticado o null si no se encuentra
      */
-    public function getM2MUserFromPayload(array $payload, array $allowedPermissions = []): ?\GPDAuth\Contracts\AuthenticatedUserInterface
+    public function getM2MUserFromPayload(array $payload, array $allowedPermissions = [], array $roles = []): ?AuthenticatedUserInterface
     {
         $authenticatedUser = null;
         // M2M solo tiene permisos de recurso basados en scopes, no roles ni datos de usuario
@@ -54,7 +54,7 @@ class JWTUserRepository implements \GPDAuthJWT\Contracts\JWTUserRepositoryInterf
             ->setId($consumerId)
             ->setUsername($payload['iss'] . '|' . $payload['azp'])
             ->setFullName($payload['iss'] . '|' . $payload['azp'])
-            ->setRoles([])
+            ->setRoles($roles)
             ->setPermissions($allowedPermissions);
 
         return $authenticatedUser;

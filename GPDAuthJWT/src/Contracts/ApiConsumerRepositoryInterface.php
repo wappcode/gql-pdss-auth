@@ -11,4 +11,5 @@ interface ApiConsumerRepositoryInterface
     public function getConsumerName(string $consumerId): string;
     public function getConsumerIdFromJwtPayload(array $payload): ?string;
     public function isM2mToken(array $payload): bool;
+    public function getAllowedRolesForIssuer(string $consumerId, array $roles): array;
 }

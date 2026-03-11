@@ -63,6 +63,7 @@ class JwtAuthMiddleware implements MiddlewareInterface
 
             // ¿Es M2M?
             $isM2M = $this->apiConsumerRepository->isM2mToken($decoded);
+            $roles = JwtUtilities::extractRoles($decoded);
             if ($isM2M) {
                 // M2M solo tiene permisos de recurso basados en scopes, no roles ni datos de usuario
                 $consumerId = $this->apiConsumerRepository->getConsumerIdFromJwtPayload($decoded);
@@ -75,9 +76,9 @@ class JwtAuthMiddleware implements MiddlewareInterface
                     throw new \RuntimeException('Untrusted consumer');
                 }
                 $permissions = $this->apiConsumerRepository->getValidPermissionsForConsumer($consumerId, $decoded);
-                $authenticatedUser = $this->userRepository->getM2MUserFromPayload($decoded, $permissions);
+                $allowedRoles = $this->apiConsumerRepository->getAllowedRolesForIssuer($consumerId, $roles);
+                $authenticatedUser = $this->userRepository->getM2MUserFromPayload($decoded, $permissions, $allowedRoles);
             } else {
-                $roles = JwtUtilities::extractRoles($decoded);
                 $allowedRoles = $this->issuerRepository->getAllowedRolesForIssuer($issuer, $roles);
                 $authenticatedUser = $this->userRepository->getUserFromPayload($decoded, $allowedRoles);
                 // Para usuarios humanos, se pueden mapear roles y permisos adicionales desde la base de datos si es necesario, usando el sub o el azp como identificador

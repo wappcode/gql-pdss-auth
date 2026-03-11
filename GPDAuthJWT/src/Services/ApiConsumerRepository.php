@@ -9,6 +9,7 @@ use GPDAuth\Entities\PermissionValue;
 use GPDAuthJWT\Entities\ApiConsumer;
 use GPDAuthJWT\Contracts\ApiConsumerRepositoryInterface;
 use GPDAuthJWT\Entities\ApiConsumerPermission;
+use GPDAuthJWT\Entities\ApiConsumerRoleMapping;
 use GPDAuthJWT\Library\JwtUtilities;
 
 class ApiConsumerRepository implements ApiConsumerRepositoryInterface
@@ -38,8 +39,17 @@ class ApiConsumerRepository implements ApiConsumerRepositoryInterface
         if (isset($this->trustedConsumersCache[$identifier])) {
             return $this->trustedConsumersCache[$identifier];
         }
+        $qb = $this->entityManager->createQueryBuilder()->from(ApiConsumer::class, 'ac')
+            ->leftJoin('ac.permissions', 'p')
+            ->leftJoin('ac.roleMappings', 'r')
+            ->select(['ac', 'p', 'r'])
+            ->where('ac.identifier = :identifier')
+            ->andWhere('ac.status = :status')
+            ->setParameter('identifier', $identifier)
+            ->setParameter('status', 'active')
+            ->setMaxResults(1);
         /** @var ApiConsumer | null */
-        $consumer = $this->entityManager->getRepository(ApiConsumer::class)->findOneBy(['identifier' => $identifier]);
+        $consumer = $qb->getQuery()->getOneOrNullResult();
         if ($consumer && $consumer->isActive()) {
             $this->trustedConsumersCache[$identifier] = $consumer;
         }
@@ -96,5 +106,20 @@ class ApiConsumerRepository implements ApiConsumerRepositoryInterface
             || isset($payload['client_id'])
             || (isset($payload['azp']) && $payload['sub'] === $payload['azp']);
         return $isM2M;
+    }
+    public function getAllowedRolesForIssuer(string $consumerId, array $roles): array
+    {
+        $allowedRoles = [];
+        $consumer = $this->getConsumer($consumerId);
+        if (!$consumer) {
+            return $allowedRoles;
+        }
+        /** @var ApiConsumerRoleMapping $role */
+        foreach ($consumer->getRoleMappings() as $role) {
+            if (in_array($role->getExternalRoleCode(), $roles)) {
+                $allowedRoles[] = $role->getInternalRoleCode();
+            }
+        }
+        return $allowedRoles;
     }
 }

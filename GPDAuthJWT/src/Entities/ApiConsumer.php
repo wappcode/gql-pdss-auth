@@ -32,10 +32,21 @@ class ApiConsumer extends AbstractEntityModelUlid
   #[ORM\OneToMany(mappedBy: "consumer", targetEntity: ApiConsumerPermission::class)]
   private Collection $permissions;
 
+  /**
+   * Mapeos de roles para este issuer (código externo → código interno)
+   * Si se define, solo los roles mapeados serán considerados válidos para los JWTs de este issuer
+   * Es obligatorio definirlo si se quieren usar roles en los JWTs de este issuer
+   * Si no se define, los usuarios de este issuer no tendrán roles ni permisos
+   * @var Collection<TrustedIssuerRoleMapping>
+   */
+  #[ORM\OneToMany(targetEntity: TrustedIssuerRoleMapping::class, mappedBy: "trustedIssuer", cascade: ["remove"])]
+  private Collection $roleMappings;
+
   public function __construct()
   {
     parent::__construct();
     $this->permissions = new ArrayCollection();
+    $this->roleMappings = new ArrayCollection();
   }
 
   public function getIdentifier(): string
@@ -198,6 +209,20 @@ class ApiConsumer extends AbstractEntityModelUlid
   {
     $this->name = $name;
 
+    return $this;
+  }
+  /**
+   *
+   * @return Collection<TrustedIssuerRoleMapping>
+   */
+  public function getRoleMappings(): Collection
+  {
+    return $this->roleMappings;
+  }
+
+  public function setRoleMappings(Collection $roleMappings): self
+  {
+    $this->roleMappings = $roleMappings;
     return $this;
   }
 }

@@ -2,6 +2,7 @@
 
 namespace GPDAuthJWT;
 
+use GPDAuthJWT\Authentication\JWTAuthenticator;
 use GPDAuth\Contracts\AuthenticatedUserInterface;
 use GPDAuthJWT\Middleware\JwtAuthMiddleware;
 use GPDAuthJWT\Services\ApiConsumerRepository;
@@ -37,14 +38,17 @@ class GPDAuthJWTModule extends AbstractModule
         $entityManager = $context->getEntityManager();
         $apiConsumerRepository = new ApiConsumerRepository($entityManager);
         $userRepository = new JWTUserRepository($apiConsumerRepository);
+        $jwtAuthenticator = new JWTAuthenticator(
+            new JWTTrustIssuerRepository($entityManager),
+            $apiConsumerRepository,
+            $userRepository,
+            $this->maxTokenLifetime
+        );
         return [
             new JwtAuthMiddleware(
-                new JWTTrustIssuerRepository($entityManager),
-                $apiConsumerRepository,
-                $userRepository,
+                $jwtAuthenticator,
                 identityKey: AuthenticatedUserInterface::class,
-                exitUnAuthorized: $this->exitUnAuthorized,
-                maxTokenLifetime: $this->maxTokenLifetime
+                exitUnAuthorized: $this->exitUnAuthorized
             )
         ];
     }

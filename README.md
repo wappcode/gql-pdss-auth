@@ -397,6 +397,70 @@ $app->addModules([
 ]);
 ```
 
+Internamente, `GPDAuthJWT` ahora centraliza la autenticación del token en un autenticador dedicado. El middleware JWT delega la validación, la resolución del usuario y la extracción del payload en `JWTAuthenticator`, expuesto mediante la interfaz `JWTAuthenticatorInterface`.
+
+### Flujo de autenticación JWT
+
+El flujo actual es:
+
+1. `JwtAuthMiddleware` extrae el bearer token desde la request.
+2. `JWTAuthenticatorInterface::authenticate(string $jwt)` valida firma, issuer, audience, expiración y tipo de token.
+3. El autenticador resuelve el usuario autenticado humano o M2M.
+4. El resultado se devuelve como un `AuthenticationResult`.
+5. El middleware inyecta en la request:
+   - `AuthenticatedUserInterface::class` con el usuario autenticado
+   - `jwt_payload` con el payload ya validado
+
+### Acceso al resultado de autenticación JWT
+
+```php
+<?php
+use GPDAuth\Contracts\AuthenticatedUserInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+$request = $context->getContextAttribute(ServerRequestInterface::class);
+
+$user = $request->getAttribute(AuthenticatedUserInterface::class);
+$jwtPayload = $request->getAttribute('jwt_payload');
+
+if ($user instanceof AuthenticatedUserInterface) {
+    echo $user->getUsername();
+}
+
+if (is_array($jwtPayload)) {
+    echo $jwtPayload['iss'] ?? '';
+}
+```
+
+### Contrato del autenticador JWT
+
+```php
+<?php
+use GPDAuthJWT\Contracts\JWTAuthenticatorInterface;
+use GPDAuthJWT\DTO\AuthenticationResult;
+
+interface JWTAuthenticatorInterface
+{
+    public function authenticate(string $jwt): AuthenticationResult;
+}
+```
+
+### DTO AuthenticationResult
+
+El DTO `AuthenticationResult` encapsula el resultado completo de la autenticación JWT:
+
+```php
+<?php
+use GPDAuth\Contracts\AuthenticatedUserInterface;
+
+final class AuthenticationResult
+{
+    public function getAuthenticatedUser(): AuthenticatedUserInterface;
+    public function getPayload(): array;
+    public function getHeader(): array;
+}
+```
+
 ### JWT vs Session
 
 - **Session Auth**: Usa sesiones PHP, ideal para aplicaciones web tradicionales
@@ -464,6 +528,24 @@ interface AuthenticatedUserInterface
     public function hasPermission(string $resource, string $permission, ?string $scope = null): bool;
     public function hasAnyPermission(array $resources, array $permission, ?array $scopes = null): bool;
     public function hasAllPermissions(array $resources, array $permission, ?array $scopes = null): bool;
+}
+```
+
+#### JWTAuthenticatorInterface
+```php
+interface JWTAuthenticatorInterface
+{
+    public function authenticate(string $jwt): AuthenticationResult;
+}
+```
+
+#### AuthenticationResult
+```php
+final class AuthenticationResult
+{
+    public function getAuthenticatedUser(): AuthenticatedUserInterface;
+    public function getPayload(): array;
+    public function getHeader(): array;
 }
 ```
 

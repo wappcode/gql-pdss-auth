@@ -25,13 +25,13 @@ class AuthSessionService extends AbstractAuthService
         $this->sessionKey = $sessionKey;
     }
 
-    public function login(string $username, string $password, string $grantType): void
+    public function login(string $username, string $password): void
     {
         $this->authenticatedUser = $this->userRepository->validateCredentials($username, $password);
         if (!($this->authenticatedUser instanceof AuthenticatedUserInterface)) {
             throw new InvalidUserException('Invalid username and password or inactive user');
         }
-        $this->setSession($this->authenticatedUser->getId(), $grantType);
+        $this->setSession($this->authenticatedUser->getId());
         $this->userRepository->updateLastAccess($this->authenticatedUser);
     }
     public function logout(): void
@@ -40,10 +40,9 @@ class AuthSessionService extends AbstractAuthService
         $this->authenticatedUser = null;
     }
 
-    public function setSession($userId, $grant): void
+    public function setSession($userId): void
     {
         $_SESSION[$this->sessionKey]["identifier"] = $userId ?? null;
-        $_SESSION[$this->sessionKey]["grant"] = $grant ?? null;
     }
 
     public function getAuthenticatedUser(): ?AuthenticatedUserInterface

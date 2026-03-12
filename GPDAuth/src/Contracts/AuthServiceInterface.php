@@ -8,7 +8,7 @@ namespace GPDAuth\Contracts;
  */
 interface AuthServiceInterface
 {
-    public function login(string $username, string $password, string $grantType);
+    public function login(string $username, string $password);
     public function logout(): void;
     public function getAuthenticatedUser(): ?AuthenticatedUserInterface;
 }

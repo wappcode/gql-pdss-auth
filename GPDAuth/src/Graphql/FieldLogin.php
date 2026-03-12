@@ -3,7 +3,6 @@
 namespace GPDAuth\Graphql;
 
 use GPDAuth\Library\PermissionStringBuilder;
-use GPDAuth\Models\AuthenticatedUserType;
 use GPDAuth\Contracts\AuthServiceInterface;
 use GPDCore\Contracts\AppContextInterface;
 use GPDCore\Exceptions\GQLException;
@@ -21,7 +20,7 @@ class FieldLogin
             /** @var AuthServiceInterface */
             $auth = $context->getServiceManager()->get(AuthServiceInterface::class);
             try {
-                $auth->login($username, $password, AuthenticatedUserType::LOCAL_USER->value);
+                $auth->login($username, $password);
                 $user = $auth->getAuthenticatedUser();
                 $permissions = PermissionStringBuilder::formatAllowedPermissions($user);
                 $userData = $user->toArray();

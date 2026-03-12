@@ -21,11 +21,13 @@ class JWTUserRepository implements \GPDAuthJWT\Contracts\JWTUserRepositoryInterf
     public function getUserFromPayload(array $payload, array $allowedRoles = []): ?AuthenticatedUserInterface
     {
         $authenticatedUser = null;
-        $username = $payload['iss'] . '|' . $payload['sub'];
+        $subjectIdentifier = $payload['iss'] . '|' . $payload['sub'];
+        // En JWT federado, 'iss+sub' es el identificador estable; username puede variar o repetirse entre IdPs.
+        $username = $payload['preferred_username'] ?? $payload['email'] ?? $subjectIdentifier;
         // Para usuarios humanos, se pueden mapear roles y permisos adicionales desde la base de datos si es necesario, usando el sub o el azp como identificador
         $authenticatedUser = (new AuthenticatedUser())
             ->setType(AuthenticatedUserType::EXTERN_USER)
-            ->setId($username)
+            ->setId($subjectIdentifier)
             ->setUsername($username)
             ->setFullName($payload["name"] ?? $username)
             ->setEmail($payload['email'] ?? null)
@@ -48,12 +50,13 @@ class JWTUserRepository implements \GPDAuthJWT\Contracts\JWTUserRepositoryInterf
         // M2M solo tiene permisos de recurso basados en scopes, no roles ni datos de usuario
         $consumerId = $this->apiConsumerRepository->getConsumerIdFromJwtPayload($payload);
         $consumerName = $this->apiConsumerRepository->getConsumerName($consumerId);
+        $username = $payload["client_id"] ?? $payload['azp'] ?? $consumerId;
         $authenticatedUser = (new AuthenticatedUser())
-            ->setFullName($consumerName)
             ->setType(AuthenticatedUserType::API_CLIENT)
             ->setId($consumerId)
-            ->setUsername($payload['iss'] . '|' . $payload['azp'])
-            ->setFullName($payload['iss'] . '|' . $payload['azp'])
+            ->setUsername($username)
+            ->setFullName($consumerName)
+            ->setFirstName($consumerName)
             ->setRoles($roles)
             ->setPermissions($allowedPermissions);
 

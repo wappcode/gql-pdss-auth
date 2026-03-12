@@ -7,12 +7,25 @@ use GPDAuth\Models\AuthenticatedUserType;
 interface AuthenticatedUserInterface
 {
     public function toArray(): array;
+    /**
+     * Identificador interno del usuario autenticado.
+     *
+     * Este valor es el que debe tratarse como identificador unico y estable
+     * entre proveedores de identidad.
+     */
     public function getId(): string;
     public function setId(string $id): self;
     public function getFullName(): string;
     public function setFullName(string $fullName): self;
     public function getFirstName(): ?string;
     public function setFirstName(?string $firstName): self;
+    /**
+     * Nombre de usuario para visualizacion o trazabilidad funcional.
+     *
+     * NOTA: este valor no es estrictamente unico. Con autenticacion JWT y
+     * multiples identity providers puede repetirse entre emisores.
+     * Use getId() para identificar de forma unica al principal autenticado.
+     */
     public function getUsername(): string;
     public function setUsername(string $username): self;
     public function getLastName(): ?string;

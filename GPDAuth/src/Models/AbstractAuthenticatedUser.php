@@ -37,7 +37,9 @@ abstract class AbstractAuthenticatedUser implements AuthenticatedUserInterface
     private ?string $firstName;
 
     /**
-     * Username
+     * Username para visualizacion o trazabilidad funcional.
+     *
+     * NOTA: no es estrictamente unico entre identity providers.
      *
      * @var string
      */
@@ -167,6 +169,10 @@ abstract class AbstractAuthenticatedUser implements AuthenticatedUserInterface
 
     /**
      * Get username
+     *
+     * NOTA: este valor no es estrictamente unico. En escenarios JWT con
+     * distintos identity providers puede repetirse.
+     * Use getId() para unicidad.
      *
      * @return string
      */

@@ -54,21 +54,23 @@ class AppModule extends AbstractModule
     function getResolvers(): array
     {
         $echoResolve = fn($root, $args) => $args["message"];
-        $proxyEcho1 = fn($resolver) => function ($root, $args, AppContextInterface $context, $info) use ($resolver) {
+        $proxyEcho1 = function ($resolver) {
+            return function ($root, $args, AppContextInterface $context, $info) use ($resolver) {
 
-            $request = $context->getContextAttribute(ServerRequestInterface::class);
-            $user = $request->getAttribute(AuthenticatedUserInterface::class);
-            /** @var AuthServiceInterface */
-            $authService = $context->getServiceManager()->get(AuthServiceInterface::class);
-            if (!$user) {
-                $user = $authService->getAuthenticatedUser();
-            }
-            if (!$user) {
-                return $resolver($root, $args, $context, $info);
-            }
-            $msg = $resolver($root, $args, $context, $info);
-            $message = sprintf("%s -> Usuario: %s", $msg, $user->getUsername(), $user->getUsername());
-            return $message;
+                $request = $context->getContextAttribute(ServerRequestInterface::class);
+                $user = $request->getAttribute(AuthenticatedUserInterface::class);
+                if (!$user) {
+                    /** @var AuthServiceInterface */
+                    $authService = $context->getServiceManager()->get(AuthServiceInterface::class);
+                    $user = $authService->getAuthenticatedUser();
+                }
+                if (!$user) {
+                    return $resolver($root, $args, $context, $info);
+                }
+                $msg = $resolver($root, $args, $context, $info);
+                $message = sprintf("%s -> Usuario: %s", $msg, $user->getUsername(), $user->getUsername());
+                return $message;
+            };
         };
         return [
             "Query::echo" => $echoResolve,

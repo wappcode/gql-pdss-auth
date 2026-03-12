@@ -12,6 +12,7 @@ Librería completa de autenticación y autorización para aplicaciones con WAppC
 - [Protección de Resolvers GraphQL](#-protección-de-resolvers-graphql)
 - [Middleware de Autenticación](#-middleware-de-autenticación)
 - [JWT Authentication](#-jwt-authentication)
+- [MUY IMPORTANTE: Unicidad de Username](#-muy-importante-unicidad-de-username)
 - [API Reference](#-api-reference)
 
 ## 🚀 Instalación
@@ -466,6 +467,23 @@ final class AuthenticationResult
 - **Session Auth**: Usa sesiones PHP, ideal para aplicaciones web tradicionales
 - **JWT Auth**: Tokens sin estado, ideal para APIs y aplicaciones SPA/móviles
 
+## ⚠️ MUY IMPORTANTE: Unicidad de Username
+
+Esta advertencia aplica al metodo `getUsername()` de `AuthenticatedUserInterface`, NO al campo `username` de la entidad `User`.
+
+En esta libreria, el valor devuelto por `AuthenticatedUserInterface::getUsername()` NO debe tratarse como identificador global unico del usuario.
+
+La entidad `User` (autenticacion local) mantiene su propia regla de unicidad para `username` en base de datos.
+
+- En escenarios JWT con multiples identity providers, el username puede repetirse entre emisores.
+- En Keycloak, por ejemplo, `sub` suele ser un UUID interno estable y `preferred_username` es el login visible.
+- Para identificar un principal de forma unica y estable, use `getId()`.
+
+Recomendacion operativa:
+
+- Use `getId()` para llaves de negocio, auditoria, correlacion de eventos y relaciones persistentes.
+- Use `getUsername()` solo para presentacion, UX, logs funcionales o trazabilidad humana.
+
 ### OAuth 2.0 Client Credentials
 
 ```php
@@ -690,15 +708,6 @@ $user = $authService->getAuthenticatedUser();
 
 Este sistema de autenticación proporciona una base sólida y flexible para manejar la seguridad en aplicaciones PHP modernas con GraphQL y REST APIs.
 
-## 🤝 Contribución
-
-Para contribuir al proyecto:
-
-1. Fork el repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/amazing-feature`)
-3. Commit tus cambios (`git commit -m 'Add some amazing feature'`)
-4. Push a la rama (`git push origin feature/amazing-feature`)
-5. Abre un Pull Request
 
 ## 📄 Licencia
 

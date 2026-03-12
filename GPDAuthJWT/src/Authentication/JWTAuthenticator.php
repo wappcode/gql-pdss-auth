@@ -24,12 +24,16 @@ class JWTAuthenticator implements JWTAuthenticatorInterface
     {
 
         $iss = $payload['iss'] ?? null;
+        $sub = $payload['sub'] ?? null;
         $kid = $header['kid'] ?? null;
         if (!$iss) {
             throw new \RuntimeException('Missing issuer');
         }
         if (!$kid) {
             throw new \RuntimeException('Missing key ID');
+        }
+        if (!$sub) {
+            throw new \RuntimeException('Missing subject');
         }
         $isValidIssuer = $this->issuerRepository->isTrustedIssuer($iss);
         if (!$isValidIssuer) {
@@ -82,7 +86,11 @@ class JWTAuthenticator implements JWTAuthenticatorInterface
         $isM2M =
             ($payload['gty'] ?? null) === 'client-credentials'
             || isset($payload['client_id'])
-            || (isset($payload['azp']) && $payload['sub'] === $payload['azp']);
+            || (
+                isset($payload['azp'])
+                && !empty($payload['azp'])
+                && isset($payload['sub'])
+                && $payload['sub'] === $payload['azp']);
         return $isM2M;
     }
 

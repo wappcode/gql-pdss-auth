@@ -14,6 +14,8 @@ use GPDAuth\Contracts\AuthServiceInterface;
 use GPDAuth\Contracts\UserRepositoryInterface;
 use GPDAuth\Services\AuthSessionService;
 use GPDAuth\Services\UserRepository;
+use GPDAuthJWT\Authentication\SessionAuthenticator;
+use GPDAuthJWT\Contracts\SessionAuthenticatorInterface;
 use GPDCore\Core\AbstractModule;
 
 /**
@@ -64,6 +66,11 @@ class GPDAuthModule extends AbstractModule
                 UserRepositoryInterface::class => function (ServiceManager $sm) use ($context) {
                     $entityManager = $context->getEntityManager();
                     return new UserRepository($entityManager);
+                },
+                SessionAuthenticatorInterface::class => function (ServiceManager $sm) {
+                    return new SessionAuthenticator(
+                        $sm->get(UserRepositoryInterface::class)
+                    );
                 },
                 AuthServiceInterface::class => function (ServiceManager $sm) use ($context) {
                     // Crear repositorios

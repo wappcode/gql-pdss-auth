@@ -4,8 +4,8 @@
 namespace GPDAuthJWT\Services;
 
 use Doctrine\ORM\EntityManager;
-use GPDAuth\Entities\PermissionAccess;
-use GPDAuth\Entities\PermissionValue;
+use GPDAuth\Enums\PermissionAccess;
+use GPDAuth\Enums\PermissionValue;
 use GPDAuthJWT\Entities\ApiConsumer;
 use GPDAuthJWT\Contracts\ApiConsumerRepositoryInterface;
 use GPDAuthJWT\Entities\ApiConsumerPermission;

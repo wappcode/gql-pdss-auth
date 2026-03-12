@@ -1,6 +1,6 @@
 <?php
 
-use GPDAuth\Library\JwtAlgorithm;
+use GPDAuth\Enums\JwtAlgorithm;
 
 return [
     'gpd_auth_jwt_secure_key' => "vPW3NTI&0+",

@@ -4,7 +4,7 @@ namespace GPDAuthJWT\Services;
 
 use GPDAuth\Contracts\AuthenticatedUserInterface;
 use GPDAuth\Models\AuthenticatedUser;
-use GPDAuth\Models\AuthenticatedUserType;
+use GPDAuth\Enums\AuthenticatedUserType;
 use GPDAuthJWT\Contracts\ApiConsumerRepositoryInterface;
 
 class JWTUserRepository implements \GPDAuthJWT\Contracts\JWTUserRepositoryInterfaces

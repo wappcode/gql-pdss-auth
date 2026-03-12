@@ -1,6 +1,6 @@
 <?php
 
-namespace GPDAuth\Models;
+namespace GPDAuth\Enums;
 
 enum AuthenticatedUserType: string
 {

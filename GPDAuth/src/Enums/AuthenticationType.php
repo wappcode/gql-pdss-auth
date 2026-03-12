@@ -1,6 +1,6 @@
 <?php
 
-namespace GPDAuth\Library;
+namespace GPDAuth\Enums;
 
 /**
  * Enum para los tipos de autenticación detectados en requests
@@ -64,7 +64,7 @@ enum AuthenticationType: string
      */
     public function getDescription(): string
     {
-        return match($this) {
+        return match ($this) {
             self::SESSION => 'Autenticación basada en sesión PHP',
             self::ACCESS_TOKEN => 'Autenticación con token de acceso JWT',
             self::REFRESH_TOKEN => 'Token de actualización',

@@ -6,7 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use DateTime;
-use GPDAuthJWT\Models\ApiConsumerStatus;
+use GPDAuthJWT\Enums\ApiConsumerStatus;
 use PDSSUtilities\AbstractEntityModelUlid;
 
 /** Usado para IdP local para Machine to Machine M2M */

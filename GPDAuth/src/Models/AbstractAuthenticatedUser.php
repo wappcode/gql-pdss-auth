@@ -3,6 +3,7 @@
 namespace GPDAuth\Models;
 
 use GPDAuth\Contracts\AuthenticatedUserInterface;
+use GPDAuth\Enums\AuthenticatedUserType;
 
 
 

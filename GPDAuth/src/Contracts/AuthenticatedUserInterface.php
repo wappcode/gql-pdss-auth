@@ -2,7 +2,7 @@
 
 namespace GPDAuth\Contracts;
 
-use GPDAuth\Models\AuthenticatedUserType;
+use GPDAuth\Enums\AuthenticatedUserType;
 
 interface AuthenticatedUserInterface
 {

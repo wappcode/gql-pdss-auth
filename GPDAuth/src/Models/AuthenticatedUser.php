@@ -4,8 +4,8 @@ namespace GPDAuth\Models;
 
 use GPDAuth\Contracts\AuthenticatedUserInterface;
 
-use GPDAuth\Entities\PermissionAccess;
-use GPDAuth\Entities\PermissionValue;
+use GPDAuth\Enums\PermissionAccess;
+use GPDAuth\Enums\PermissionValue;
 
 class AuthenticatedUser extends AbstractAuthenticatedUser implements AuthenticatedUserInterface
 {

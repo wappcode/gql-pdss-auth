@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace GPDAuth\Graphql;
 
-use GPDAuth\Entities\PermissionValue;
+use GPDAuth\Enums\PermissionValue;
 use GraphQL\Type\Definition\EnumType;
 
 final class TypePermissionValue extends EnumType

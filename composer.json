@@ -1,6 +1,6 @@
 {
   "name": "wappcode/gql-pdss-auth",
-  "version": "4-dev",
+  "version": "4.0.0",
   "license": "MIT",
   "autoload": {
     "psr-4": {

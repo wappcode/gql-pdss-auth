@@ -75,10 +75,12 @@ class GPDAuthModule extends AbstractModule
                 AuthServiceInterface::class => function (ServiceManager $sm) use ($context) {
                     // Crear repositorios
                     $userRepository = $sm->get(UserRepositoryInterface::class);
+                    $sessionAuthenticator = $sm->get(SessionAuthenticatorInterface::class);
 
                     // Crear servicio de autenticación
                     $authService = new AuthSessionService(
                         $userRepository,
+                        $sessionAuthenticator,
                     );
 
                     return $authService;

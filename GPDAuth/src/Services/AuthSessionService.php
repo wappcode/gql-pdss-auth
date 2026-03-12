@@ -5,19 +5,23 @@ namespace GPDAuth\Services;
 use GPDAuth\Library\InvalidUserException;
 use GPDAuth\Contracts\AuthenticatedUserInterface;
 use GPDAuth\Contracts\UserRepositoryInterface;
+use GPDAuthJWT\Contracts\SessionAuthenticatorInterface;
 
 @session_start();
 class AuthSessionService extends AbstractAuthService
 {
 
     private UserRepositoryInterface $userRepository;
+    private SessionAuthenticatorInterface $sessionAuthenticator;
     private string $sessionKey;
 
     public function __construct(
         UserRepositoryInterface $userRepository,
+        SessionAuthenticatorInterface $sessionAuthenticator,
         string $sessionKey = 'gpdauth_session_id'
     ) {
         $this->userRepository = $userRepository;
+        $this->sessionAuthenticator = $sessionAuthenticator;
         $this->sessionKey = $sessionKey;
     }
 
@@ -45,9 +49,10 @@ class AuthSessionService extends AbstractAuthService
     public function getAuthenticatedUser(): ?AuthenticatedUserInterface
     {
         if (!($this->authenticatedUser instanceof AuthenticatedUserInterface)) {
-            $userId = $_SESSION[$this->sessionKey]["identifier"] ?? null;
-            if ($userId !== null) {
-                $this->authenticatedUser = $this->userRepository->findById($userId);
+            try {
+                $this->authenticatedUser = $this->sessionAuthenticator->authenticate($this->sessionKey);
+            } catch (\Throwable $e) {
+                $this->authenticatedUser = null;
             }
         }
         return $this->authenticatedUser ?? null;

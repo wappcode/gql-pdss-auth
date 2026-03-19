@@ -42,8 +42,8 @@ return [
             'collation' => 'utf8mb4_unicode_ci'
         ],
         "entity_paths" => [
-            realpath(__DIR__ . "/../../dev/modules/AppModule/Entities"),
-            realpath(__DIR__ . "/../../vendor/wappcode/gql-pdss-auth/GPDAuth/src/Entities"),
+           "GPDAuth\Entities"=> realpath(__DIR__ . "/../../vendor/wappcode/gql-pdss-auth/GPDAuth/src/Entities"),
+            "GPDAuthJWT\Entities"=> realpath(__DIR__ . "/../../vendor/wappcode/gql-pdss-auth/GPDAuthJWT/src/Entities"),
         ]
     ]
 ];

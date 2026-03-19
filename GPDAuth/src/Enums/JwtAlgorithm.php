@@ -1,6 +1,6 @@
 <?php
 
-namespace GPDAuth\Library;
+namespace GPDAuth\Enums;
 
 /**
  * Enum para algoritmos de firma JWT
@@ -12,42 +12,42 @@ enum JwtAlgorithm: string
      * HMAC using SHA-256 (Simétrico)
      */
     case HS256 = 'HS256';
-    
+
     /**
      * HMAC using SHA-384 (Simétrico)
      */
     case HS384 = 'HS384';
-    
+
     /**
      * HMAC using SHA-512 (Simétrico)
      */
     case HS512 = 'HS512';
-    
+
     /**
      * RSA using SHA-256 (Asimétrico)
      */
     case RS256 = 'RS256';
-    
+
     /**
      * RSA using SHA-384 (Asimétrico)
      */
     case RS384 = 'RS384';
-    
+
     /**
      * RSA using SHA-512 (Asimétrico)
      */
     case RS512 = 'RS512';
-    
+
     /**
      * ECDSA using P-256 and SHA-256 (Asimétrico)
      */
     case ES256 = 'ES256';
-    
+
     /**
      * ECDSA using P-384 and SHA-384 (Asimétrico)
      */
     case ES384 = 'ES384';
-    
+
     /**
      * ECDSA using secp256k1 curve and SHA-256 (Asimétrico)
      */
@@ -55,7 +55,7 @@ enum JwtAlgorithm: string
 
     /**
      * Obtiene el valor string del enum (para compatibilidad)
-     * 
+     *
      * @return string
      */
     public function getValue(): string
@@ -65,7 +65,7 @@ enum JwtAlgorithm: string
 
     /**
      * Crea una instancia del enum desde un string
-     * 
+     *
      * @param string $value
      * @return self
      * @throws \ValueError Si el valor no es válido
@@ -77,7 +77,7 @@ enum JwtAlgorithm: string
 
     /**
      * Crea una instancia del enum desde un string con fallback
-     * 
+     *
      * @param string $value
      * @param self|null $default
      * @return self|null
@@ -89,7 +89,7 @@ enum JwtAlgorithm: string
 
     /**
      * Verifica si es un algoritmo simétrico (HMAC)
-     * 
+     *
      * @return bool
      */
     public function isSymmetric(): bool
@@ -99,7 +99,7 @@ enum JwtAlgorithm: string
 
     /**
      * Verifica si es un algoritmo asimétrico (RSA/ECDSA)
-     * 
+     *
      * @return bool
      */
     public function isAsymmetric(): bool
@@ -109,7 +109,7 @@ enum JwtAlgorithm: string
 
     /**
      * Verifica si usa RSA
-     * 
+     *
      * @return bool
      */
     public function isRSA(): bool
@@ -119,7 +119,7 @@ enum JwtAlgorithm: string
 
     /**
      * Verifica si usa ECDSA
-     * 
+     *
      * @return bool
      */
     public function isECDSA(): bool
@@ -129,12 +129,12 @@ enum JwtAlgorithm: string
 
     /**
      * Obtiene el algoritmo de hash usado
-     * 
+     *
      * @return string
      */
     public function getHashAlgorithm(): string
     {
-        return match($this) {
+        return match ($this) {
             self::HS256, self::RS256, self::ES256, self::ES256K => 'SHA256',
             self::HS384, self::RS384, self::ES384 => 'SHA384',
             self::HS512, self::RS512 => 'SHA512'
@@ -143,12 +143,12 @@ enum JwtAlgorithm: string
 
     /**
      * Obtiene la descripción del algoritmo
-     * 
+     *
      * @return string
      */
     public function getDescription(): string
     {
-        return match($this) {
+        return match ($this) {
             self::HS256 => 'HMAC con SHA-256 (simétrico, clave compartida)',
             self::HS384 => 'HMAC con SHA-384 (simétrico, clave compartida)',
             self::HS512 => 'HMAC con SHA-512 (simétrico, clave compartida)',
@@ -163,12 +163,12 @@ enum JwtAlgorithm: string
 
     /**
      * Obtiene el nivel de seguridad recomendado (1-5, donde 5 es más seguro)
-     * 
+     *
      * @return int
      */
     public function getSecurityLevel(): int
     {
-        return match($this) {
+        return match ($this) {
             self::HS256, self::RS256, self::ES256 => 3,
             self::HS384, self::RS384, self::ES384 => 4,
             self::HS512, self::RS512 => 5,
@@ -178,7 +178,7 @@ enum JwtAlgorithm: string
 
     /**
      * Verifica si requiere claves públicas/privadas
-     * 
+     *
      * @return bool
      */
     public function requiresKeyPair(): bool
@@ -188,7 +188,7 @@ enum JwtAlgorithm: string
 
     /**
      * Obtiene los algoritmos recomendados para uso general
-     * 
+     *
      * @return array<self>
      */
     public static function getRecommended(): array
@@ -198,7 +198,7 @@ enum JwtAlgorithm: string
 
     /**
      * Obtiene todos los algoritmos simétricos
-     * 
+     *
      * @return array<self>
      */
     public static function getSymmetricAlgorithms(): array
@@ -208,7 +208,7 @@ enum JwtAlgorithm: string
 
     /**
      * Obtiene todos los algoritmos asimétricos
-     * 
+     *
      * @return array<self>
      */
     public static function getAsymmetricAlgorithms(): array
@@ -218,7 +218,7 @@ enum JwtAlgorithm: string
 
     /**
      * Obtiene el algoritmo por defecto recomendado
-     * 
+     *
      * @return self
      */
     public static function getDefault(): self

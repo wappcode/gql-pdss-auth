@@ -5,10 +5,7 @@ declare(strict_types=1);
 namespace GPDAuth\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
-use GPDCore\Entities\AbstractEntityModel;
-
-
-
+use PDSSUtilities\AbstractEntityModel;
 
 #[ORM\Entity()]
 #[ORM\Table(name: "gpd_auth_resources")]

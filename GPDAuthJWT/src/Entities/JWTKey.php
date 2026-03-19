@@ -4,7 +4,7 @@ namespace GPDAuthJWT\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
 use DateTime;
-use GPDCore\Entities\AbstractEntityModelUlid;
+use PDSSUtilities\AbstractEntityModelUlid;
 
 #[ORM\Entity]
 #[ORM\Table(name: "gpd_auth_jwt_keys")]

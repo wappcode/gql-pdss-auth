@@ -22,7 +22,7 @@ abstract class AbstractAuthService implements AuthServiceInterface
      * @param string $password
      * @throws Exception
      */
-    public abstract function login(string $identifier, string $password, string $grantType): void;
+    public abstract function login(string $identifier, string $password): void;
 
     public abstract function logout(): void;
 

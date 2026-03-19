@@ -7,8 +7,7 @@ namespace GPDAuthJWT\Entities;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use GPDAuth\Entities\Role;
-use GPDCore\Entities\AbstractEntityModelUlid;
+use PDSSUtilities\AbstractEntityModelUlid;
 
 #[ORM\Entity()]
 #[ORM\Table(name: "gpd_auth_trusted_issuers")]
@@ -69,23 +68,20 @@ class TrustedIssuer extends AbstractEntityModelUlid
 
 
     /**
-     * Roles permitidos para este issuer (opcional, se puede usar para filtrar roles específicos por issuer)
-     * Si se define, solo los roles asociados a este issuer serán considerados válidos para los JWTs de este issuer
-     * Es obligatorio definirlo para el issuer si se quieren usar roles en los JWTs de ese issuer, de lo contrario, no se validarán roles para ese issuer
-     * Si no se define los usuarios de este issuer no tendrán roles y por tanto no tendran permisos
-     * @var Collection<Role>
+     * Mapeos de roles para este issuer (código externo → código interno)
+     * Si se define, solo los roles mapeados serán considerados válidos para los JWTs de este issuer
+     * Es obligatorio definirlo si se quieren usar roles en los JWTs de este issuer
+     * Si no se define, los usuarios de este issuer no tendrán roles ni permisos
+     * @var Collection<TrustedIssuerRoleMapping>
      */
-    #[ORM\ManyToMany(targetEntity: Role::class)]
-    #[ORM\JoinTable(name: "gpd_auth_trusted_issuer_roles")]
-    #[ORM\JoinColumn(name: "trusted_issuer_id", referencedColumnName: "id", onDelete: "CASCADE")]
-    #[ORM\InverseJoinColumn(name: "role_id", referencedColumnName: "id", onDelete: "CASCADE")]
-    private Collection $allowedRoles;
+    #[ORM\OneToMany(targetEntity: TrustedIssuerRoleMapping::class, mappedBy: "trustedIssuer", cascade: ["remove"])]
+    private Collection $roleMappings;
 
     public function __construct()
     {
         parent::__construct();
         $this->audiences = new ArrayCollection();
-        $this->allowedRoles = new ArrayCollection();
+        $this->roleMappings = new ArrayCollection();
     }
     public function getIssuer(): string
     {
@@ -177,16 +173,16 @@ class TrustedIssuer extends AbstractEntityModelUlid
 
     /**
      *
-     * @return Collection<Role>
+     * @return Collection<TrustedIssuerRoleMapping>
      */
-    public function getAllowedRoles(): Collection
+    public function getRoleMappings(): Collection
     {
-        return $this->allowedRoles;
+        return $this->roleMappings;
     }
 
-    public function setAllowedRoles(Collection $allowedRoles): self
+    public function setRoleMappings(Collection $roleMappings): self
     {
-        $this->allowedRoles = $allowedRoles;
+        $this->roleMappings = $roleMappings;
         return $this;
     }
 }

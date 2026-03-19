@@ -1,6 +1,6 @@
 <?php
 
-namespace GPDAuthJWT\Models;
+namespace GPDAuthJWT\Enums;
 
 enum ApiConsumerStatus: string
 {

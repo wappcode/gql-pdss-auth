@@ -6,7 +6,8 @@ use Exception;
 use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
-use GPDAuth\Entities\PermissionAccess;
+use GPDAuth\Enums\PermissionAccess;
+use GPDAuth\Enums\PermissionValue;
 use GPDAuth\Models\ResourcePermission;
 use GPDAuthJWT\Models\UnverifiedJWT;
 use Psr\Http\Message\ServerRequestInterface;
@@ -45,7 +46,9 @@ class JwtUtilities
 
         $permissions = array_map(function (string $scope) {
             $scopeFormated = str_replace('.', ':', strtolower($scope));
-            [$resource, $permissionValue] = explode(':', $scopeFormated, 2);
+            $permissionArray = explode(':', $scopeFormated, 2);
+            $resource = $permissionArray[0];
+            $permissionValue = $permissionArray[1] ?? PermissionValue::ALL->value;
             $permission = new ResourcePermission($resource, PermissionAccess::ALLOW->value, $permissionValue);
             return $permission;
         }, $jwtScopes);

@@ -1,14 +1,12 @@
 <?php
 
-use GPDAuth\Library\AuthConfigKey;
-use GPDAuth\Library\AuthMethod;
-use GPDAuth\Library\JwtAlgorithm;
+use GPDAuth\Enums\JwtAlgorithm;
 
 return [
-    AuthConfigKey::JwtSecureKey->value => "vPW3NTI&0+",
-    AuthConfigKey::AuthSessionKey->value => "gpd_auth_session_key", // key o indice asociativo del array $_SESSION para authentificación
-    AuthConfigKey::JwtExpirationTime->value => 1200, // Tiempo en segundos
-    AuthConfigKey::JwtAlgorithm->value => JwtAlgorithm::HS256->value,
-    AuthConfigKey::AuthMethodKey->value => AuthMethod::SessionOrJwt,
-    AuthConfigKey::AuthIssKey->value => $_SERVER["SERVER_NAME"] ?? "localhost",
+    'gpd_auth_jwt_secure_key' => "vPW3NTI&0+",
+    'gpd_auth_session_key' => "gpd_auth_session_key", // key o indice asociativo del array $_SESSION para authentificación
+    'gpd_auth_jwt_default_expiration_time' => 1200, // Tiempo en segundos
+    'gpd_auth_jwt_algorithm_key' => JwtAlgorithm::HS256->value,
+    'gpd_auth_auth_method_key' => 'SESSION_OR_JWT',
+    'gpd_auth_iss_key' => $_SERVER["SERVER_NAME"] ?? "localhost",
 ];

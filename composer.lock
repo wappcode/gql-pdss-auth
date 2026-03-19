@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2c336c8c95c66ecb726fdecdabb225e3",
+    "content-hash": "b396392b665034b55579e8dc21ab4df8",
     "packages": [
         {
             "name": "firebase/php-jwt",
@@ -280,16 +280,16 @@
         },
         {
             "name": "guzzlehttp/psr7",
-            "version": "2.8.0",
+            "version": "2.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/psr7.git",
-                "reference": "21dc724a0583619cd1652f673303492272778051"
+                "reference": "7d0ed42f28e42d61352a7a79de682e5e67fec884"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/psr7/zipball/21dc724a0583619cd1652f673303492272778051",
-                "reference": "21dc724a0583619cd1652f673303492272778051",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/7d0ed42f28e42d61352a7a79de682e5e67fec884",
+                "reference": "7d0ed42f28e42d61352a7a79de682e5e67fec884",
                 "shasum": ""
             },
             "require": {
@@ -305,6 +305,7 @@
             "require-dev": {
                 "bamarni/composer-bin-plugin": "^1.8.2",
                 "http-interop/http-factory-tests": "0.9.0",
+                "jshttp/mime-db": "1.54.0.1",
                 "phpunit/phpunit": "^8.5.44 || ^9.6.25"
             },
             "suggest": {
@@ -376,7 +377,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/psr7/issues",
-                "source": "https://github.com/guzzle/psr7/tree/2.8.0"
+                "source": "https://github.com/guzzle/psr7/tree/2.9.0"
             },
             "funding": [
                 {
@@ -392,7 +393,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-08-23T21:21:41+00:00"
+            "time": "2026-03-10T16:41:02+00:00"
         },
         {
             "name": "psr/http-client",
@@ -777,6 +778,48 @@
                 }
             ],
             "time": "2024-09-25T14:21:43+00:00"
+        },
+        {
+            "name": "wappcode/pdss-utilities",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/wappcode/pdss-utilities.git",
+                "reference": "6b4fca60afb32a53b3cd02f29ab6534f6f93bafc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/wappcode/pdss-utilities/zipball/6b4fca60afb32a53b3cd02f29ab6534f6f93bafc",
+                "reference": "6b4fca60afb32a53b3cd02f29ab6534f6f93bafc",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "doctrine/dbal": "^4",
+                "doctrine/orm": ">=3.0",
+                "phpunit/phpunit": "^9",
+                "symfony/cache": "^7",
+                "symfony/yaml": "^7"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "PDSSUtilities\\": "PDSSUtilities/src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Utilidades para PHP Doctrine Server Side",
+            "support": {
+                "issues": "https://github.com/wappcode/pdss-utilities/issues",
+                "source": "https://github.com/wappcode/pdss-utilities/tree/master"
+            },
+            "time": "2026-03-10T21:18:24+00:00"
         }
     ],
     "packages-dev": [
@@ -4840,12 +4883,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/wappcode/gql-pdss-lib.git",
-                "reference": "8b09882557b54bf0ece32ed25d65d4d70b1ab1f0"
+                "reference": "9566be5b07ad18d8456be30a6f4868da8558722c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wappcode/gql-pdss-lib/zipball/8b09882557b54bf0ece32ed25d65d4d70b1ab1f0",
-                "reference": "8b09882557b54bf0ece32ed25d65d4d70b1ab1f0",
+                "url": "https://api.github.com/repos/wappcode/gql-pdss-lib/zipball/9566be5b07ad18d8456be30a6f4868da8558722c",
+                "reference": "9566be5b07ad18d8456be30a6f4868da8558722c",
                 "shasum": ""
             },
             "require": {
@@ -4899,7 +4942,7 @@
                 "issues": "https://github.com/wappcode/gql-pdss-lib/issues",
                 "source": "https://github.com/wappcode/gql-pdss-lib/tree/master"
             },
-            "time": "2026-03-06T22:05:36+00:00"
+            "time": "2026-03-10T21:25:39+00:00"
         },
         {
             "name": "wappcode/graphql-basic-client",
@@ -4930,48 +4973,6 @@
                 "source": "https://github.com/wappcode/graphql-basic-client/tree/1.0.5"
             },
             "time": "2026-01-30T05:19:29+00:00"
-        },
-        {
-            "name": "wappcode/pdss-utilities",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/wappcode/pdss-utilities.git",
-                "reference": "01ddf33b531dbe9752e890c05d09e2926cf68cfd"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/wappcode/pdss-utilities/zipball/01ddf33b531dbe9752e890c05d09e2926cf68cfd",
-                "reference": "01ddf33b531dbe9752e890c05d09e2926cf68cfd",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.0"
-            },
-            "require-dev": {
-                "doctrine/dbal": "^4",
-                "doctrine/orm": ">=3.0",
-                "phpunit/phpunit": "^9",
-                "symfony/cache": "^7",
-                "symfony/yaml": "^7"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "PDSSUtilities\\": "PDSSUtilities/src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Utilidades para PHP Doctrine Server Side",
-            "support": {
-                "issues": "https://github.com/wappcode/pdss-utilities/issues",
-                "source": "https://github.com/wappcode/pdss-utilities/tree/master"
-            },
-            "time": "2026-03-06T20:45:27+00:00"
         },
         {
             "name": "webonyx/graphql-php",

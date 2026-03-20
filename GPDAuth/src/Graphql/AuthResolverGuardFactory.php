@@ -7,12 +7,13 @@ use GPDAuth\Library\NoSignedException;
 use GPDAuth\Contracts\AuthenticatedUserInterface;
 use GPDAuth\Contracts\AuthServiceInterface;
 use GPDCore\Contracts\AppContextInterface;
+use GPDCore\Contracts\ResolverMiddlewareInterface;
 use GPDCore\Graphql\ResolverWrapperMiddleware;
 use Psr\Http\Message\ServerRequestInterface;
 
 class AuthResolverGuardFactory
 {
-    public static function requireAuthenticated(?string $identifier = null): ResolverWrapperMiddleware
+    public static function requireAuthenticated(?string $identifier = null): ResolverMiddlewareInterface
     {
         $proxy = fn($resolver) => function ($root, $args, $context, $info) use ($resolver, $identifier) {
             $user = static::getAuthenticatedUser($context, $identifier);
@@ -23,7 +24,7 @@ class AuthResolverGuardFactory
         };
         return new ResolverWrapperMiddleware($proxy);
     }
-    public static function requireRole(string $role, ?string $identifier = null): ResolverWrapperMiddleware
+    public static function requireRole(string $role, ?string $identifier = null): ResolverMiddlewareInterface
     {
         $proxy = fn($resolver) => function ($root, $args, $context, $info) use ($resolver, $role, $identifier) {
             $user = static::getAuthenticatedUser($context, $identifier);
@@ -38,7 +39,7 @@ class AuthResolverGuardFactory
         return new ResolverWrapperMiddleware($proxy);
     }
 
-    public static function requireAnyRole(array $roles, ?string $identifier = null): ResolverWrapperMiddleware
+    public static function requireAnyRole(array $roles, ?string $identifier = null): ResolverMiddlewareInterface
     {
         $proxy = fn($resolver) => function ($root, $args, $context, $info) use ($resolver, $roles, $identifier) {
             $user = static::getAuthenticatedUser($context, $identifier);
@@ -53,7 +54,7 @@ class AuthResolverGuardFactory
         return new ResolverWrapperMiddleware($proxy);
     }
 
-    public static function requireAllRoles(array $roles, ?string $identifier = null): ResolverWrapperMiddleware
+    public static function requireAllRoles(array $roles, ?string $identifier = null): ResolverMiddlewareInterface
     {
         $proxy = fn($resolver) => function ($root, $args, $context, $info) use ($resolver, $roles, $identifier) {
             $user = static::getAuthenticatedUser($context, $identifier);
@@ -68,7 +69,7 @@ class AuthResolverGuardFactory
         return new ResolverWrapperMiddleware($proxy);
     }
 
-    public static function requirePermission(string $resource, string $permission, ?string $scope = null, ?string $identifier = null): ResolverWrapperMiddleware
+    public static function requirePermission(string $resource, string $permission, ?string $scope = null, ?string $identifier = null): ResolverMiddlewareInterface
     {
         $proxy = fn($resolver) => function ($root, $args, $context, $info) use ($resolver, $resource, $permission, $scope, $identifier) {
             $user = static::getAuthenticatedUser($context, $identifier);
@@ -82,7 +83,7 @@ class AuthResolverGuardFactory
         };
         return new ResolverWrapperMiddleware($proxy);
     }
-    public static function requireAnyPermission(array $resources, array $permissions, ?array $scopes = null, ?string $identifier = null): ResolverWrapperMiddleware
+    public static function requireAnyPermission(array $resources, array $permissions, ?array $scopes = null, ?string $identifier = null): ResolverMiddlewareInterface
     {
         $proxy = fn($resolver) => function ($root, $args, $context, $info) use ($resolver, $resources, $permissions, $scopes, $identifier) {
             $user = static::getAuthenticatedUser($context, $identifier);
@@ -97,7 +98,7 @@ class AuthResolverGuardFactory
         return new ResolverWrapperMiddleware($proxy);
     }
 
-    public static function requireAllPermissions(array $resources, array $permissions, ?array $scopes = null, ?string $identifier = null): ResolverWrapperMiddleware
+    public static function requireAllPermissions(array $resources, array $permissions, ?array $scopes = null, ?string $identifier = null): ResolverMiddlewareInterface
     {
         $proxy = fn($resolver) => function ($root, $args, $context, $info) use ($resolver, $resources, $permissions, $scopes, $identifier) {
             $user = static::getAuthenticatedUser($context, $identifier);

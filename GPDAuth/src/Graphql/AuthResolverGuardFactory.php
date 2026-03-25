@@ -126,8 +126,9 @@ class AuthResolverGuardFactory
         if ($user instanceof AuthenticatedUserInterface) {
             return $user;
         }
+        $serviceManager = $context->getServiceManager();
         /** @var AuthServiceInterface|null */
-        $authService = $context->getServiceManager()?->get(AuthServiceInterface::class);
+        $authService = $serviceManager?->has(AuthServiceInterface::class) ? $serviceManager->get(AuthServiceInterface::class) : null;
         $user = $authService?->getAuthenticatedUser();
         return $user;
     }

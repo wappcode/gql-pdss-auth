@@ -53,7 +53,7 @@ class AuthenticatedUser extends AbstractAuthenticatedUser implements Authenticat
         if (!empty($scopeFormated) && $scopeFormated != $permissionScopeFormated) {
             return false;
         }
-        return $permission->getAccess() === PermissionAccess::ALLOW;
+        return strtolower($permission->getAccess()) === strtolower(PermissionAccess::ALLOW->value);
     }
     /**
      * Determina si el usuario tiene algun permiso para alguno de los recursos

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d1183ca87577a2b3620ce8a62a92f334",
+    "content-hash": "f089047fdbd061809cc74d898723f23f",
     "packages": [
         {
             "name": "firebase/php-jwt",
@@ -4882,12 +4882,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/wappcode/gql-pdss-lib.git",
-                "reference": "fe2f224bee57c48443a9b14791167c52a07fefaa"
+                "reference": "76d9bcadeb99cd65b723dd634b69487c26fa7b2d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wappcode/gql-pdss-lib/zipball/fe2f224bee57c48443a9b14791167c52a07fefaa",
-                "reference": "fe2f224bee57c48443a9b14791167c52a07fefaa",
+                "url": "https://api.github.com/repos/wappcode/gql-pdss-lib/zipball/76d9bcadeb99cd65b723dd634b69487c26fa7b2d",
+                "reference": "76d9bcadeb99cd65b723dd634b69487c26fa7b2d",
                 "shasum": ""
             },
             "require": {
@@ -4939,22 +4939,22 @@
             "description": "Utilidades para crear una api GraphQL",
             "support": {
                 "issues": "https://github.com/wappcode/gql-pdss-lib/issues",
-                "source": "https://github.com/wappcode/gql-pdss-lib/tree/5.0.1"
+                "source": "https://github.com/wappcode/gql-pdss-lib/tree/5.1.0"
             },
-            "time": "2026-03-18T16:04:09+00:00"
+            "time": "2026-03-20T01:50:47+00:00"
         },
         {
             "name": "wappcode/graphql-basic-client",
-            "version": "1.0.5",
+            "version": "1.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/wappcode/graphql-basic-client.git",
-                "reference": "3124407c1885254f3f4c26d4293c3f234b0ac99c"
+                "reference": "1cad15ef91e5a881fa2777584ed853a1d3558190"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/wappcode/graphql-basic-client/zipball/3124407c1885254f3f4c26d4293c3f234b0ac99c",
-                "reference": "3124407c1885254f3f4c26d4293c3f234b0ac99c",
+                "url": "https://api.github.com/repos/wappcode/graphql-basic-client/zipball/1cad15ef91e5a881fa2777584ed853a1d3558190",
+                "reference": "1cad15ef91e5a881fa2777584ed853a1d3558190",
                 "shasum": ""
             },
             "require-dev": {
@@ -4969,22 +4969,22 @@
             "notification-url": "https://packagist.org/downloads/",
             "support": {
                 "issues": "https://github.com/wappcode/graphql-basic-client/issues",
-                "source": "https://github.com/wappcode/graphql-basic-client/tree/1.0.5"
+                "source": "https://github.com/wappcode/graphql-basic-client/tree/1.0.6"
             },
-            "time": "2026-01-30T05:19:29+00:00"
+            "time": "2026-03-18T20:16:16+00:00"
         },
         {
             "name": "webonyx/graphql-php",
-            "version": "v15.31.1",
+            "version": "v15.31.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webonyx/graphql-php.git",
-                "reference": "8b446b55a30680f105eb5c4d25ccbc015926d398"
+                "reference": "b2c3b02f9151afeba7ab79580e89992ac0ad4fec"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webonyx/graphql-php/zipball/8b446b55a30680f105eb5c4d25ccbc015926d398",
-                "reference": "8b446b55a30680f105eb5c4d25ccbc015926d398",
+                "url": "https://api.github.com/repos/webonyx/graphql-php/zipball/b2c3b02f9151afeba7ab79580e89992ac0ad4fec",
+                "reference": "b2c3b02f9151afeba7ab79580e89992ac0ad4fec",
                 "shasum": ""
             },
             "require": {
@@ -5002,7 +5002,7 @@
                 "nyholm/psr7": "^1.5",
                 "phpbench/phpbench": "^1.2",
                 "phpstan/extension-installer": "^1.1",
-                "phpstan/phpstan": "2.1.40",
+                "phpstan/phpstan": "2.1.42",
                 "phpstan/phpstan-phpunit": "2.0.16",
                 "phpstan/phpstan-strict-rules": "2.0.10",
                 "phpunit/phpunit": "^9.5 || ^10.5.21 || ^11",
@@ -5038,7 +5038,7 @@
             ],
             "support": {
                 "issues": "https://github.com/webonyx/graphql-php/issues",
-                "source": "https://github.com/webonyx/graphql-php/tree/v15.31.1"
+                "source": "https://github.com/webonyx/graphql-php/tree/v15.31.2"
             },
             "funding": [
                 {
@@ -5050,7 +5050,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2026-03-16T15:32:01+00:00"
+            "time": "2026-03-23T07:32:52+00:00"
         }
     ],
     "aliases": [],

@@ -126,7 +126,7 @@ class AuthenticatedUser extends AbstractAuthenticatedUser implements Authenticat
     /**
      * Localiza un determinado permiso con acceso autorizado
      * Los permisos con acceso denegado retornan null
-     *
+     * Los valores y access de los permisos se comparan sin considerar mayusculas o minusculas
      * @param string $resource
      * @param string $permissionValue
      * @return ResourcePermission|null
@@ -135,15 +135,17 @@ class AuthenticatedUser extends AbstractAuthenticatedUser implements Authenticat
     {
         $result = null;
         $permissions = $this->getPermissions() ?? [];
+        $permissionValueFormated = strtolower($permissionValue);
         /** @var ResourcePermission */
         foreach ($permissions as $permission) {
+            $permisionVF = strtolower($permission->getValue());
             if (
                 $resource != $permission->getResource() ||
-                ($permissionValue != $permission->getValue() &&
-                    $permission->getValue() != PermissionValue::ALL
+                ($permissionValueFormated != $permisionVF &&
+                    $permisionVF != strtolower(PermissionValue::ALL->value)
                 )
             ) continue;
-            if ($permission->getAccess() == PermissionAccess::ALLOW) {
+            if (strtolower($permission->getAccess()) == strtolower(PermissionAccess::ALLOW->value)) {
                 return $permission;
             } else {
                 return null;

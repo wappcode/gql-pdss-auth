@@ -67,14 +67,15 @@ class ApiConsumerRepository implements ApiConsumerRepositoryInterface
         $consumerPermissions = $consumer->getPermissions();
         /** @var ResourcePermission */
         foreach ($permissions as $permission) {
-
-            if ($permission->getAccess() === PermissionAccess::DENY) {
+            $accessFormated = strtolower($permission->getAccess());
+            if ($accessFormated === strtolower(PermissionAccess::DENY->value)) {
                 continue;
             }
-            $resource = $permission->getResource();
+
+            $resource = strtolower($permission->getResource());
 
             $consumerPermission = $consumerPermissions->filter(function ($perm) use ($resource) {
-                return $perm->getResourceCode() === $resource;
+                return strtolower($perm->getResourceCode()) === $resource;
             });
 
             if (!($consumerPermission instanceof ApiConsumerPermission)) {
@@ -82,7 +83,7 @@ class ApiConsumerRepository implements ApiConsumerRepositoryInterface
             }
             $consumerPermission = strtolower($permission->getValue());
             $permissionValue = strtolower($permission->getValue());
-            if ($consumerPermission === PermissionValue::ALL || $consumerPermission === $permissionValue) {
+            if ($consumerPermission === strtolower(PermissionValue::ALL->value) || $consumerPermission === $permissionValue) {
                 $validPermissions[] = $permission;
             }
         }

@@ -76,7 +76,7 @@ class ApiConsumerRepository implements ApiConsumerRepositoryInterface
 
             $consumerPermission = $consumerPermissions->filter(function ($perm) use ($resource) {
                 return strtolower($perm->getResourceCode()) === $resource;
-            });
+            })->first();
 
             if (!($consumerPermission instanceof ApiConsumerPermission)) {
                 continue; // No tiene permiso para este recurso

@@ -2,8 +2,8 @@
 
 namespace GPDAuth\Library;
 
+use GPDCore\Exceptions\GQLException;
 use Throwable;
-use GPDCore\Library\GQLException;
 
 class NoAuthorizedException extends GQLException
 {

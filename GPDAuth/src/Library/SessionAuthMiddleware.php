@@ -1,11 +1,11 @@
 <?php
-// src/Middleware/JwtAuthMiddleware.php
+// src/Library/SessionAuthMiddleware.php
 
-namespace App\Middleware;
+namespace GPDAuth\Library;
 
 
-use GPDAuth\Library\NoSignedException;
-use GPDAuth\Contracts\UserRepositoryInterface;
+use GPDAuth\Contracts\AuthenticatedUserInterface;
+use GPDAuthJWT\Contracts\SessionAuthenticatorInterface;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -22,9 +22,9 @@ class SessionAuthMiddleware implements MiddlewareInterface
      * @param boolean $exitUnAuthorized
      */
     public function __construct(
-        private UserRepositoryInterface $userRepository,
+        private SessionAuthenticatorInterface $sessionAuthenticator,
         private string $sessionKey = 'gpdauth_session_id',
-        private string $identityKey = 'identity',
+        private string $identityKey = AuthenticatedUserInterface::class,
         private bool $exitUnAuthorized = true,
 
     ) {}
@@ -36,14 +36,7 @@ class SessionAuthMiddleware implements MiddlewareInterface
 
 
         try {
-            $userId = $_SESSION[$this->sessionKey]["identifier"] ?? null;
-            if ($userId === null) {
-                throw new NoSignedException();
-            }
-            $authenticatedUser = $this->userRepository->findById($userId);
-            if ($authenticatedUser === null) {
-                throw new NoSignedException();
-            }
+            $authenticatedUser = $this->sessionAuthenticator->authenticate($this->sessionKey);
             return $handler->handle(
                 $request->withAttribute($this->identityKey, $authenticatedUser)
             );

@@ -124,9 +124,9 @@ class ResourcePermission
     }
 
     /**
-     * Get [string]
+     * Get 
      *
-     * @return  array
+     * @return  ?string
      */
     public function getScope()
     {
@@ -134,13 +134,13 @@ class ResourcePermission
     }
 
     /**
-     * Set [string]
+     * Set 
      *
-     * @param  array  $scope  [string]
+     * @param  ?string  $scope 
      *
      * @return  self
      */
-    public function setScope(array $scope)
+    public function setScope(?string $scope)
     {
         $this->scope = $scope;
 

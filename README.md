@@ -12,6 +12,7 @@ Librería completa de autenticación y autorización para aplicaciones con WAppC
 - [Protección de Resolvers GraphQL](#-protección-de-resolvers-graphql)
 - [Middleware de Autenticación](#-middleware-de-autenticación)
 - [JWT Authentication](#-jwt-authentication)
+- [MUY IMPORTANTE: Unicidad de Username](#-muy-importante-unicidad-de-username)
 - [API Reference](#-api-reference)
 
 ## 🚀 Instalación
@@ -41,8 +42,8 @@ return [
             'collation' => 'utf8mb4_unicode_ci'
         ],
         "entity_paths" => [
-            realpath(__DIR__ . "/../../dev/modules/AppModule/Entities"),
-            realpath(__DIR__ . "/../../vendor/wappcode/gql-pdss-auth/GPDAuth/src/Entities"),
+           "GPDAuth\Entities"=> realpath(__DIR__ . "/../vendor/wappcode/gql-pdss-auth/GPDAuth/src/Entities"),
+            "GPDAuthJWT\Entities"=> realpath(__DIR__ . "/../vendor/wappcode/gql-pdss-auth/GPDAuthJWT/src/Entities"),
         ]
     ]
 ];
@@ -50,13 +51,10 @@ return [
 
 ### 3. Crear Esquema de Base de Datos
 
-**Opción A: CLI de Doctrine**
+**CLI de Doctrine**
 ```bash
 vendor/bin/doctrine orm:schema-tool:create
 ```
-
-**Opción B: Script SQL**
-Ejecute el archivo SQL incluido: `sql/gpd_auth.sql`
 
 ## ⚙️ Configuración Básica
 
@@ -109,7 +107,7 @@ $authService = $context->getServiceManager()->get(AuthServiceInterface::class);
 
 // Login
 try {
-    $authService->login('username', 'password', 'local_user');
+    $authService->login('username', 'password');
     echo "Login exitoso";
 } catch (Exception $e) {
     echo "Error: " . $e->getMessage();
@@ -170,7 +168,7 @@ use GPDAuth\Contracts\AuthServiceInterface;
 $auth = $context->getServiceManager()->get(AuthServiceInterface::class);
 
 // Autenticación
-$auth->login(string $username, string $password, string $grantType): void;
+$auth->login(string $username, string $password): void;
 $auth->logout(): void;
 $user = $auth->getAuthenticatedUser(): ?AuthenticatedUserInterface;
 ```
@@ -190,7 +188,7 @@ public static function createLoginResolve(): callable
         $auth = $context->getServiceManager()->get(AuthServiceInterface::class);
         
         try {
-            $auth->login($username, $password, AuthenticatedUserType::LOCAL_USER->value);
+            $auth->login($username, $password);
             $user = $auth->getAuthenticatedUser();
             
             return [
@@ -397,10 +395,91 @@ $app->addModules([
 ]);
 ```
 
+Internamente, `GPDAuthJWT` ahora centraliza la autenticación del token en un autenticador dedicado. El middleware JWT delega la validación, la resolución del usuario y la extracción del payload en `JWTAuthenticator`, expuesto mediante la interfaz `JWTAuthenticatorInterface`.
+
+### Flujo de autenticación JWT
+
+El flujo actual es:
+
+1. `JwtAuthMiddleware` extrae el bearer token desde la request.
+2. `JWTAuthenticatorInterface::authenticate(string $jwt)` valida firma, issuer, audience, expiración y tipo de token.
+3. El autenticador resuelve el usuario autenticado humano o M2M.
+4. El resultado se devuelve como un `AuthenticationResult`.
+5. El middleware inyecta en la request:
+   - `AuthenticatedUserInterface::class` con el usuario autenticado
+   - `jwt_payload` con el payload ya validado
+
+### Acceso al resultado de autenticación JWT
+
+```php
+<?php
+use GPDAuth\Contracts\AuthenticatedUserInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+$request = $context->getContextAttribute(ServerRequestInterface::class);
+
+$user = $request->getAttribute(AuthenticatedUserInterface::class);
+$jwtPayload = $request->getAttribute('jwt_payload');
+
+if ($user instanceof AuthenticatedUserInterface) {
+    echo $user->getUsername();
+}
+
+if (is_array($jwtPayload)) {
+    echo $jwtPayload['iss'] ?? '';
+}
+```
+
+### Contrato del autenticador JWT
+
+```php
+<?php
+use GPDAuthJWT\Contracts\JWTAuthenticatorInterface;
+use GPDAuthJWT\DTO\AuthenticationResult;
+
+interface JWTAuthenticatorInterface
+{
+    public function authenticate(string $jwt): AuthenticationResult;
+}
+```
+
+### DTO AuthenticationResult
+
+El DTO `AuthenticationResult` encapsula el resultado completo de la autenticación JWT:
+
+```php
+<?php
+use GPDAuth\Contracts\AuthenticatedUserInterface;
+
+final class AuthenticationResult
+{
+    public function getAuthenticatedUser(): AuthenticatedUserInterface;
+    public function getPayload(): array;
+    public function getHeader(): array;
+}
+```
+
 ### JWT vs Session
 
 - **Session Auth**: Usa sesiones PHP, ideal para aplicaciones web tradicionales
 - **JWT Auth**: Tokens sin estado, ideal para APIs y aplicaciones SPA/móviles
+
+## ⚠️ MUY IMPORTANTE: Unicidad de Username
+
+Esta advertencia aplica al metodo `getUsername()` de `AuthenticatedUserInterface`, NO al campo `username` de la entidad `User`.
+
+En esta libreria, el valor devuelto por `AuthenticatedUserInterface::getUsername()` NO debe tratarse como identificador global unico del usuario.
+
+La entidad `User` (autenticacion local) mantiene su propia regla de unicidad para `username` en base de datos.
+
+- En escenarios JWT con multiples identity providers, el username puede repetirse entre emisores.
+- En Keycloak, por ejemplo, `sub` suele ser un UUID interno estable y `preferred_username` es el login visible.
+- Para identificar un principal de forma unica y estable, use `getId()`.
+
+Recomendacion operativa:
+
+- Use `getId()` para llaves de negocio, auditoria, correlacion de eventos y relaciones persistentes.
+- Use `getUsername()` solo para presentacion, UX, logs funcionales o trazabilidad humana.
 
 ### OAuth 2.0 Client Credentials
 
@@ -438,7 +517,7 @@ RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
 ```php
 interface AuthServiceInterface
 {
-    public function login(string $username, string $password, string $grantType);
+    public function login(string $username, string $password);
     public function logout(): void;
     public function getAuthenticatedUser(): ?AuthenticatedUserInterface;
 }
@@ -464,6 +543,24 @@ interface AuthenticatedUserInterface
     public function hasPermission(string $resource, string $permission, ?string $scope = null): bool;
     public function hasAnyPermission(array $resources, array $permission, ?array $scopes = null): bool;
     public function hasAllPermissions(array $resources, array $permission, ?array $scopes = null): bool;
+}
+```
+
+#### JWTAuthenticatorInterface
+```php
+interface JWTAuthenticatorInterface
+{
+    public function authenticate(string $jwt): AuthenticationResult;
+}
+```
+
+#### AuthenticationResult
+```php
+final class AuthenticationResult
+{
+    public function getAuthenticatedUser(): AuthenticatedUserInterface;
+    public function getPayload(): array;
+    public function getHeader(): array;
 }
 ```
 
@@ -493,7 +590,7 @@ type AuthenticatedUser {
 
 ```php
 <?php
-// Tipos de usuario
+// GPDAuth\Enums\AuthenticatedUserType
 enum AuthenticatedUserType: string
 {
     case API_CLIENT = 'api_client';
@@ -501,13 +598,59 @@ enum AuthenticatedUserType: string
     case EXTERN_USER = 'extern_user';
 }
 
-// Métodos de autenticación
-enum AuthMethod: string
+// GPDAuthJWT\Enums\ApiConsumerStatus
+enum ApiConsumerStatus: string
 {
-    case Session = 'SESSION';
-    case Jwt = 'JWT';
-    case JwtOrSession = 'JWT_OR_SESSION';
-    case SessionOrJwt = 'SESSION_OR_JWT';
+    case ACTIVE = 'active';
+    case REVOKED = 'revoked';
+    case SUSPENDED = 'suspended';
+}
+
+enum PermissionAccess: string
+{
+    case ALLOW = 'allow';
+    case DENY = 'deny';
+}
+
+enum PermissionValue: string
+{
+    case ALL = 'all';
+    case VIEW = 'view';
+    case CREATE = 'create';
+    case UPDATE = 'update';
+    case DELETE = 'delete';
+    case UPLOAD = 'upload';
+    case DOWNLOAD = 'download';
+}
+
+enum AuthenticationType: string
+{
+    case SESSION = 'session';
+    case ACCESS_TOKEN = 'access_token';
+    case REFRESH_TOKEN = 'refresh_token';
+    case NONE = 'none';
+}
+
+enum HashAlgorithm: string
+{
+    case Argon2id = 'argon2id';
+    case Bcrypt = 'bcrypt';
+    case Sha256 = 'sha256';
+    case Sha1 = 'sha1';
+    case Md5 = 'md5';
+}
+
+enum JwtAlgorithm: string
+{
+    case HS256 = 'HS256';
+    case HS384 = 'HS384';
+    case HS512 = 'HS512';
+    case RS256 = 'RS256';
+    case RS384 = 'RS384';
+    case RS512 = 'RS512';
+    case ES256 = 'ES256';
+    case ES384 = 'ES384';
+    case ES256K = 'ES256K';
 }
 ```
 
@@ -515,12 +658,22 @@ enum AuthMethod: string
 
 La librería incluye las siguientes entidades Doctrine:
 
-- **User**: usuarios del sistema
+**GPDAuth (módulo base)**
+
+- **User**: usuarios del sistema con autenticación local
 - **Role**: roles asignables a usuarios
-- **Resource**: recursos protegidos
-- **Permission**: permisos específicos sobre recursos
-- **ApiConsumer**: clientes API para JWT
-- **TrustedIssuer**: emisores JWT confiables
+- **Resource**: recursos protegidos del sistema
+- **Permission**: permisos específicos sobre recursos con soporte de scope
+
+**GPDAuthJWT (módulo JWT)**
+
+- **ApiConsumer**: clientes API para autenticación machine-to-machine (M2M)
+- **ApiConsumerPermission**: permisos asignados a un cliente API sobre recursos concretos
+- **ApiConsumerRoleMapping**: mapeo de roles externos del cliente API a roles internos del sistema
+- **JWTKey**: claves criptográficas (pública/privada) para firma y verificación de JWTs
+- **TrustedIssuer**: emisores JWT externos de confianza (p.ej. Keycloak, Auth0)
+- **TrustedIssuerAudience**: audiencias (`aud`) válidas permitidas por cada emisor de confianza
+- **TrustedIssuerRoleMapping**: mapeo de roles externos del emisor a roles internos del sistema
 
 ---
 
@@ -602,21 +755,12 @@ $userRepository = new UserRepository($entityManager);
 $authService = new AuthSessionService($userRepository);
 
 // Uso del servicio
-$authService->login('username', 'password', 'local_user');
+$authService->login('username', 'password');
 $user = $authService->getAuthenticatedUser();
 ```
 
 Este sistema de autenticación proporciona una base sólida y flexible para manejar la seguridad en aplicaciones PHP modernas con GraphQL y REST APIs.
 
-## 🤝 Contribución
-
-Para contribuir al proyecto:
-
-1. Fork el repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/amazing-feature`)
-3. Commit tus cambios (`git commit -m 'Add some amazing feature'`)
-4. Push a la rama (`git push origin feature/amazing-feature`)
-5. Abre un Pull Request
 
 ## 📄 Licencia
 

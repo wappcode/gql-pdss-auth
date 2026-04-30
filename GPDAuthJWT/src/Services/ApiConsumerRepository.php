@@ -4,11 +4,12 @@
 namespace GPDAuthJWT\Services;
 
 use Doctrine\ORM\EntityManager;
-use GPDAuth\Entities\PermissionAccess;
-use GPDAuth\Entities\PermissionValue;
+use GPDAuth\Enums\PermissionAccess;
+use GPDAuth\Enums\PermissionValue;
 use GPDAuthJWT\Entities\ApiConsumer;
 use GPDAuthJWT\Contracts\ApiConsumerRepositoryInterface;
-use GPDAuthJWT\Entities\ApiPermission;
+use GPDAuthJWT\Entities\ApiConsumerPermission;
+use GPDAuthJWT\Entities\ApiConsumerRoleMapping;
 use GPDAuthJWT\Library\JwtUtilities;
 
 class ApiConsumerRepository implements ApiConsumerRepositoryInterface
@@ -38,8 +39,17 @@ class ApiConsumerRepository implements ApiConsumerRepositoryInterface
         if (isset($this->trustedConsumersCache[$identifier])) {
             return $this->trustedConsumersCache[$identifier];
         }
+        $qb = $this->entityManager->createQueryBuilder()->from(ApiConsumer::class, 'ac')
+            ->leftJoin('ac.permissions', 'p')
+            ->leftJoin('ac.roleMappings', 'r')
+            ->select(['ac', 'p', 'r'])
+            ->where('ac.identifier = :identifier')
+            ->andWhere('ac.status = :status')
+            ->setParameter('identifier', $identifier)
+            ->setParameter('status', 'active')
+            ->setMaxResults(1);
         /** @var ApiConsumer | null */
-        $consumer = $this->entityManager->getRepository(ApiConsumer::class)->findOneBy(['identifier' => $identifier]);
+        $consumer = $qb->getQuery()->getOneOrNullResult();
         if ($consumer && $consumer->isActive()) {
             $this->trustedConsumersCache[$identifier] = $consumer;
         }
@@ -57,22 +67,23 @@ class ApiConsumerRepository implements ApiConsumerRepositoryInterface
         $consumerPermissions = $consumer->getPermissions();
         /** @var ResourcePermission */
         foreach ($permissions as $permission) {
-
-            if ($permission->getAccess() === PermissionAccess::DENY) {
+            $accessFormated = strtolower($permission->getAccess());
+            if ($accessFormated === strtolower(PermissionAccess::DENY->value)) {
                 continue;
             }
-            $resource = $permission->getResource();
+
+            $resource = strtolower($permission->getResource());
 
             $consumerPermission = $consumerPermissions->filter(function ($perm) use ($resource) {
-                return $perm->getResource()->getCode() === $resource;
-            });
+                return strtolower($perm->getResourceCode()) === $resource;
+            })->first();
 
-            if (!($consumerPermission instanceof ApiPermission)) {
+            if (!($consumerPermission instanceof ApiConsumerPermission)) {
                 continue; // No tiene permiso para este recurso
             }
             $consumerPermission = strtolower($permission->getValue());
             $permissionValue = strtolower($permission->getValue());
-            if ($consumerPermission === PermissionValue::ALL || $consumerPermission === $permissionValue) {
+            if ($consumerPermission === strtolower(PermissionValue::ALL->value) || $consumerPermission === $permissionValue) {
                 $validPermissions[] = $permission;
             }
         }
@@ -89,12 +100,20 @@ class ApiConsumerRepository implements ApiConsumerRepositoryInterface
         $clientId = $payload['azp'] ?? $payload['client_id'] ?? null;
         return $clientId;
     }
-    public function isM2mToken(array $payload): bool
+
+    public function getAllowedRolesForIssuer(string $consumerId, array $roles): array
     {
-        $isM2M =
-            ($payload['gty'] ?? null) === 'client-credentials'
-            || isset($payload['client_id'])
-            || (isset($payload['azp']) && $payload['sub'] === $payload['azp']);
-        return $isM2M;
+        $allowedRoles = [];
+        $consumer = $this->getConsumer($consumerId);
+        if (!$consumer) {
+            return $allowedRoles;
+        }
+        /** @var ApiConsumerRoleMapping $role */
+        foreach ($consumer->getRoleMappings() as $role) {
+            if (in_array($role->getExternalRoleCode(), $roles)) {
+                $allowedRoles[] = $role->getInternalRoleCode();
+            }
+        }
+        return $allowedRoles;
     }
 }

@@ -8,9 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use GPDAuth\Entities\Role;
 use GPDAuth\Entities\User;
 use GPDAuth\Entities\Resource;
-use GPDCore\Entities\AbstractEntityModel;
-
-
+use PDSSUtilities\AbstractEntityModel;
 
 #[ORM\Entity()]
 #[ORM\Table(name: "gpd_auth_permissions")]

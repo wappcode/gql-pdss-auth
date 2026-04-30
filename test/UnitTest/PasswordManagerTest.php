@@ -2,7 +2,7 @@
 
 use PHPUnit\Framework\TestCase;
 use GPDAuth\Library\PasswordManager;
-use GPDAuth\Library\HashAlgorithm;
+use GPDAuth\Enums\HashAlgorithm;
 
 class PasswordManagerTest extends TestCase
 {
@@ -15,12 +15,12 @@ class PasswordManagerTest extends TestCase
     public function testEncodeWithArgon2id()
     {
         $hash = PasswordManager::encode($this->testPassword);
-        
+
         // Argon2id hashes should start with $argon2id$
         $this->assertStringStartsWith('$argon2id$', $hash);
         $this->assertNotEmpty($hash);
         $this->assertNotEquals($this->testPassword, $hash);
-        
+
         // Each call should generate a different hash due to salt randomization
         $hash2 = PasswordManager::encode($this->testPassword);
         $this->assertNotEquals($hash, $hash2);
@@ -32,7 +32,7 @@ class PasswordManagerTest extends TestCase
     public function testEncodeWithExplicitArgon2id()
     {
         $hash = PasswordManager::encode($this->testPassword, null, HashAlgorithm::Argon2id);
-        
+
         $this->assertStringStartsWith('$argon2id$', $hash);
         $this->assertTrue(password_verify($this->testPassword, $hash));
     }
@@ -47,9 +47,9 @@ class PasswordManagerTest extends TestCase
             'time_cost' => 2,
             'threads' => 2
         ];
-        
+
         $hash = PasswordManager::encode($this->testPassword, null, HashAlgorithm::Argon2id, $options);
-        
+
         $this->assertStringStartsWith('$argon2id$', $hash);
         $this->assertTrue(password_verify($this->testPassword, $hash));
     }
@@ -60,7 +60,7 @@ class PasswordManagerTest extends TestCase
     public function testEncodeWithBcrypt()
     {
         $hash = PasswordManager::encode($this->testPassword, null, HashAlgorithm::Bcrypt);
-        
+
         // Bcrypt hashes should start with $2y$
         $this->assertStringStartsWith('$2y$', $hash);
         $this->assertTrue(password_verify($this->testPassword, $hash));
@@ -72,9 +72,9 @@ class PasswordManagerTest extends TestCase
     public function testEncodeWithBcryptCustomOptions()
     {
         $options = ['cost' => 10];
-        
+
         $hash = PasswordManager::encode($this->testPassword, null, HashAlgorithm::Bcrypt, $options);
-        
+
         $this->assertStringStartsWith('$2y$', $hash);
         $this->assertStringContainsString('$10$', $hash); // Cost should be included in hash
         $this->assertTrue(password_verify($this->testPassword, $hash));
@@ -86,7 +86,7 @@ class PasswordManagerTest extends TestCase
     public function testEncodeWithSHA256()
     {
         $hash = PasswordManager::encode($this->testPassword, $this->testSalt, HashAlgorithm::Sha256);
-        
+
         $this->assertEquals(64, strlen($hash)); // SHA256 produces 64 character hash
         $this->assertEquals(hash('sha256', $this->testPassword . $this->testSalt), $hash);
     }
@@ -97,7 +97,7 @@ class PasswordManagerTest extends TestCase
     public function testEncodeWithSHA1()
     {
         $hash = PasswordManager::encode($this->testPassword, $this->testSalt, HashAlgorithm::Sha1);
-        
+
         $this->assertEquals(40, strlen($hash)); // SHA1 produces 40 character hash
         $this->assertEquals(hash('sha1', $this->testPassword . $this->testSalt), $hash);
     }
@@ -108,7 +108,7 @@ class PasswordManagerTest extends TestCase
     public function testEncodeWithMD5()
     {
         $hash = PasswordManager::encode($this->testPassword, $this->testSalt, HashAlgorithm::Md5);
-        
+
         $this->assertEquals(32, strlen($hash)); // MD5 produces 32 character hash
         $this->assertEquals(hash('md5', $this->testPassword . $this->testSalt), $hash);
     }
@@ -120,7 +120,7 @@ class PasswordManagerTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Algoritmo de hash no soportado: unsupported');
-        
+
         PasswordManager::encode($this->testPassword, null, 'unsupported');
     }
 
@@ -130,13 +130,13 @@ class PasswordManagerTest extends TestCase
     public function testVerifyArgon2id()
     {
         $hash = PasswordManager::encode($this->testPassword, null, HashAlgorithm::Argon2id);
-        
+
         // Correct password should verify
         $this->assertTrue(PasswordManager::verify($this->testPassword, $hash));
-        
+
         // Wrong password should fail
         $this->assertFalse(PasswordManager::verify('WrongPassword', $hash));
-        
+
         // Auto-detection should work
         $this->assertTrue(PasswordManager::verify($this->testPassword, $hash, null, null));
     }
@@ -147,13 +147,13 @@ class PasswordManagerTest extends TestCase
     public function testVerifyBcrypt()
     {
         $hash = PasswordManager::encode($this->testPassword, null, HashAlgorithm::Bcrypt);
-        
+
         // Correct password should verify
         $this->assertTrue(PasswordManager::verify($this->testPassword, $hash));
-        
+
         // Wrong password should fail
         $this->assertFalse(PasswordManager::verify('WrongPassword', $hash));
-        
+
         // Auto-detection should work
         $this->assertTrue(PasswordManager::verify($this->testPassword, $hash, null, null));
     }
@@ -164,19 +164,19 @@ class PasswordManagerTest extends TestCase
     public function testVerifyLegacyAlgorithms()
     {
         $algorithms = [HashAlgorithm::Sha256, HashAlgorithm::Sha1, HashAlgorithm::Md5];
-        
+
         foreach ($algorithms as $algo) {
             $hash = PasswordManager::encode($this->testPassword, $this->testSalt, $algo);
-            
+
             // Correct password and salt should verify
             $this->assertTrue(PasswordManager::verify($this->testPassword, $hash, $this->testSalt, $algo));
-            
+
             // Wrong password should fail
             $this->assertFalse(PasswordManager::verify('WrongPassword', $hash, $this->testSalt, $algo));
-            
+
             // Wrong salt should fail
             $this->assertFalse(PasswordManager::verify($this->testPassword, $hash, 'wrong_salt', $algo));
-            
+
             // Auto-detection should work
             $this->assertTrue(PasswordManager::verify($this->testPassword, $hash, $this->testSalt, null));
         }
@@ -190,16 +190,16 @@ class PasswordManagerTest extends TestCase
         // Test Argon2id detection
         $argonHash = PasswordManager::encode($this->testPassword, null, HashAlgorithm::Argon2id);
         $this->assertTrue(PasswordManager::verify($this->testPassword, $argonHash));
-        
+
         // Test Bcrypt detection
         $bcryptHash = PasswordManager::encode($this->testPassword, null, HashAlgorithm::Bcrypt);
         $this->assertTrue(PasswordManager::verify($this->testPassword, $bcryptHash));
-        
+
         // Test legacy algorithm detection by creating known hashes
         $md5Hash = hash('md5', $this->testPassword);
         $sha1Hash = hash('sha1', $this->testPassword);
         $sha256Hash = hash('sha256', $this->testPassword);
-        
+
         $this->assertTrue(PasswordManager::verify($this->testPassword, $md5Hash, null, null));
         $this->assertTrue(PasswordManager::verify($this->testPassword, $sha1Hash, null, null));
         $this->assertTrue(PasswordManager::verify($this->testPassword, $sha256Hash, null, null));
@@ -212,7 +212,7 @@ class PasswordManagerTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('No se pudo detectar el algoritmo del hash');
-        
+
         PasswordManager::verify($this->testPassword, 'invalid_hash_format');
     }
 
@@ -222,10 +222,10 @@ class PasswordManagerTest extends TestCase
     public function testNeedsRehashArgon2id()
     {
         $hash = PasswordManager::encode($this->testPassword, null, HashAlgorithm::Argon2id);
-        
+
         // Same options should not need rehash
         $this->assertFalse(PasswordManager::needsRehash($hash, HashAlgorithm::Argon2id));
-        
+
         // Different options should need rehash
         $newOptions = ['memory_cost' => 131072]; // Higher memory cost
         $this->assertTrue(PasswordManager::needsRehash($hash, HashAlgorithm::Argon2id, $newOptions));
@@ -237,10 +237,10 @@ class PasswordManagerTest extends TestCase
     public function testNeedsRehashBcrypt()
     {
         $hash = PasswordManager::encode($this->testPassword, null, HashAlgorithm::Bcrypt);
-        
+
         // Same options should not need rehash
         $this->assertFalse(PasswordManager::needsRehash($hash, HashAlgorithm::Bcrypt));
-        
+
         // Different cost should need rehash
         $newOptions = ['cost' => 14]; // Higher cost
         $this->assertTrue(PasswordManager::needsRehash($hash, HashAlgorithm::Bcrypt, $newOptions));
@@ -254,7 +254,7 @@ class PasswordManagerTest extends TestCase
         $sha256Hash = PasswordManager::encode($this->testPassword, $this->testSalt, HashAlgorithm::Sha256);
         $sha1Hash = PasswordManager::encode($this->testPassword, $this->testSalt, HashAlgorithm::Sha1);
         $md5Hash = PasswordManager::encode($this->testPassword, $this->testSalt, HashAlgorithm::Md5);
-        
+
         // Legacy algorithms should always need rehash to secure algorithm
         $this->assertTrue(PasswordManager::needsRehash($sha256Hash));
         $this->assertTrue(PasswordManager::needsRehash($sha1Hash));
@@ -268,14 +268,14 @@ class PasswordManagerTest extends TestCase
     {
         $salt1 = PasswordManager::createSalt();
         $salt2 = PasswordManager::createSalt();
-        
+
         // Salts should be different
         $this->assertNotEquals($salt1, $salt2);
-        
+
         // Should be 64 characters (SHA256 hash)
         $this->assertEquals(64, strlen($salt1));
         $this->assertEquals(64, strlen($salt2));
-        
+
         // Test with different algorithm
         $md5Salt = PasswordManager::createSalt('md5');
         $this->assertEquals(32, strlen($md5Salt));
@@ -290,12 +290,12 @@ class PasswordManagerTest extends TestCase
         $emptyHash = PasswordManager::encode('');
         $this->assertNotEmpty($emptyHash);
         $this->assertTrue(PasswordManager::verify('', $emptyHash));
-        
+
         // Very long password should work
         $longPassword = str_repeat('A', 1000);
         $longHash = PasswordManager::encode($longPassword);
         $this->assertTrue(PasswordManager::verify($longPassword, $longHash));
-        
+
         // Unicode password should work
         $unicodePassword = '测试密码🔐';
         $unicodeHash = PasswordManager::encode($unicodePassword);
@@ -308,15 +308,15 @@ class PasswordManagerTest extends TestCase
     public function testTimingAttackResistance()
     {
         $hash = PasswordManager::encode($this->testPassword);
-        
+
         $startTime = microtime(true);
         PasswordManager::verify($this->testPassword, $hash);
         $correctTime = microtime(true) - $startTime;
-        
+
         $startTime = microtime(true);
         PasswordManager::verify('WrongPassword', $hash);
         $wrongTime = microtime(true) - $startTime;
-        
+
         // Times should be similar (within reasonable variance)
         // This is a basic test - real timing attack testing would be more sophisticated
         $timeDiff = abs($correctTime - $wrongTime);
@@ -330,20 +330,20 @@ class PasswordManagerTest extends TestCase
     {
         // Simulate old password hash
         $oldHash = PasswordManager::encode($this->testPassword, $this->testSalt, HashAlgorithm::Sha256);
-        
+
         // Verify old hash works
         $this->assertTrue(PasswordManager::verify($this->testPassword, $oldHash, $this->testSalt, HashAlgorithm::Sha256));
-        
+
         // Check if it needs rehashing
         $this->assertTrue(PasswordManager::needsRehash($oldHash));
-        
+
         // Simulate migration to new hash
         $newHash = PasswordManager::encode($this->testPassword); // Default to Argon2id
-        
+
         // New hash should work and not need rehashing
         $this->assertTrue(PasswordManager::verify($this->testPassword, $newHash));
         $this->assertFalse(PasswordManager::needsRehash($newHash));
-        
+
         // Old and new hashes should be different
         $this->assertNotEquals($oldHash, $newHash);
     }

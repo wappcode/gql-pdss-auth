@@ -5,13 +5,9 @@ declare(strict_types=1);
 namespace GPDAuth\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
-use GPDCore\Entities\AbstractEntityModel;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\ArrayCollection;
-
-
-
-
+use PDSSUtilities\AbstractEntityModel;
 
 #[ORM\Entity()]
 #[ORM\Table(name: "gpd_auth_roles")]

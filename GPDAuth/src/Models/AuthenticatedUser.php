@@ -4,8 +4,8 @@ namespace GPDAuth\Models;
 
 use GPDAuth\Contracts\AuthenticatedUserInterface;
 
-use GPDAuth\Entities\PermissionAccess;
-use GPDAuth\Entities\PermissionValue;
+use GPDAuth\Enums\PermissionAccess;
+use GPDAuth\Enums\PermissionValue;
 
 class AuthenticatedUser extends AbstractAuthenticatedUser implements AuthenticatedUserInterface
 {
@@ -35,6 +35,7 @@ class AuthenticatedUser extends AbstractAuthenticatedUser implements Authenticat
      * Determina si el usuario tiene permiso para un determinado recurso
      * Solo se consideran permisos con acceso autorizado
      * Sobreescribir este método para un servicio personalizado
+     * No se consideran mayusculas o minusculas en la comparación de los valores y access de los permisos
      * 
      * @param string $resource
      * @param string $permissionValue
@@ -43,14 +44,16 @@ class AuthenticatedUser extends AbstractAuthenticatedUser implements Authenticat
      */
     public function hasPermission(string $resource, string $permissionValue, ?string $scope = null): bool
     {
-        $permission = $this->findPermission($resource, $permissionValue, $scope);
+        $permission = $this->findPermission($resource, $permissionValue);
+        $scopeFormated = is_string($scope) ? strtolower($scope) : null;
         if (!($permission instanceof ResourcePermission)) {
             return false;
         }
-        if (!empty($scope) && $scope != $permission->getScope()) {
+        $permissionScopeFormated = $permission->getScope() != null ? strtolower($permission->getScope()) : null;
+        if (!empty($scopeFormated) && $scopeFormated != $permissionScopeFormated) {
             return false;
         }
-        return $permission->getAccess() === PermissionAccess::ALLOW;
+        return strtolower($permission->getAccess()) === strtolower(PermissionAccess::ALLOW->value);
     }
     /**
      * Determina si el usuario tiene algun permiso para alguno de los recursos
@@ -126,7 +129,7 @@ class AuthenticatedUser extends AbstractAuthenticatedUser implements Authenticat
     /**
      * Localiza un determinado permiso con acceso autorizado
      * Los permisos con acceso denegado retornan null
-     *
+     * Los valores, resources y access de los permisos se comparan sin considerar mayusculas o minusculas
      * @param string $resource
      * @param string $permissionValue
      * @return ResourcePermission|null
@@ -135,15 +138,19 @@ class AuthenticatedUser extends AbstractAuthenticatedUser implements Authenticat
     {
         $result = null;
         $permissions = $this->getPermissions() ?? [];
+        $permissionValueFormated = strtolower($permissionValue);
+        $resourceFormated = strtolower($resource);
         /** @var ResourcePermission */
         foreach ($permissions as $permission) {
+            $permisionVF = strtolower($permission->getValue());
+            $resourceVF = strtolower($permission->getResource());
             if (
-                $resource != $permission->getResource() ||
-                ($permissionValue != $permission->getValue() &&
-                    $permission->getValue() != PermissionValue::ALL
+                $resourceFormated != $resourceVF ||
+                ($permissionValueFormated != $permisionVF &&
+                    $permisionVF != strtolower(PermissionValue::ALL->value)
                 )
             ) continue;
-            if ($permission->getAccess() == PermissionAccess::ALLOW) {
+            if (strtolower($permission->getAccess()) == strtolower(PermissionAccess::ALLOW->value)) {
                 return $permission;
             } else {
                 return null;

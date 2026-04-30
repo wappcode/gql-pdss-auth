@@ -6,8 +6,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use DateTime;
-use GPDAuthJWT\Models\ApiConsumerStatus;
-use GPDCore\Entities\AbstractEntityModelUlid;
+use GPDAuthJWT\Enums\ApiConsumerStatus;
+use PDSSUtilities\AbstractEntityModelUlid;
 
 /** Usado para IdP local para Machine to Machine M2M */
 #[ORM\Entity]
@@ -29,13 +29,24 @@ class ApiConsumer extends AbstractEntityModelUlid
   #[ORM\Column(name: "revoked_at", type: "datetime", nullable: true)]
   private ?DateTime $revokedAt = null;
 
-  #[ORM\OneToMany(mappedBy: "consumer", targetEntity: ApiPermission::class)]
+  #[ORM\OneToMany(mappedBy: "consumer", targetEntity: ApiConsumerPermission::class)]
   private Collection $permissions;
+
+  /**
+   * Mapeos de roles para este issuer (código externo → código interno)
+   * Si se define, solo los roles mapeados serán considerados válidos para los JWTs de este issuer
+   * Es obligatorio definirlo si se quieren usar roles en los JWTs de este issuer
+   * Si no se define, los usuarios de este issuer no tendrán roles ni permisos
+   * @var Collection<TrustedIssuerRoleMapping>
+   */
+  #[ORM\OneToMany(targetEntity: TrustedIssuerRoleMapping::class, mappedBy: "trustedIssuer", cascade: ["remove"])]
+  private Collection $roleMappings;
 
   public function __construct()
   {
     parent::__construct();
     $this->permissions = new ArrayCollection();
+    $this->roleMappings = new ArrayCollection();
   }
 
   public function getIdentifier(): string
@@ -136,14 +147,14 @@ class ApiConsumer extends AbstractEntityModelUlid
   }
 
   /**
-   * @return Collection<int, ApiPermission>
+   * @return Collection<int, ApiConsumerPermission>
    */
   public function getPermissions(): Collection
   {
     return $this->permissions;
   }
 
-  public function addPermission(ApiPermission $permission): self
+  public function addPermission(ApiConsumerPermission $permission): self
   {
     if (!$this->permissions->contains($permission)) {
       $this->permissions->add($permission);
@@ -151,7 +162,7 @@ class ApiConsumer extends AbstractEntityModelUlid
     return $this;
   }
 
-  public function removePermission(ApiPermission $permission): self
+  public function removePermission(ApiConsumerPermission $permission): self
   {
     $this->permissions->removeElement($permission);
     return $this;
@@ -161,7 +172,7 @@ class ApiConsumer extends AbstractEntityModelUlid
   /**
    * Check if consumer has a specific permission
    */
-  public function hasPermission(ApiPermission $permission): bool
+  public function hasPermission(ApiConsumerPermission $permission): bool
   {
     return $this->permissions->contains($permission);
   }
@@ -198,6 +209,20 @@ class ApiConsumer extends AbstractEntityModelUlid
   {
     $this->name = $name;
 
+    return $this;
+  }
+  /**
+   *
+   * @return Collection<TrustedIssuerRoleMapping>
+   */
+  public function getRoleMappings(): Collection
+  {
+    return $this->roleMappings;
+  }
+
+  public function setRoleMappings(Collection $roleMappings): self
+  {
+    $this->roleMappings = $roleMappings;
     return $this;
   }
 }

@@ -1,7 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use GPDAuth\Library\JwtAlgorithm;
+use GPDAuth\Enums\JwtAlgorithm;
 
 class JwtAlgorithmTest extends TestCase
 {
@@ -67,7 +67,7 @@ class JwtAlgorithmTest extends TestCase
         $this->assertTrue(JwtAlgorithm::HS256->isSymmetric());
         $this->assertTrue(JwtAlgorithm::HS384->isSymmetric());
         $this->assertTrue(JwtAlgorithm::HS512->isSymmetric());
-        
+
         $this->assertFalse(JwtAlgorithm::RS256->isSymmetric());
         $this->assertFalse(JwtAlgorithm::ES256->isSymmetric());
     }
@@ -80,7 +80,7 @@ class JwtAlgorithmTest extends TestCase
         $this->assertFalse(JwtAlgorithm::HS256->isAsymmetric());
         $this->assertFalse(JwtAlgorithm::HS384->isAsymmetric());
         $this->assertFalse(JwtAlgorithm::HS512->isAsymmetric());
-        
+
         $this->assertTrue(JwtAlgorithm::RS256->isAsymmetric());
         $this->assertTrue(JwtAlgorithm::ES256->isAsymmetric());
     }
@@ -93,7 +93,7 @@ class JwtAlgorithmTest extends TestCase
         $this->assertTrue(JwtAlgorithm::RS256->isRSA());
         $this->assertTrue(JwtAlgorithm::RS384->isRSA());
         $this->assertTrue(JwtAlgorithm::RS512->isRSA());
-        
+
         $this->assertFalse(JwtAlgorithm::HS256->isRSA());
         $this->assertFalse(JwtAlgorithm::ES256->isRSA());
     }
@@ -106,7 +106,7 @@ class JwtAlgorithmTest extends TestCase
         $this->assertTrue(JwtAlgorithm::ES256->isECDSA());
         $this->assertTrue(JwtAlgorithm::ES384->isECDSA());
         $this->assertTrue(JwtAlgorithm::ES256K->isECDSA());
-        
+
         $this->assertFalse(JwtAlgorithm::HS256->isECDSA());
         $this->assertFalse(JwtAlgorithm::RS256->isECDSA());
     }
@@ -120,11 +120,11 @@ class JwtAlgorithmTest extends TestCase
         $this->assertEquals('SHA256', JwtAlgorithm::RS256->getHashAlgorithm());
         $this->assertEquals('SHA256', JwtAlgorithm::ES256->getHashAlgorithm());
         $this->assertEquals('SHA256', JwtAlgorithm::ES256K->getHashAlgorithm());
-        
+
         $this->assertEquals('SHA384', JwtAlgorithm::HS384->getHashAlgorithm());
         $this->assertEquals('SHA384', JwtAlgorithm::RS384->getHashAlgorithm());
         $this->assertEquals('SHA384', JwtAlgorithm::ES384->getHashAlgorithm());
-        
+
         $this->assertEquals('SHA512', JwtAlgorithm::HS512->getHashAlgorithm());
         $this->assertEquals('SHA512', JwtAlgorithm::RS512->getHashAlgorithm());
     }
@@ -136,13 +136,13 @@ class JwtAlgorithmTest extends TestCase
     {
         $this->assertStringContainsString('HMAC', JwtAlgorithm::HS256->getDescription());
         $this->assertStringContainsString('simétrico', JwtAlgorithm::HS256->getDescription());
-        
+
         $this->assertStringContainsString('RSA', JwtAlgorithm::RS256->getDescription());
         $this->assertStringContainsString('asimétrico', JwtAlgorithm::RS256->getDescription());
-        
+
         $this->assertStringContainsString('ECDSA', JwtAlgorithm::ES256->getDescription());
         $this->assertStringContainsString('curva elíptica', JwtAlgorithm::ES256->getDescription());
-        
+
         $this->assertStringContainsString('Bitcoin/Ethereum', JwtAlgorithm::ES256K->getDescription());
     }
 
@@ -154,12 +154,12 @@ class JwtAlgorithmTest extends TestCase
         $this->assertEquals(3, JwtAlgorithm::HS256->getSecurityLevel());
         $this->assertEquals(3, JwtAlgorithm::RS256->getSecurityLevel());
         $this->assertEquals(3, JwtAlgorithm::ES256->getSecurityLevel());
-        
+
         $this->assertEquals(4, JwtAlgorithm::HS384->getSecurityLevel());
         $this->assertEquals(4, JwtAlgorithm::RS384->getSecurityLevel());
         $this->assertEquals(4, JwtAlgorithm::ES384->getSecurityLevel());
         $this->assertEquals(4, JwtAlgorithm::ES256K->getSecurityLevel());
-        
+
         $this->assertEquals(5, JwtAlgorithm::HS512->getSecurityLevel());
         $this->assertEquals(5, JwtAlgorithm::RS512->getSecurityLevel());
     }
@@ -172,7 +172,7 @@ class JwtAlgorithmTest extends TestCase
         $this->assertFalse(JwtAlgorithm::HS256->requiresKeyPair());
         $this->assertFalse(JwtAlgorithm::HS384->requiresKeyPair());
         $this->assertFalse(JwtAlgorithm::HS512->requiresKeyPair());
-        
+
         $this->assertTrue(JwtAlgorithm::RS256->requiresKeyPair());
         $this->assertTrue(JwtAlgorithm::ES256->requiresKeyPair());
         $this->assertTrue(JwtAlgorithm::ES256K->requiresKeyPair());
@@ -184,12 +184,12 @@ class JwtAlgorithmTest extends TestCase
     public function testGetRecommended()
     {
         $recommended = JwtAlgorithm::getRecommended();
-        
+
         $this->assertContains(JwtAlgorithm::HS256, $recommended);
         $this->assertContains(JwtAlgorithm::HS384, $recommended);
         $this->assertContains(JwtAlgorithm::RS256, $recommended);
         $this->assertContains(JwtAlgorithm::ES256, $recommended);
-        
+
         // Estos no deberían estar en recomendados para uso general
         $this->assertNotContains(JwtAlgorithm::ES256K, $recommended);
     }
@@ -200,11 +200,11 @@ class JwtAlgorithmTest extends TestCase
     public function testGetSymmetricAlgorithms()
     {
         $symmetric = JwtAlgorithm::getSymmetricAlgorithms();
-        
+
         $this->assertContains(JwtAlgorithm::HS256, $symmetric);
         $this->assertContains(JwtAlgorithm::HS384, $symmetric);
         $this->assertContains(JwtAlgorithm::HS512, $symmetric);
-        
+
         $this->assertNotContains(JwtAlgorithm::RS256, $symmetric);
         $this->assertNotContains(JwtAlgorithm::ES256, $symmetric);
     }
@@ -215,11 +215,11 @@ class JwtAlgorithmTest extends TestCase
     public function testGetAsymmetricAlgorithms()
     {
         $asymmetric = JwtAlgorithm::getAsymmetricAlgorithms();
-        
+
         $this->assertContains(JwtAlgorithm::RS256, $asymmetric);
         $this->assertContains(JwtAlgorithm::ES256, $asymmetric);
         $this->assertContains(JwtAlgorithm::ES256K, $asymmetric);
-        
+
         $this->assertNotContains(JwtAlgorithm::HS256, $asymmetric);
         $this->assertNotContains(JwtAlgorithm::HS384, $asymmetric);
     }
@@ -239,10 +239,10 @@ class JwtAlgorithmTest extends TestCase
     {
         $cases = JwtAlgorithm::cases();
         $this->assertCount(9, $cases);
-        
+
         $expectedAlgorithms = ['HS256', 'HS384', 'HS512', 'RS256', 'RS384', 'RS512', 'ES256', 'ES384', 'ES256K'];
         $actualAlgorithms = array_map(fn($case) => $case->value, $cases);
-        
+
         $this->assertEquals($expectedAlgorithms, $actualAlgorithms);
     }
 
@@ -253,10 +253,12 @@ class JwtAlgorithmTest extends TestCase
     {
         // Los algoritmos más comunes que deben estar presentes
         $commonAlgorithms = ['HS256', 'HS384', 'HS512', 'RS256', 'ES256'];
-        
+
         foreach ($commonAlgorithms as $algorithm) {
-            $this->assertTrue(JwtAlgorithm::tryFromString($algorithm) !== null, 
-                "Algorithm $algorithm should be supported");
+            $this->assertTrue(
+                JwtAlgorithm::tryFromString($algorithm) !== null,
+                "Algorithm $algorithm should be supported"
+            );
         }
     }
 }

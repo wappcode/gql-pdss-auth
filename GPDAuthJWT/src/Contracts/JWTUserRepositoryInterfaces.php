@@ -12,6 +12,6 @@ interface JWTUserRepositoryInterfaces
      * @param array $payload El payload decodificado del JWT
      * @return AuthenticatedUserInterface|null El usuario autenticado o null si no se encuentra
      */
-    public function getUserFromPayload(array $payload, array $allowedRoles): ?AuthenticatedUserInterface;
-    public function getM2MUserFromPayload(array $payload, array $allowedPermissions): ?AuthenticatedUserInterface;
+    public function getUserFromPayload(array $payload, array $allowedRoles = []): ?AuthenticatedUserInterface;
+    public function getM2MUserFromPayload(array $payload, array $allowedPermissions = [], array $roles = []): ?AuthenticatedUserInterface;
 }

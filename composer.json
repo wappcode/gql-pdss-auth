@@ -1,6 +1,6 @@
 {
   "name": "wappcode/gql-pdss-auth",
-  "version": "4.0.2",
+  "version": "4.0.11",
   "license": "MIT",
   "autoload": {
     "psr-4": {
@@ -10,7 +10,6 @@
   },
   "require-dev": {
     "wappcode/gqlpdss": "dev-master",
-    "wappcode/pdss-utilities": "dev-master",
     "phpunit/phpunit": "^9.6",
     "wappcode/graphql-basic-client": "^1.0",
     "guzzlehttp/guzzle": "^7.8"
@@ -24,7 +23,8 @@
     "php": ">=8.2",
     "firebase/php-jwt": "^7.0",
     "psr/http-message": "^2.0",
-    "psr/http-server-middleware": "^1.0"
+    "psr/http-server-middleware": "^1.0",
+    "wappcode/pdss-utilities": "^4.0.0"
   },
   "bin": [
     "bin/create-jwt"

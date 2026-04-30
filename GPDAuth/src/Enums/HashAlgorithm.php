@@ -1,10 +1,10 @@
 <?php
 
-namespace GPDAuth\Library;
+namespace GPDAuth\Enums;
 
 /**
  * Enum para algoritmos de hash de contraseñas
- * 
+ *
  * Define los algoritmos disponibles para el hash de contraseñas,
  * categorizándolos entre seguros y legacy (deprecados).
  */
@@ -13,8 +13,8 @@ enum HashAlgorithm: string
     // Algoritmos seguros (recomendados)
     case Argon2id = 'argon2id';
     case Bcrypt = 'bcrypt';
-    
-    // Algoritmos legacy (deprecados, solo para compatibilidad)
+
+        // Algoritmos legacy (deprecados, solo para compatibilidad)
     case Sha256 = 'sha256';
     case Sha1 = 'sha1';
     case Md5 = 'md5';
@@ -37,7 +37,7 @@ enum HashAlgorithm: string
 
     /**
      * Obtiene los algoritmos seguros disponibles
-     * 
+     *
      * @return array<HashAlgorithm>
      */
     public static function getSecureAlgorithms(): array
@@ -47,7 +47,7 @@ enum HashAlgorithm: string
 
     /**
      * Obtiene los algoritmos legacy (deprecados)
-     * 
+     *
      * @return array<HashAlgorithm>
      */
     public static function getLegacyAlgorithms(): array
@@ -58,7 +58,7 @@ enum HashAlgorithm: string
     /**
      * Crea una instancia del enum desde un string
      * Útil para mantener compatibilidad con código legacy
-     * 
+     *
      * @param string $algorithm
      * @return HashAlgorithm
      * @throws \InvalidArgumentException

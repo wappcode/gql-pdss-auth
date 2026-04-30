@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace GPDAuth\Entities;
+namespace GPDAuth\Enums;
 
 enum PermissionValue: string
 {

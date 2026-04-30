@@ -1,7 +1,7 @@
 <?php
 
 use PHPUnit\Framework\TestCase;
-use GPDAuth\Library\HashAlgorithm;
+use GPDAuth\Enums\HashAlgorithm;
 
 class HashAlgorithmTest extends TestCase
 {
@@ -25,17 +25,17 @@ class HashAlgorithmTest extends TestCase
         // Algoritmos seguros
         $this->assertTrue(HashAlgorithm::Argon2id->isSecure());
         $this->assertFalse(HashAlgorithm::Argon2id->isLegacy());
-        
+
         $this->assertTrue(HashAlgorithm::Bcrypt->isSecure());
         $this->assertFalse(HashAlgorithm::Bcrypt->isLegacy());
-        
+
         // Algoritmos legacy
         $this->assertFalse(HashAlgorithm::Sha256->isSecure());
         $this->assertTrue(HashAlgorithm::Sha256->isLegacy());
-        
+
         $this->assertFalse(HashAlgorithm::Sha1->isSecure());
         $this->assertTrue(HashAlgorithm::Sha1->isLegacy());
-        
+
         $this->assertFalse(HashAlgorithm::Md5->isSecure());
         $this->assertTrue(HashAlgorithm::Md5->isLegacy());
     }
@@ -67,7 +67,7 @@ class HashAlgorithmTest extends TestCase
         $this->assertEquals(HashAlgorithm::Sha256, HashAlgorithm::fromString('sha256'));
         $this->assertEquals(HashAlgorithm::Sha1, HashAlgorithm::fromString('sha1'));
         $this->assertEquals(HashAlgorithm::Md5, HashAlgorithm::fromString('md5'));
-        
+
         // Test case insensitive
         $this->assertEquals(HashAlgorithm::Argon2id, HashAlgorithm::fromString('ARGON2ID'));
         $this->assertEquals(HashAlgorithm::Bcrypt, HashAlgorithm::fromString('BCRYPT'));
@@ -81,7 +81,7 @@ class HashAlgorithmTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Algoritmo de hash no soportado: invalid');
-        
+
         HashAlgorithm::fromString('invalid');
     }
 
@@ -145,10 +145,10 @@ class HashAlgorithmTest extends TestCase
             // Verificar que el valor string es válido
             $this->assertIsString($algorithm->value);
             $this->assertNotEmpty($algorithm->value);
-            
+
             // Verificar que fromString es el inverso
             $this->assertEquals($algorithm, HashAlgorithm::fromString($algorithm->value));
-            
+
             // Verificar que getSecurityInfo funciona
             $securityInfo = $algorithm->getSecurityInfo();
             $this->assertIsArray($securityInfo);

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace GPDAuthJWT\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
-use GPDCore\Entities\AbstractEntityModelUlid;
+use PDSSUtilities\AbstractEntityModelUlid;
 
 #[ORM\Entity()]
 #[ORM\Table(name: "gpd_auth_trusted_issuer_audiences")]

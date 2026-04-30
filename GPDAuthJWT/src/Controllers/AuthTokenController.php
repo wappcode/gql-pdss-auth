@@ -4,7 +4,7 @@ namespace GPDAuthJWT\Controllers;
 
 use Firebase\JWT\JWT;
 use GPDAuthJWT\Entities\ApiConsumer;
-use GPDAuthJWT\Entities\ApiPermission;
+use GPDAuthJWT\Entities\ApiConsumerPermission;
 use GPDAuthJWT\Entities\JWTKey;
 use GPDCore\Contracts\AppContextInterface;
 use GPDCore\Routing\AbstractAppController;
@@ -80,7 +80,7 @@ class AuthTokenController extends AbstractAppController
         $entityManager = $context->getEntityManager();
         $requestedScopes = array_filter(explode(' ', $scopeReq));
 
-        $qb = $entityManager->createQueryBuilder()->from(ApiPermission::class, 'p')
+        $qb = $entityManager->createQueryBuilder()->from(ApiConsumerPermission::class, 'p')
             ->innerJoin('p.resource', 'r')
             ->innerJoin('p.consumers', 'c')
             ->select(['r.code', 'p.value'])

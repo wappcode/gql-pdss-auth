@@ -3,20 +3,18 @@
 namespace GPDAuthJWT\Entities;
 
 use Doctrine\ORM\Mapping as ORM;
-use GPDAuth\Entities\Resource;
-use GPDCore\Entities\AbstractEntityModel;
+use PDSSUtilities\AbstractEntityModel;
 
 /** Usado para IdP local para Machine to Machine M2M */
 #[ORM\Entity]
 #[ORM\Table(name: "gpd_auth_api_permissions")]
-class ApiPermission extends AbstractEntityModel
+class ApiConsumerPermission extends AbstractEntityModel
 {
     #[ORM\Column(name: "name", type: "string", length: 100, unique: true, nullable: false)]
     private string $name;
 
-    #[ORM\ManyToOne(targetEntity: Resource::class)]
-    #[ORM\JoinColumn(name: "resource_id", referencedColumnName: "id", nullable: false)]
-    private Resource $resource;
+    #[ORM\Column(type: "string", length: 255, nullable: false, name: "resource_code")]
+    private string $resourceCode;
 
     /**
      * view,create,updated,delete,all
@@ -40,7 +38,7 @@ class ApiPermission extends AbstractEntityModel
      *
      * @var ApiConsumer
      */
-    #[ORM\OneToMany(targetEntity: ApiConsumer::class, mappedBy: "permissions")]
+    #[ORM\ManyToOne(targetEntity: ApiConsumer::class, inversedBy: "permissions")]
     #[ORM\JoinColumn(name: "consumer_id", referencedColumnName: "id", nullable: false, onDelete: "CASCADE")]
     private ApiConsumer $consumer;
 
@@ -96,11 +94,11 @@ class ApiPermission extends AbstractEntityModel
     }
 
     /**
-     * Get the value of resource
+     * Get the value of resourceCode
      */
-    public function getResource(): Resource
+    public function getResourceCode(): string
     {
-        return $this->resource;
+        return $this->resourceCode;
     }
 
     /**
@@ -108,9 +106,9 @@ class ApiPermission extends AbstractEntityModel
      *
      * @return  self
      */
-    public function setResource(Resource $resource): self
+    public function setResourceCode(string $resourceCode): self
     {
-        $this->resource = $resource;
+        $this->resourceCode = $resourceCode;
 
         return $this;
     }

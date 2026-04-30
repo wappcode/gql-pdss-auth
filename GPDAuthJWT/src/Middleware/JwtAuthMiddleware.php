@@ -5,10 +5,8 @@ namespace GPDAuthJWT\Middleware;
 
 
 use GPDAuth\Contracts\AuthenticatedUserInterface;
+use GPDAuthJWT\Contracts\JWTAuthenticatorInterface;
 use GPDAuthJWT\Library\JwtUtilities;
-use GPDAuthJWT\Contracts\ApiConsumerRepositoryInterface;
-use GPDAuthJWT\Contracts\JWTTrustIssuerRepositoryInterface;
-use GPDAuthJWT\Contracts\JWTUserRepositoryInterfaces;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -23,17 +21,13 @@ class JwtAuthMiddleware implements MiddlewareInterface
      * Cuando exitUnAuthorized es true, responde con 401 si la autenticación falla (Aplica para rutas protegidas)
      * Cuando exitUnAuthorized es false, continúa la cadena de middleware si la autenticación falla (Aplica para rutas públicas o para GraphQL para validar cada query, la validación se hace en los resolvers o middleware de los resolvers, con los datos del atributo identity de request)
      *
-     * @param JWTTrustIssuerRepositoryInterface $issuerRepository
-     * @param ApiConsumerRepositoryInterface $apiConsumerRepository
+     * @param JWTAuthenticatorInterface $jwtAuthenticator
      * @param boolean $exitUnAuthorized
      */
     public function __construct(
-        private JWTTrustIssuerRepositoryInterface $issuerRepository,
-        private ApiConsumerRepositoryInterface $apiConsumerRepository,
-        private JWTUserRepositoryInterfaces $userRepository,
+        private JWTAuthenticatorInterface $jwtAuthenticator,
         private string $identityKey = AuthenticatedUserInterface::class,
-        private bool $exitUnAuthorized = true,
-        private int $maxTokenLifetime = 3600
+        private bool $exitUnAuthorized = true
     ) {}
 
     public function process(
@@ -50,40 +44,10 @@ class JwtAuthMiddleware implements MiddlewareInterface
             }
         }
         try {
+            $authenticationResult = $this->jwtAuthenticator->authenticate($jwt);
 
-            // Decodificar sin verificar para obtener header y payload
-            $unverified = JwtUtilities::decodeUnverified($jwt);
-            $header = (array) $unverified->getHeader();
-            $payload = (array) $unverified->getPayload();
-            $issuer = $payload['iss'] ?? null;
-
-            $this->validateIssuer($payload);
-
-            $decoded = $this->decodeAndValidate($jwt, $header, $payload);
-
-            // ¿Es M2M?
-            $isM2M = $this->apiConsumerRepository->isM2mToken($decoded);
-            if ($isM2M) {
-                // M2M solo tiene permisos de recurso basados en scopes, no roles ni datos de usuario
-                $consumerId = $this->apiConsumerRepository->getConsumerIdFromJwtPayload($decoded);
-                $consumerName = $this->apiConsumerRepository->getConsumerName($consumerId);
-                if (!$consumerId || !$consumerName) {
-                    throw new \RuntimeException('Invalid client credentials');
-                }
-                $isTruestedConsumer = $this->apiConsumerRepository->isTrustedConsumer($consumerId);
-                if (!$isTruestedConsumer) {
-                    throw new \RuntimeException('Untrusted consumer');
-                }
-                $permissions = $this->apiConsumerRepository->getValidPermissionsForConsumer($consumerId, $decoded);
-                $authenticatedUser = $this->userRepository->getM2MUserFromPayload($decoded, $permissions);
-            } else {
-                $roles = JwtUtilities::extractRoles($decoded);
-                $allowedRoles = $this->issuerRepository->getAllowedRolesForIssuer($issuer, $roles);
-                $authenticatedUser = $this->userRepository->getUserFromPayload($decoded, $allowedRoles);
-                // Para usuarios humanos, se pueden mapear roles y permisos adicionales desde la base de datos si es necesario, usando el sub o el azp como identificador
-            }
-            $request = $request->withAttribute($this->identityKey, $authenticatedUser);
-            $request = $request->withAttribute('jwt_payload', $decoded);
+            $request = $request->withAttribute($this->identityKey, $authenticationResult->getAuthenticatedUser());
+            $request = $request->withAttribute('jwt_payload', $authenticationResult->getPayload());
             return $handler->handle(
                 $request
             );
@@ -96,76 +60,6 @@ class JwtAuthMiddleware implements MiddlewareInterface
             }
         }
     }
-
-    private function validateIssuer(array $payload): void
-    {
-        $iss = $payload['iss'] ?? null;
-        if (!$iss) {
-            throw new \RuntimeException('Missing issuer');
-        }
-        $isValidIssuer = $this->issuerRepository->isTrustedIssuer($iss);
-        if (!$isValidIssuer) {
-            throw new \RuntimeException('Untrusted issuer');
-        }
-    }
-
-    private function decodeAndValidate(string $jwt, array $header, array $payload): array
-    {
-
-
-
-        $iss = $payload['iss'] ?? null;
-        $kid = $header['kid'] ?? null;
-
-        if (!$kid) {
-            throw new \RuntimeException('Missing key ID');
-        }
-
-        $jwk = $this->issuerRepository->fetchJsonWebKeyByKeyId($iss, $kid);
-        if (empty($jwk)) {
-            throw new \RuntimeException('Invalid kid');
-        }
-
-        if (!$jwk) {
-            throw new \RuntimeException('Invalid key ID');
-        }
-
-        $publicKey = JwtUtilities::parsePublicKeyFromJWK($jwk);
-
-        if (!$publicKey) {
-            throw new \RuntimeException('Could not extract public key');
-        }
-        $algorithm = $header->alg ?? 'RS256';
-        $validAlgorithm = $this->issuerRepository->getIssuerAlgorithm($iss);
-        if ($algorithm !== $validAlgorithm) {
-            throw new \RuntimeException('Invalid algorithm');
-        }
-        // Decodificar y verificar el JWT
-        $decoded =  JwtUtilities::decodeAndVerify($jwt, $publicKey, asArray: true);
-
-        // Validar audience
-        $audience = is_array($decoded['aud']) ? $decoded['aud'][0] : $decoded['aud'];
-
-        if (!$this->issuerRepository->isValidAudience($iss, $audience)) {
-            throw new \RuntimeException('Invalid audience');
-        }
-
-        //Expiración (firebase lo valida, pero mejor explícito)
-        if ($decoded['exp'] < time() || $decoded["exp"] > time() + $this->maxTokenLifetime || $decoded["exp"] > $decoded["iat"] + $this->maxTokenLifetime) {
-            throw new \RuntimeException('Token expired');
-        }
-        // Validar que el token no tenga una fecha de expiración demasiado lejana para evitar tokens eternos
-        if ($decoded["exp"] > time() + $this->maxTokenLifetime || $decoded["exp"] > $decoded["iat"] + $this->maxTokenLifetime) {
-            throw new \RuntimeException('Token expiration too far in the future');
-        }
-
-
-        return $decoded;
-    }
-
-
-
-
 
     private function unauthorized(string $message): ResponseInterface
     {

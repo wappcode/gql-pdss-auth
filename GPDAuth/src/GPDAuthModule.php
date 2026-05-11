@@ -12,6 +12,7 @@ use GPDAuth\Middleware\AuthMiddleware;
 use GPDAuth\Contracts\AuthenticatedUserInterface;
 use GPDAuth\Contracts\AuthServiceInterface;
 use GPDAuth\Contracts\UserRepositoryInterface;
+use GPDAuth\Graphql\FieldLogout;
 use GPDAuth\Services\AuthSessionService;
 use GPDAuth\Services\UserRepository;
 use GPDAuthJWT\Authentication\SessionAuthenticator;
@@ -123,7 +124,7 @@ class GPDAuthModule extends AbstractModule
             'Query::login' => FieldLogin::createResolve(),
             'Query::getSessionData' => FieldSignedUser::createResolve(),
             'Query::getAuthenticatedUser' => FieldSignedUser::createResolve(),
-
+            'Query::logout' => FieldLogout::createResolve(),
         ];
     }
 }

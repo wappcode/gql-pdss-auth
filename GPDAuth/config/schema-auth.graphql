@@ -2,6 +2,7 @@ type Query {
 login(username: String!, password: String!): AuthenticatedUser
 getSessionData: AuthenticatedUser @deprecated(reason: "Alias of getAuthenticatedUser. Will be removed in future versions.")
 getAuthenticatedUser: AuthenticatedUser
+logout: Boolean
 }
 
 type AuthenticatedUser{

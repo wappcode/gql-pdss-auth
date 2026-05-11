@@ -122,6 +122,7 @@ class GPDAuthModule extends AbstractModule
             'Permission::resource' => ResolversPermission::getResourceResolve($proxy = null),
             'Query::login' => FieldLogin::createResolve(),
             'Query::getSessionData' => FieldSignedUser::createResolve(),
+            'Query::getAuthenticatedUser' => FieldSignedUser::createResolve(),
 
         ];
     }

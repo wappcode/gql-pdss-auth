@@ -32,8 +32,16 @@ class EchoProtectedTest extends TestCase
   {
     $message = "Hola";
     $jwt = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJsb2NhbGhvc3QiLCJzdWIiOiJwLmxvcGV6IiwiZXhwIjoxNzAxODg4MjkyLCJpYXQiOjE3MDE4ODcwOTIsImp0aSI6ImxvY2FsaG9zdDo6cC5sb3BleiIsIm5hbWUiOiJQYW5jaG8gTFx1MDBmM3BleiIsImdpdmVuX25hbWUiOiJQYW5jaG8iLCJmYW1pbHlfbmFtZSI6IkxcdTAwZjNwZXoiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJwLmxvcGV6IiwiZW1haWwiOiJwLmxvcGV6QGRlbW8ubG9jYWwubGFuIiwiYXV0aF90aW1lIjoxNzAxODg3MDkyLCJleGkiOjEyMDAsImJpcnRoX2ZhbWlseV9uYW1lIjoiTFx1MDBmM3BleiIsImJpcnRoX2dpdmVuX25hbWUiOiJQYW5jaG8ifQ.nTs126usQ_vls3nWU8XdV1EaIjdEB7tbFXtL6NqE3CM";
-    $data = $this->echo($message, $jwt);
-    $this->assertNotEmpty($data["errors"], "Check error with invalid jwt");
+    $invalid = false;
+    try {
+      $data = $this->echo($message, $jwt);
+    } catch (Exception $e) {
+      $message = $e->getMessage();
+      if (str_contains($message, "No autorizado")) {
+        $invalid = true;
+      }
+    }
+    $this->assertTrue($invalid, "Check error with invalid jwt");
   }
   public function testValidToken()
   {

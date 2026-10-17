@@ -2,10 +2,10 @@
 
 namespace GPDAuth\Library;
 
-use GPDCore\Exceptions\GQLException;
+use Exception;
 use Throwable;
 
-class InvalidUserException extends GQLException
+class InvalidUserException extends Exception
 {
 
 
@@ -13,9 +13,6 @@ class InvalidUserException extends GQLException
     const CODE = 400;
     public function __construct(string $message = 'No signed', string $errorId = InvalidUserException::ERROR_ID, int $httpcode = InvalidUserException::CODE, $category = 'businessLogic', ?Throwable $previous = null)
     {
-        parent::__construct($message, $errorId, $httpcode, $category, $previous);
-        $this->category = $category;
-        $this->errorId = $errorId;
-        $this->httpcode = $httpcode;
+        parent::__construct($message, $errorId, $previous);
     }
 }
